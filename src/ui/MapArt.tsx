@@ -74,8 +74,39 @@ function Shadow({ p, w }: { p: Pt; w: number }) {
   return <Ellipse cx={p.x} cy={p.y + 1} rx={w * 0.42} ry={w * 0.2} fill="#000" opacity={0.22} />;
 }
 
+const FLOWER_CLUMPS: SpriteName[] = [
+  'lavender',
+  'poppies',
+  'roseBush',
+  'hydrangea',
+  'tulips',
+  'foxgloves',
+];
+
+/**
+ * Remplace les anciens massifs « en bloc » (bordures de pierre, haies carrées)
+ * par des fleurs naturelles, variées selon la position (stable d'un rendu à l'autre).
+ */
+function naturalize(name: SpriteName, p: Pt, width: number): [SpriteName, number] {
+  const h = Math.abs(Math.round(p.x * 7.3 + p.y * 13.1));
+  switch (name) {
+    case 'flowerBed':
+      return [FLOWER_CLUMPS[h % FLOWER_CLUMPS.length], width * 0.95];
+    case 'flowerBorder':
+      return ['flowerStrip', width * 0.62];
+    case 'flowerBorderM':
+      return ['flowerStripM', width * 0.62];
+    case 'hedge':
+    case 'hedgeM':
+      return [h % 2 ? 'whiteShrub' : 'roseBush', width * 0.85];
+    default:
+      return [name, width];
+  }
+}
+
 /** Sprite de décor avec son ombre. */
-function Decor({ name, p, width }: { name: SpriteName; p: Pt; width: number }) {
+function Decor({ name: raw, p, width: w0 }: { name: SpriteName; p: Pt; width: number }) {
+  const [name, width] = naturalize(raw, p, w0);
   return (
     <G>
       <Shadow p={p} w={width} />
@@ -780,53 +811,12 @@ function FrontLips({
 
 /** Porche d'entrée à colonnes et fronton, sur la face avant gauche (porte « y »). */
 function Porch({ ox, oy, w, h }: { ox: number; oy: number; w: number; h: number }) {
-  const cx = ox + w / 2;
-  const y = oy + h;
-  const stone = '#B8AE9C';
-  const top = 56;
-  const half = 3.6;
-  const a = iso(cx - half, y + 1.1);
-  const b = iso(cx + half, y + 1.1);
-  const apex = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 - top - 40 };
+  // Portail gothique en pixel art (SpriteCook), centré sur la porte du mur avant.
+  const c = iso(ox + w / 2, oy + h + 1.2);
   return (
     <G>
-      {/* grand perron à trois marches */}
-      <Box gx={cx - half - 0.6} gy={y + 0.1} w={2 * half + 1.2} d={2.4} h={3} color="#9C9384" />
-      <Box gx={cx - half - 0.3} gy={y + 0.1} w={2 * half + 0.6} d={1.8} h={6} color="#A89F8F" />
-      <Box gx={cx - half} gy={y + 0.1} w={2 * half} d={1.3} h={9} color="#B3AA99" />
-      {/* six colonnes */}
-      {[-3.3, -2.0, -0.7, 0.7, 2.0, 3.3].map((dx) => (
-        <Box key={dx} gx={cx + dx - 0.2} gy={y + 0.95} w={0.4} d={0.4} h={top} color={stone} />
-      ))}
-      {/* entablement et fronton */}
-      <Box gx={cx - half - 0.2} gy={y + 0.7} w={2 * half + 0.4} d={0.7} h={8} color="#A39883" />
-      <Polygon
-        points={poly([
-          lift(iso(cx - half - 0.2, y + 1.4), top + 8),
-          lift(iso(cx + half + 0.2, y + 1.4), top + 8),
-          apex,
-        ])}
-        fill="#C9BFAD"
-        stroke="#7C7262"
-        strokeWidth={1}
-      />
-      <Polygon
-        points={poly([
-          lift(iso(cx - half - 0.2, y + 0.7), top + 8),
-          lift(iso(cx - half - 0.2, y + 1.4), top + 8),
-          apex,
-        ])}
-        fill="#A89E8B"
-      />
-      {/* médaillon au centre du fronton */}
-      <Circle
-        cx={apex.x + (a.x - b.x) * 0.0}
-        cy={apex.y + 22}
-        r={6}
-        fill="#8C7A5A"
-        stroke="#5A4A32"
-        strokeWidth={1}
-      />
+      <Ellipse cx={c.x} cy={c.y - 4} rx={58} ry={22} fill="#000" opacity={0.18} />
+      <Sprite name="porch" p={{ x: c.x + 2, y: c.y + 14 }} width={128} />
     </G>
   );
 }

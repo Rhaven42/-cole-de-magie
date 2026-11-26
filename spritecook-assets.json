@@ -158,6 +158,27 @@
       "slices": [
         "<maison>-<0|1>-back-unsorted"
       ]
+    },
+    {
+      "asset_id": "54a8c7a6-2372-4ddb-ba26-239d39b531aa",
+      "label": "fleurs naturelles (style profs)",
+      "slices": [
+        "lavender",
+        "poppies",
+        "roseBush",
+        "hydrangea",
+        "flowerStrip",
+        "tulips",
+        "whiteShrub",
+        "foxgloves"
+      ]
+    },
+    {
+      "asset_id": "1208b331-fae4-4a3e-9f08-13e6b14fdeb6",
+      "label": "portail gothique de l'Accueil",
+      "slices": [
+        "porch"
+      ]
     }
   ],
   "notes": "Planches découpées localement dans src/assets/sprites/. Les variantes *-unsorted.png sont des versions désaturées (élèves pas encore répartis). Les sprites teacherDeskM* sont des miroirs (bureau tourné vers les élèves). Ancienne planche tier-3 dorée (54244606…) remplacée. Index régénéré par `npm run assets`.",

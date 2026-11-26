@@ -32,10 +32,18 @@ export function Walker({
   const [init] = useState<Anchor>(() => from ?? anchor);
   const [start] = useState(() => iso(init.g.x, init.g.y));
   const [pos] = useState(() => new Animated.ValueXY(start));
-  const [bob] = useState(() => new Animated.Value(0));
+  /** Cycle de pas : -1 → 0 → 1 (balancement + petit rebond à chaque pas). */
+  const [stride] = useState(() => new Animated.Value(0));
+  /** Orientation pendant la marche : miroir horizontal et face/dos (sans re-rendu). */
+  const [flip] = useState(() => new Animated.Value(1));
+  const [showBack] = useState(() => new Animated.Value(back ? 1 : 0));
   const last = useRef<Anchor>(init);
   const here = useRef(start);
   const key = `${anchor.room}|${anchor.g.x.toFixed(2)}|${anchor.g.y.toFixed(2)}`;
+
+  useEffect(() => {
+    showBack.setValue(back ? 1 : 0);
+  }, [back, showBack]);
 
   useEffect(() => {
     const target: Anchor = { g: { ...anchor.g }, room: anchor.room };
@@ -44,22 +52,34 @@ export function Walker({
     last.current = target;
     let cancelled = false;
     let current: Animated.CompositeAnimation | null = null;
-    const step = Animated.loop(
-      Animated.sequence([
-        Animated.timing(bob, { toValue: -2.5, duration: 140, useNativeDriver: true }),
-        Animated.timing(bob, { toValue: 0, duration: 140, useNativeDriver: true }),
-      ]),
-    );
+    const half = (to: number) =>
+      Animated.timing(stride, {
+        toValue: to,
+        duration: 150,
+        easing: Easing.inOut(Easing.sin),
+        useNativeDriver: true,
+      });
+    const step = Animated.loop(Animated.sequence([half(1), half(0), half(-1), half(0)]));
     step.start();
     const go = (i: number) => {
       if (cancelled) return;
       if (i >= pts.length) {
         step.stop();
-        bob.setValue(0);
+        stride.setValue(0);
+        flip.setValue(1);
+        showBack.setValue(back ? 1 : 0);
         return;
       }
       const p = pts[i];
-      const dist = Math.hypot(p.x - here.current.x, p.y - here.current.y);
+      const dx = p.x - here.current.x;
+      const dy = p.y - here.current.y;
+      const dist = Math.hypot(dx, dy);
+      if (dist > 0.5) {
+        // Sprites de face : regardent en bas à gauche ; de dos : en haut à droite.
+        const up = dy < 0;
+        showBack.setValue(up ? 1 : 0);
+        flip.setValue(up ? (dx < 0 ? -1 : 1) : dx > 0 ? -1 : 1);
+      }
       current = Animated.timing(pos, {
         toValue: p,
         duration: Math.max(30, (dist / SPEED) * 1000),
@@ -81,16 +101,29 @@ export function Walker({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key]);
 
+  const bob = stride.interpolate({ inputRange: [-1, 0, 1], outputRange: [-2.5, 0, -2.5] });
+  const sway = stride.interpolate({ inputRange: [-1, 1], outputRange: ['-4deg', '4deg'] });
+  const showFront = showBack.interpolate({ inputRange: [0, 1], outputRange: [1, 0] });
+
   return (
     <Animated.View
       pointerEvents="none"
       style={[styles.wrap, { transform: [{ translateX: pos.x }, { translateY: pos.y }] }]}
     >
-      <Animated.View style={{ transform: [{ translateY: bob }] }}>
-        <View style={styles.shadow} />
-        <Chibi student={student} size={SIZE} sleeping={sleeping} back={back} />
-        {sleeping ? <Text style={styles.zzz}>z</Text> : null}
+      <View style={styles.shadow} />
+      <Animated.View
+        style={{ transform: [{ translateY: bob }, { rotate: sway }, { scaleX: flip }] }}
+      >
+        <Animated.View style={{ opacity: showFront }}>
+          <Chibi student={student} size={SIZE} sleeping={sleeping} />
+        </Animated.View>
+        {sleeping ? null : (
+          <Animated.View style={[StyleSheet.absoluteFill, { opacity: showBack }]}>
+            <Chibi student={student} size={SIZE} back />
+          </Animated.View>
+        )}
       </Animated.View>
+      {sleeping ? <Text style={styles.zzz}>z</Text> : null}
     </Animated.View>
   );
 }
