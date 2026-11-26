@@ -188,6 +188,12 @@
       "name": "Delan Lanatre, le Chevalier du Sinople",
       "file": "portraits/delan.png",
       "role": "Duel"
+    },
+    {
+      "asset_id": "65bcc7ab-db74-4102-9c13-c006a409b73f",
+      "name": "Alva",
+      "file": "portraits/alva.png",
+      "role": "Astronomie"
     }
   ]
 }
