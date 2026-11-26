@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.9.3 — Paysage dessiné à la main
+
+- Fin du semis aléatoire (arbres, rochers, points de fleurs) et des tapis rouges de couloirs, jugés artificiels.
+- **Nouveaux décors de paysage** (planche SpriteCook) : étang aux nénuphars, saule pleureur, kiosque, serre, volière en pierre, potager clôturé, bosquet, clôture, arche de roses, feu de camp avec rondins, cibles d'entraînement, meule et charrette, bordure de lavande et de roses, passerelle, herbes hautes et fougères, vieux chêne avec balançoire.
+- **Lieux composés** : prairie du fond (volière, feu de camp, meule, cibles), côté droit (serre, potager, kiosque, saule), étang avec passerelle devant à droite, bordures fleuries le long de la façade et du mur droit, arche de roses sur l'allée, lisière boisée irrégulière autour de la carte.
+
 ## 0.9.2 — Plus de décor
 
 - Pelouses remplies : environ 140 arbres, sapins, buissons, rochers, massifs, haies et citrouilles semés autour de l'école (placement fixe, sans chevauchement, en laissant l'allée et les couloirs libres), et des centaines de petites fleurs sauvages.

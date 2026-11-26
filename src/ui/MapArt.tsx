@@ -7,8 +7,6 @@ import { FLOOR_TEXTURE, GARDENS, ISO, PLOT, PLOTS, ROOM_DECOR, ROOM_SCALE } from
 import type { Station } from '../engine';
 import {
   courtyard,
-  CORRIDOR_X,
-  CORRIDOR_Y,
   courtyardLamps,
   examCorridor,
   floorPoly,
@@ -22,7 +20,6 @@ import {
   roomOrigin,
   poly,
   roomSize,
-  stationOrigin,
   type Pt,
 } from './iso';
 import { Box, Furniture, shade, Sprite, tiered, WallQuad } from './isoArt';
@@ -187,199 +184,11 @@ function ExamCorridor({ env }: { env: EnvDef }) {
   );
 }
 
-/** Générateur pseudo-aléatoire déterministe pour le décor (même décor à chaque affichage). */
-function seeded(seed: number) {
-  let t = seed;
-  return () => {
-    t = (t + 0x6d2b79f5) | 0;
-    let r = Math.imul(t ^ (t >>> 15), t | 1);
-    r ^= r + Math.imul(r ^ (r >>> 7), r | 61);
-    return ((r ^ (r >>> 14)) >>> 0) / 4294967296;
-  };
-}
-
-/** Emprise de l'école (couloirs compris). */
-function schoolBounds() {
-  const school0 = plotOrigin(0, 0);
-  const pad = PLOT.gap / 2;
-  return {
-    x0: school0.x - pad,
-    y0: school0.y - pad,
-    x1: school0.x + PLOT.cols * (S + PLOT.gap) - PLOT.gap + pad,
-    y1: school0.y + PLOT.rows * (S + PLOT.gap) - PLOT.gap + pad,
-  };
-}
-
 interface Placed {
   name: SpriteName;
   x: number;
   y: number;
   w: number;
-}
-
-/** Végétation et rochers semés sur toutes les pelouses libres autour de l'école. */
-const SCATTER: Placed[] = (() => {
-  const rnd = seeded(20261126);
-  const b = schoolBounds();
-  const { pathX, gateY } = courtyard();
-  const f = fountainPoint();
-  const exam = stationOrigin('exam');
-  const ex = roomSize('exam');
-  const ec = examCorridor();
-  const out: Placed[] = [];
-  const kinds: [SpriteName, number, number][] = [
-    ['oak', 0.24, 58],
-    ['pine', 0.2, 44],
-    ['bush', 0.18, 28],
-    ['rocks', 0.1, 30],
-    ['flowerBed', 0.1, 36],
-    ['pumpkins', 0.06, 32],
-    ['hedge', 0.06, 38],
-    ['planterTree', 0.06, 28],
-  ];
-  const blocked = (x: number, y: number) => {
-    if (x < 1.5 || y < 1.5 || x > GRID_X - 1.5 || y > GRID_Y - 1.5) return true;
-    if (x > b.x0 - 1.8 && x < b.x1 + 1.8 && y > b.y0 - 1.8 && y < b.y1 + 1.8) return true;
-    if (
-      exam &&
-      x > exam.x - 1.8 &&
-      x < exam.x + ex.w + 1.8 &&
-      y > exam.y - 1.8 &&
-      y < exam.y + ex.h + 1.8
-    )
-      return true;
-    if (ec && Math.abs(x - ec.x) < 3 && y > ec.y0 - 1 && y < ec.y1 + 1) return true;
-    // cour d'entrée : on laisse l'allée et ses abords dégagés
-    if (y > b.y1 && Math.abs(x - pathX) < 14 && y < gateY + 3) return true;
-    if (Math.hypot(x - f.x, y - f.y) < 4) return true;
-    return out.some((o) => Math.hypot(o.x - x, o.y - y) < 2.6);
-  };
-  for (let tries = 0; tries < 2500 && out.length < 140; tries++) {
-    const x = rnd() * GRID_X;
-    const y = rnd() * GRID_Y;
-    if (blocked(x, y)) continue;
-    let r = rnd();
-    let pick = kinds[0];
-    for (const k of kinds) {
-      if (r < k[1]) {
-        pick = k;
-        break;
-      }
-      r -= k[1];
-    }
-    out.push({ name: pick[0], x, y, w: pick[2] * (0.85 + rnd() * 0.3) });
-  }
-  return out.sort((a, c) => a.x + a.y - (c.x + c.y));
-})();
-
-/** Touffes de fleurs sauvages (petits points colorés) sur l'herbe. */
-const FLOWERS: { x: number; y: number; c: string }[] = (() => {
-  const rnd = seeded(77);
-  const b = schoolBounds();
-  const colors = ['#F2E8C8', '#E9A6C2', '#B9A6E9', '#F2D06B', '#E97A6B'];
-  const out: { x: number; y: number; c: string }[] = [];
-  for (let i = 0; i < 900 && out.length < 220; i++) {
-    const x = rnd() * GRID_X;
-    const y = rnd() * GRID_Y;
-    if (x > b.x0 - 0.5 && x < b.x1 + 0.5 && y > b.y0 - 0.5 && y < b.y1 + 0.5) continue;
-    out.push({ x, y, c: colors[Math.floor(rnd() * colors.length)] });
-  }
-  return out;
-})();
-
-/** Végétation : couche « arrière » (dessinée avant l'école) ou « avant » (après). */
-function Scatter({ env, front }: { env: EnvDef; front: boolean }) {
-  const b = schoolBounds();
-  const items = SCATTER.filter((o) => (o.x > b.x1 || o.y > b.y1) === front);
-  return (
-    <G>
-      {!front && env.deco === 'tree'
-        ? FLOWERS.map((f, i) => {
-            const p = iso(f.x, f.y);
-            return (
-              <G key={`f${i}`}>
-                <Circle cx={p.x} cy={p.y} r={1.6} fill={f.c} />
-                <Circle cx={p.x + 3} cy={p.y + 1} r={1.3} fill={f.c} />
-                <Circle cx={p.x - 2} cy={p.y + 1.6} r={1.2} fill={f.c} />
-              </G>
-            );
-          })
-        : null}
-      {items.map((o, i) =>
-        env.deco === 'tree' ||
-        !['oak', 'pine', 'bush', 'pumpkins', 'planterTree'].includes(o.name) ? (
-          <Decor key={i} name={o.name} p={iso(o.x, o.y)} width={o.w} />
-        ) : (
-          <Deco key={i} p={iso(o.x, o.y)} s={1.1} env={env} />
-        ),
-      )}
-    </G>
-  );
-}
-
-/** Tapis de couloir et mobilier aux carrefours (chandeliers, plantes, bancs). */
-function CorridorDecor({ env }: { env: EnvDef }) {
-  const b = schoolBounds();
-  const runner = env.id === 'manor' ? '#6B2430' : shade(env.corridor, 0.6);
-  const xs = CORRIDOR_X;
-  const ys = CORRIDOR_Y;
-  const props: ReactElement[] = [];
-  const cycle: [SpriteName, number][] = [
-    ['candelabra', 20],
-    ['planterTree', 26],
-    ['candelabra', 20],
-    ['parkBench', 28],
-    ['clock', 20],
-    ['planterTree', 26],
-  ];
-  let n = 0;
-  for (const x of xs)
-    for (const y of ys) {
-      if (x <= b.x0 + 0.1 || y <= b.y0 + 0.1 || x >= b.x1 - 0.1 || y >= b.y1 - 0.1) continue;
-      const [name, w] = cycle[n++ % cycle.length];
-      props.push(<Decor key={`c${x}-${y}`} name={name} p={iso(x - 0.75, y - 0.75)} width={w} />);
-    }
-  return (
-    <G>
-      {xs.map((x) => (
-        <Polygon
-          key={`rx${x}`}
-          points={floorPoly(x - 0.35, b.y0, 0.7, b.y1 - b.y0)}
-          fill={runner}
-          opacity={0.5}
-        />
-      ))}
-      {ys.map((y) => (
-        <Polygon
-          key={`ry${y}`}
-          points={floorPoly(b.x0, y - 0.35, b.x1 - b.x0, 0.7)}
-          fill={runner}
-          opacity={0.5}
-        />
-      ))}
-      {props}
-    </G>
-  );
-}
-
-/** Arbres autour de l'école (le décor change selon l'environnement). */
-function Perimeter({ env }: { env: EnvDef }) {
-  const pts: [number, number][] = [];
-  for (let x = 2; x < GRID_X - PLOT.front; x += 5.5) pts.push([x, 2 + ((x * 7) % 3)]);
-  for (let y = 7; y < GRID_Y - PLOT.front; y += 5.5) pts.push([2 + ((y * 5) % 3), y]);
-  const els = pts.map(([x, y], i) =>
-    env.deco === 'tree' ? (
-      <Decor
-        key={i}
-        name={i % 3 === 0 ? 'pine' : 'oak'}
-        p={iso(x, y)}
-        width={i % 3 === 0 ? 46 : 64}
-      />
-    ) : (
-      <Deco key={i} p={iso(x, y)} s={1.2} env={env} />
-    ),
-  );
-  return <G>{els}</G>;
 }
 
 /** Fontaine de la cour d'entrée. */
@@ -393,6 +202,138 @@ function Fountain({ p }: { p: Pt }) {
       <Line x1={p.x} y1={p.y - 4} x2={p.x} y2={p.y - 24} stroke="#8A9497" strokeWidth={6} />
       <Ellipse cx={p.x} cy={p.y - 24} rx={10} ry={4.5} fill="#9AA5A8" />
       <Ellipse cx={p.x} cy={p.y - 27} rx={5} ry={2.5} fill="#BFE6FF" />
+    </G>
+  );
+}
+
+/**
+ * Paysage dessiné à la main autour de l'école (positions en cases).
+ * Des « lieux » cohérents plutôt qu'un semis : prairie du fond, coin de l'étang,
+ * potager et serre, bosquets, bordures fleuries le long des murs.
+ */
+/** Lisière boisée : bosquets en grappes irrégulières, avec des clairières. */
+function forestEdge(): Placed[] {
+  const out: Placed[] = [];
+  const kinds: [SpriteName, number][] = [
+    ['grove', 120],
+    ['pine', 54],
+    ['oak', 72],
+    ['pine', 50],
+    ['grove', 110],
+    ['wildGrass', 40],
+    ['pine', 56],
+    ['oak', 66],
+  ];
+  const jitter = [0.4, -0.6, 0.9, -0.2, 0.7, -0.9, 0.1, 0.5, -0.4, 0.8];
+  const step = [5.5, 4.5, 6.5, 3.8, 7.5, 5, 4.2, 6];
+  let k = 0;
+  const line = (
+    from: number,
+    to: number,
+    at: (t: number, j: number) => [number, number],
+    skip?: (t: number) => boolean,
+  ) => {
+    for (let t = from; t < to; t += step[k % step.length]) {
+      if (skip && skip(t)) {
+        k++;
+        continue;
+      }
+      const [x, y] = at(t, jitter[k % jitter.length]);
+      const [name, w] = kinds[k % kinds.length];
+      out.push({ name, x, y, w });
+      k++;
+    }
+  };
+  // bords du fond (haut gauche et haut droit), bord droit et bord avant
+  line(30, GRID_X - 2, (t, j) => [t, 1.4 + j * 0.6]);
+  line(24, GRID_Y - 2, (t, j) => [1.4 + j * 0.5, t]);
+  line(24, GRID_Y - 4, (t, j) => [GRID_X - 1.8 + j * 0.5, t]);
+  line(
+    2,
+    GRID_X - 6,
+    (t, j) => [t, GRID_Y - 1.6 + j * 0.4],
+    (t) => Math.abs(t - 34) < 8,
+  );
+  return out;
+}
+
+const LANDSCAPE: Placed[] = [
+  // Prairie du fond : volière, feu de camp, meule et charrette, cibles d'entraînement
+  { name: 'pine', x: 10, y: 2.5, w: 52 },
+  { name: 'oak', x: 14.5, y: 2.2, w: 70 },
+  { name: 'pine', x: 20, y: 2.8, w: 54 },
+  { name: 'grove', x: 25, y: 2.2, w: 110 },
+  { name: 'grove', x: 2.6, y: 18.5, w: 104 },
+  { name: 'owlery', x: 33, y: 10, w: 80 },
+  { name: 'wildGrass', x: 36.5, y: 14.5, w: 40 },
+  { name: 'campfire', x: 46.5, y: 12, w: 88 },
+  { name: 'targets', x: 55, y: 18, w: 76 },
+  { name: 'fenceM', x: 58.5, y: 13.4, w: 60 },
+  { name: 'fenceM', x: 64.5, y: 13.4, w: 60 },
+  { name: 'haystack', x: 63, y: 8.5, w: 82 },
+  { name: 'swingOak', x: 72.5, y: 17.5, w: 100 },
+  // Côté droit : serre et potager, kiosque, bordures fleuries le long du mur
+  { name: 'flowerBorder', x: 65.9, y: 30, w: 66 },
+  { name: 'greenhouse', x: 71.5, y: 28, w: 104 },
+  { name: 'flowerBorder', x: 65.9, y: 42, w: 66 },
+  { name: 'vegGarden', x: 71, y: 39.5, w: 110 },
+  { name: 'flowerBorder', x: 65.9, y: 55, w: 66 },
+  { name: 'gazebo', x: 71, y: 55, w: 96 },
+  { name: 'roseArch', x: 67.5, y: 61, w: 54 },
+  { name: 'flowerBorder', x: 65.9, y: 68, w: 66 },
+  { name: 'willow', x: 72.5, y: 68, w: 96 },
+  // Pelouse avant droite : l'étang, sa passerelle et son saule
+  { name: 'pond', x: 58, y: 89.5, w: 130 },
+  { name: 'footbridge', x: 51.5, y: 88.5, w: 64 },
+  { name: 'willow', x: 63.5, y: 86.5, w: 100 },
+  { name: 'wildGrass', x: 53.5, y: 92.5, w: 40 },
+  { name: 'swingOak', x: 70.5, y: 88, w: 96 },
+  // Avant : bordures fleuries le long de la façade, arche de roses sur l'allée
+  { name: 'flowerBorderM', x: 8, y: 83.8, w: 66 },
+  { name: 'flowerBorderM', x: 15, y: 83.8, w: 66 },
+  { name: 'flowerBorderM', x: 22, y: 83.8, w: 66 },
+  { name: 'flowerBorderM', x: 28.5, y: 83.8, w: 66 },
+  { name: 'flowerBorderM', x: 40.5, y: 83.8, w: 66 },
+  { name: 'flowerBorderM', x: 47.5, y: 83.8, w: 66 },
+  { name: 'flowerBorderM', x: 54.5, y: 83.8, w: 66 },
+  { name: 'flowerBorderM', x: 61, y: 83.8, w: 66 },
+  { name: 'roseArch', x: 34, y: 85.6, w: 58 },
+  // Pelouse avant gauche : un coin de verger, un feu de veillée
+  { name: 'grove', x: 9, y: 90, w: 116 },
+  { name: 'oak', x: 18.5, y: 88.5, w: 70 },
+  { name: 'wildGrass', x: 14, y: 93, w: 40 },
+  { name: 'oak', x: 24.5, y: 92, w: 66 },
+  ...forestEdge(),
+];
+
+/** Paysage : couche arrière (avant les bâtiments) ou avant (devant la façade). */
+function Landscape({ env, front }: { env: EnvDef; front: boolean }) {
+  const school0 = plotOrigin(0, 0);
+  const x1 = school0.x + PLOT.cols * (S + PLOT.gap) - PLOT.gap / 2;
+  const y1 = school0.y + PLOT.rows * (S + PLOT.gap) - PLOT.gap / 2;
+  const items = LANDSCAPE.filter((o) => (o.x > x1 || o.y > y1) === front).sort(
+    (a, b) => a.x + a.y - (b.x + b.y),
+  );
+  const natural = env.deco === 'tree';
+  return (
+    <G>
+      {items.map((o, i) =>
+        natural ||
+        ![
+          'oak',
+          'pine',
+          'grove',
+          'willow',
+          'swingOak',
+          'wildGrass',
+          'vegGarden',
+          'haystack',
+        ].includes(o.name) ? (
+          <Decor key={i} name={o.name} p={iso(o.x, o.y)} width={o.w} />
+        ) : (
+          <Deco key={i} p={iso(o.x, o.y)} s={1.2} env={env} />
+        ),
+      )}
     </G>
   );
 }
@@ -414,40 +355,17 @@ function Ground({ env }: { env: EnvDef }) {
   const yard: Outdoor[] = [];
   for (const l of courtyardLamps()) yard.push({ name: 'lamp', x: l.x, y: l.y, w: 22 });
   yard.push(
-    // côté droit de l'allée (entre l'école et le portail)
-    { name: 'statue', x: pathX - 5.5, y: y1 + 3.2, w: 40 },
-    { name: 'flowerBed', x: pathX + 11.5, y: y1 + 3.5, w: 46 },
-    { name: 'parkBench', x: pathX + 3.6, y: y1 + 10, w: 34 },
-    { name: 'birdbath', x: x1 + 8.5, y: y1 + 2.5, w: 22 },
-    { name: 'well', x: x1 + 9.5, y: y0 + h * 0.75, w: 44 },
-    { name: 'picnic', x: x1 + 6.5, y: y0 + h * 0.55, w: 46 },
-    { name: 'oak', x: x1 + 10, y: y0 + h * 0.4, w: 70 },
-    { name: 'oak', x: x1 + 9, y: y0 + h * 0.15, w: 64 },
-    { name: 'pumpkins', x: x1 + 5, y: y0 + h * 0.3, w: 40 },
-    { name: 'wheelbarrow', x: x1 + 6.5, y: y0 + h * 0.36, w: 34 },
-    { name: 'bush', x: x1 + 4, y: y0 + h * 0.85, w: 30 },
-
+    { name: 'statue', x: pathX - 5.5, y: y1 + 3.4, w: 40 },
+    { name: 'hedge', x: pathX - 3.4, y: y1 + 7, w: 40 },
+    { name: 'hedge', x: pathX - 3.4, y: y1 + 10, w: 40 },
+    { name: 'flowerBed', x: pathX + 12, y: y1 + 7, w: 44 },
+    { name: 'parkBench', x: pathX + 3.6, y: y1 + 9.5, w: 34 },
     { name: 'flowerBed', x: pathX - 3.6, y: gateY - 3.5, w: 36 },
     { name: 'flowerBed', x: pathX + 3.6, y: gateY - 3.5, w: 36 },
     { name: 'owlPost', x: pathX + 3, y: gateY - 0.8, w: 22 },
     { name: 'signpost', x: pathX - 3, y: gateY - 1.2, w: 28 },
     { name: 'hedge', x: pathX - 5.5, y: gateY - 0.5, w: 40 },
     { name: 'hedge', x: pathX + 5.5, y: gateY - 0.5, w: 40 },
-
-    // côté gauche de l'allée
-    { name: 'hedge', x: pathX - 3.4, y: y1 + 7, w: 40 },
-    { name: 'hedge', x: pathX - 3.4, y: y1 + 10, w: 40 },
-    { name: 'bush', x: pathX - 6, y: y1 + 4.5, w: 32 },
-    { name: 'pine', x: pathX - 9, y: y1 + 7, w: 48 },
-    { name: 'rocks', x: pathX - 13, y: y1 + 5, w: 36 },
-    { name: 'oak', x: pathX - 18, y: y1 + 7.5, w: 70 },
-    { name: 'pine', x: pathX - 24, y: y1 + 6, w: 46 },
-    { name: 'pumpkins', x: pathX - 28, y: y1 + 3.5, w: 38 },
-    { name: 'oak', x: pathX - 34, y: y1 + 7, w: 66 },
-    { name: 'bush', x: pathX - 40, y: y1 + 4, w: 30 },
-    { name: 'pine', x: pathX - 45, y: y1 + 7.5, w: 46 },
-    { name: 'parkBench', x: pathX - 21, y: y1 + 3, w: 34 },
-    { name: 'flowerBed', x: pathX - 31, y: y1 + 3.2, w: 42 },
   );
   const yardEls = yard
     .filter((o) => isManor || !['oak', 'pine', 'bush', 'pumpkins'].includes(o.name))
@@ -487,7 +405,6 @@ function Ground({ env }: { env: EnvDef }) {
         tint={tinted ? env.corridor : '#2B1A0E'}
         tintOpacity={tinted ? 0.45 : 0.18}
       />
-      <CorridorDecor env={env} />
       {/* Allée pavée en « L » : du couloir de l'Accueil jusqu'au portail */}
       <TexFloor
         id="pathA"
@@ -501,8 +418,7 @@ function Ground({ env }: { env: EnvDef }) {
         tintOpacity={tinted ? 0.4 : 0}
       />
       <ExamCorridor env={env} />
-      <Perimeter env={env} />
-      <Scatter env={env} front={false} />
+      <Landscape env={env} front={false} />
       {yardEls}
       <Fountain p={iso(fountainPoint().x, fountainPoint().y)} />
       <Sprite name="gate" p={iso(gateX, gateY + 0.9)} width={100} lift={8} />
@@ -999,7 +915,7 @@ function MapArtBase({ rooms, plots, env: envIndex }: Props) {
     <Svg width={MAP_W} height={MAP_H}>
       <Ground env={env} />
       {items.map((x) => x.el)}
-      <Scatter env={env} front />
+      <Landscape env={env} front />
     </Svg>
   );
 }
