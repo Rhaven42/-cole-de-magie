@@ -196,10 +196,18 @@
       "role": "Astronomie"
     },
     {
-      "asset_id": "46b6f443-4627-4994-8249-16f0ca7b9b03",
+      "asset_id": "d019dfa4-1882-4a33-936a-034f20bd3835",
       "name": "Dolohov",
       "file": "portraits/dolohov.png",
-      "role": "Potions"
+      "role": "Potions",
+      "note": "source pleine résolution (raw), recadrée avec marge"
+    },
+    {
+      "asset_id": "1d3d35df-922a-424e-9c54-d06a45d8bdce",
+      "name": "Solomon Tregahl",
+      "file": "portraits/solomon.png",
+      "role": "Botanique",
+      "note": "source pleine résolution (raw), recadrée avec marge"
     }
   ]
 }
