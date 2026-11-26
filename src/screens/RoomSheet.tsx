@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Image, Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { PORTRAITS } from '../assets/portraits';
 import { COURSES, type CourseId } from '../data/courses';
 import { ECONOMY } from '../data/economy';
 import { HOUSE_IDS, HOUSES } from '../data/houses';
@@ -161,10 +162,23 @@ export function RoomSheet() {
         </View>
         <ScrollView contentContainerStyle={{ paddingBottom: space.xl }}>
           {isCourse && NAMED_PROFESSORS[st.courseId!] ? (
-            <Text style={styles.prof}>
-              🧙 {professorTitle(NAMED_PROFESSORS[st.courseId!]!)} :{' '}
-              {professorLabel(NAMED_PROFESSORS[st.courseId!]!)}
-            </Text>
+            <View style={styles.profRow}>
+              {PORTRAITS[st.courseId!] ? (
+                <Image
+                  source={PORTRAITS[st.courseId!]!}
+                  style={styles.portrait}
+                  resizeMode="contain"
+                  accessibilityIgnoresInvertColors
+                />
+              ) : null}
+              <Text style={[styles.prof, { flex: 1 }]}>
+                {professorTitle(NAMED_PROFESSORS[st.courseId!]!)}
+                {'\n'}
+                <Text style={styles.profName}>
+                  {professorLabel(NAMED_PROFESSORS[st.courseId!]!)}
+                </Text>
+              </Text>
+            </View>
           ) : null}
           {isClosed(game, st) ? <Text style={styles.closed}>💥 {t('room.closed')}</Text> : null}
           <View style={styles.stats}>
@@ -421,7 +435,18 @@ const styles = StyleSheet.create({
   head: { flexDirection: 'row', alignItems: 'center', marginBottom: space.sm },
   lvl: { fontWeight: '700', color: colors.goldDark, marginRight: space.sm },
   close: { width: 48, height: 48, alignItems: 'center', justifyContent: 'center' },
-  prof: { fontWeight: '700', color: colors.ink, marginBottom: space.sm },
+  profRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: space.md,
+    backgroundColor: colors.parchmentDark,
+    borderRadius: radius.md,
+    padding: space.sm,
+    marginBottom: space.sm,
+  },
+  portrait: { width: 64, height: 128 },
+  prof: { fontWeight: '600', color: colors.inkSoft },
+  profName: { fontWeight: '800', fontSize: 17, color: colors.ink },
   closed: { color: colors.bad, fontWeight: '800', textAlign: 'center', marginBottom: space.sm },
   stats: {
     flexDirection: 'row',

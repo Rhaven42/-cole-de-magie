@@ -47,6 +47,7 @@ import { stationName } from '../ui/kit';
 import { colors, formatDuration, formatNumber } from '../ui/theme';
 import { Walker } from '../ui/Walker';
 import { Ambient } from '../ui/Ambient';
+import { Professor } from '../ui/Professor';
 import { nightFactor } from '../data/daynight';
 
 const MIN_SCALE = 0.25;
@@ -426,6 +427,18 @@ export function SchoolScreen() {
             {stableSnap.plots.map((p) => (
               <BuildSign key={p.id} id={p.id} game={game} />
             ))}
+            {game.stationOrder.map((id) => {
+              const st = game.stations[id];
+              if (st.kind !== 'course' || !st.courseId || !PLOTS[id]) return null;
+              return (
+                <Professor
+                  key={`prof-${id}`}
+                  stationId={id}
+                  courseId={st.courseId}
+                  teaching={st.seats.some((x) => x.occupant !== null)}
+                />
+              );
+            })}
             {ordered.map((p) => {
               const s = game.students[p.id];
               if (!s) return null;
