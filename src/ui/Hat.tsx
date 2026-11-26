@@ -4,7 +4,7 @@ import { SPRITES } from '../assets';
 import { HOUSE_IDS } from '../data/houses';
 import { Crest } from './Crest';
 
-/** Méliandre, le Chapeau Songeur (sprite SpriteCook). Il se dandine quand il parle. */
+/** Le Chaporacle, chapeau de répartition (sprite SpriteCook). Il se dandine quand il parle. */
 export function Hat({ size = 56, talking = false }: { size?: number; talking?: boolean }) {
   const d = SPRITES.hat;
   return (

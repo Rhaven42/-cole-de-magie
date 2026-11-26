@@ -1,4 +1,8 @@
-/** Les 4 Maisons d'Arcanum Academy. Couleurs imposées (§3). */
+/**
+ * Les 4 Maisons d'Arcanum Academy. Les identifiants internes restent stables
+ * (sauvegardes) : pyrraxe = Griffebraise, sylvaine = Renardombre,
+ * aurelis = Cerfronce, azurea = Corvencre.
+ */
 export type HouseId = 'pyrraxe' | 'sylvaine' | 'aurelis' | 'azurea';
 
 export const HOUSE_IDS: HouseId[] = ['pyrraxe', 'sylvaine', 'aurelis', 'azurea'];
@@ -19,7 +23,7 @@ export interface HouseDef {
   color: string;
   /** Couleur claire pour fonds / uniformes. */
   light: string;
-  emblem: 'phoenix' | 'stag' | 'sun' | 'seahorse';
+  emblem: 'griffin' | 'fox' | 'stag' | 'raven';
   bonus: HouseBonus;
 }
 
@@ -28,28 +32,28 @@ export const HOUSES: Record<HouseId, HouseDef> = {
     id: 'pyrraxe',
     color: '#C0392B',
     light: '#F2C4BE',
-    emblem: 'phoenix',
+    emblem: 'griffin',
     bonus: { courseTimeMult: { defense: 0.92, flying: 0.92, duel: 0.92 } },
   },
   sylvaine: {
     id: 'sylvaine',
     color: '#1E8449',
     light: '#BFE3CC',
-    emblem: 'stag',
+    emblem: 'fox',
     bonus: { coinMult: 1.08 },
   },
   aurelis: {
     id: 'aurelis',
-    color: '#F4C430',
-    light: '#FBEBB5',
-    emblem: 'sun',
+    color: '#D9A21E',
+    light: '#F6E3B0',
+    emblem: 'stag',
     bonus: { fatigueMult: 0.9 },
   },
   azurea: {
     id: 'azurea',
     color: '#2471A3',
     light: '#BFD8EA',
-    emblem: 'seahorse',
+    emblem: 'raven',
     bonus: { courseTimeMult: { history: 0.92, divination: 0.92, astronomy: 0.92 }, xpMult: 1.1 },
   },
 };

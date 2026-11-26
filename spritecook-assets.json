@@ -211,6 +211,16 @@
       "slices": [
         "<nom>-3"
       ]
+    },
+    {
+      "asset_id": "5442c536-02c4-415c-b15c-022c44996829",
+      "label": "blasons des Maisons",
+      "slices": [
+        "crest_pyrraxe (Griffebraise)",
+        "crest_sylvaine (Renardombre)",
+        "crest_azurea (Corvencre)",
+        "crest_aurelis (Cerfronce)"
+      ]
     }
   ],
   "notes": "Planches découpées localement dans src/assets/sprites/. Les variantes *-unsorted.png sont des versions désaturées (élèves pas encore répartis). Les sprites teacherDeskM* sont des miroirs (bureau tourné vers les élèves). Ancienne planche tier-3 dorée (54244606…) remplacée. Index régénéré par `npm run assets`.",

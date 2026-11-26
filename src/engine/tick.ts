@@ -112,7 +112,7 @@ function handlePatience(state: GameState, dt: number, events: GameEvent[]): void
   }
 }
 
-// ─── Répartition (Chapeau Songeur) ───────────────────────────────────────────
+// ─── Répartition (le Chaporacle) ───────────────────────────────────────────
 
 export function chooseHouse(state: GameState, s: Student): HouseId {
   const counts: Record<HouseId, number> = { pyrraxe: 0, sylvaine: 0, aurelis: 0, azurea: 0 };

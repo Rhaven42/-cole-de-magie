@@ -23,7 +23,7 @@ describe('cycle de vie des élèves', () => {
     expect(s.fatigue).toBeGreaterThan(0);
     expect(s.hunger).toBeGreaterThan(0);
     if (coinEv!.type === 'coins') {
-      // Sylvaine : +8 % → 10 × 1.08 ≈ 11, déposés dans le coffre de la salle
+      // Renardombre (sylvaine) : +8 % → 10 × 1.08 ≈ 11, déposés dans le coffre de la salle
       expect(coinEv!.amount).toBe(11);
       expect(g.coins).toBe(coins);
       expect(g.stations['course-potions'].pending).toBe(11);

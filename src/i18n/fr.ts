@@ -12,14 +12,14 @@ export const fr = {
   'tab.houses': 'Maisons',
   'tab.settings': 'Réglages',
 
-  'house.pyrraxe': 'Pyrraxe',
-  'house.sylvaine': 'Sylvaine',
-  'house.aurelis': 'Aurélis',
-  'house.azurea': 'Azuréa',
-  'house.pyrraxe.trait': 'Courageux, impulsif',
-  'house.sylvaine.trait': 'Ambitieux, rusé',
-  'house.aurelis.trait': 'Loyal, travailleur',
-  'house.azurea.trait': 'Curieux, érudit',
+  'house.pyrraxe': 'Griffebraise',
+  'house.sylvaine': 'Renardombre',
+  'house.aurelis': 'Cerfronce',
+  'house.azurea': 'Corvencre',
+  'house.pyrraxe.trait': 'Le courage et l’audace',
+  'house.sylvaine.trait': 'La ruse et l’indépendance',
+  'house.aurelis.trait': 'La loyauté et la ténacité',
+  'house.azurea.trait': 'La curiosité et l’imagination',
   'house.pyrraxe.bonus': '−8 % de temps en Défense, Duel et Balais volants',
   'house.sylvaine.bonus': '+8 % d’Éclats par cours validé',
   'house.aurelis.bonus': '−10 % de fatigue',
@@ -109,7 +109,7 @@ export const fr = {
   'room.served': 'Servis',
   'room.left': 'Partis',
   'room.bias': 'Orienter vers…',
-  'room.biasLocked': 'Orientation au niveau 5 du Chapeau',
+  'room.biasLocked': 'Orientation au niveau 5 du Chaporacle',
   'room.biasNone': 'Aucune',
   'room.close': 'Fermer',
 
@@ -273,7 +273,7 @@ export const fr = {
 
 export type TKey = keyof typeof fr;
 
-/** Répliques originales de Méliandre, le Chapeau Songeur (§6 bis). */
+/** Répliques originales du Chaporacle, le chapeau de répartition (§6 bis). */
 export const HAT_LINES_FR = [
   'Hmm… je sens une odeur de courage. Ou de chaussettes. Probablement de courage.',
   'Ne bouge pas, je fouille ta tête. Oh, il y a un poney ici ? Passons.',

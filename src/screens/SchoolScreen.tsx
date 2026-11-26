@@ -200,7 +200,7 @@ function BuildSign({ id, game }: { id: string; game: GameState }) {
   );
 }
 
-/** Méliandre sur son piédestal, au centre du Salon des Destinées. */
+/** Le Chaporacle sur son piédestal, au centre du Salon des Destinées. */
 function SortingHat({ game }: { game: GameState }) {
   const st = game.stations.sorting;
   const o = roomOrigin(PLOTS.sorting);
