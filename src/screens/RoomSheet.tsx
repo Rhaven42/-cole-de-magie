@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { Image, Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { PORTRAITS } from '../assets/portraits';
+import { SPRITES, type SpriteName } from '../assets';
+import { COURSE_PROPS } from '../data/roomProps';
 import { COURSES, type CourseId } from '../data/courses';
 import { ECONOMY } from '../data/economy';
 import { HOUSE_IDS, HOUSES } from '../data/houses';
@@ -25,6 +27,7 @@ import {
   serviceTime,
   storageCap,
   trackCost,
+  propCost,
   type Purchase,
   type Station,
 } from '../engine';
@@ -310,6 +313,47 @@ export function RoomSheet() {
             />
           ) : null}
 
+          {isCourse && COURSE_PROPS[st.courseId!] ? (
+            <>
+              <Text style={styles.section}>Mobilier spécial</Text>
+              {COURSE_PROPS[st.courseId!].map((p) => {
+                const owned = !p.cost || (st.props ?? []).includes(p.id);
+                const sp = SPRITES[p.sprite as SpriteName];
+                return (
+                  <View key={p.id} style={styles.propRow}>
+                    {sp ? (
+                      <Image
+                        source={sp.src}
+                        style={[styles.propImg, !owned && { opacity: 0.45 }]}
+                        resizeMode="contain"
+                      />
+                    ) : null}
+                    {owned ? (
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.propName}>{p.name}</Text>
+                        <Text style={styles.propSub}>
+                          {p.cost
+                            ? `✓ Installé · +${Math.round((p.coinBonus ?? 0) * 100)} % d’Éclats`
+                            : 'Décor de la salle'}
+                        </Text>
+                      </View>
+                    ) : (
+                      <BuyButton
+                        style={{ flex: 1 }}
+                        icon="🔒"
+                        label={p.name}
+                        sub={`+${Math.round((p.coinBonus ?? 0) * 100)} % d’Éclats dans cette salle`}
+                        cost={propCost(st, p.id)}
+                        coins={coins}
+                        onPress={() => store.buyProp(st.id, p.id)}
+                      />
+                    )}
+                  </View>
+                );
+              })}
+            </>
+          ) : null}
+
           {st.kind !== 'course' && SERVICES[st.kind].tracks.length ? (
             <>
               <Text style={styles.section}>{t('room.upgradesTitle')}</Text>
@@ -435,6 +479,10 @@ const styles = StyleSheet.create({
   head: { flexDirection: 'row', alignItems: 'center', marginBottom: space.sm },
   lvl: { fontWeight: '700', color: colors.goldDark, marginRight: space.sm },
   close: { width: 48, height: 48, alignItems: 'center', justifyContent: 'center' },
+  propRow: { flexDirection: 'row', alignItems: 'center', gap: space.sm, marginBottom: space.xs },
+  propImg: { width: 44, height: 44 },
+  propName: { fontWeight: '800', color: colors.ink },
+  propSub: { color: colors.inkSoft, fontSize: 12 },
   profRow: {
     flexDirection: 'row',
     alignItems: 'center',

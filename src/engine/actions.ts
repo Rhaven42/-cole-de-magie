@@ -1,3 +1,4 @@
+import { propDef } from '../data/roomProps';
 import { COURSES, type CourseId } from '../data/courses';
 import { ECONOMY } from '../data/economy';
 import { expCost } from '../data/formulas';
@@ -106,6 +107,21 @@ export function upgradeTrack(state: GameState, stationId: string, trackId: strin
   const st = state.stations[stationId];
   if (!st || !pay(state, trackCost(st, trackId))) return false;
   st.tracks[trackId] = (st.tracks[trackId] ?? 0) + 1;
+  return true;
+}
+
+/** Prix d'un meuble spécial, ou null s'il est déjà là / gratuit / inconnu. */
+export function propCost(st: Station, propId: string): number | null {
+  if (!st.courseId) return null;
+  const def = propDef(st.courseId, propId);
+  if (!def?.cost || st.props?.includes(propId)) return null;
+  return def.cost;
+}
+
+export function buyProp(state: GameState, stationId: string, propId: string): boolean {
+  const st = state.stations[stationId];
+  if (!st || !pay(state, propCost(st, propId))) return false;
+  st.props = [...(st.props ?? []), propId];
   return true;
 }
 

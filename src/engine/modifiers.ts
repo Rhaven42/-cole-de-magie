@@ -1,3 +1,4 @@
+import { propDef } from '../data/roomProps';
 import { COURSES } from '../data/courses';
 import { ECONOMY, NEEDS, POPULATION } from '../data/economy';
 import { applyTime, comfortReduction } from '../data/formulas';
@@ -106,6 +107,12 @@ export function seatCoinMult(seatLevel: number): number {
   return 1 + ECONOMY.seatUpgrade.coinPerLevel * (seatLevel - 1);
 }
 
+/** Bonus d'Éclats du mobilier spécial débloqué dans la salle. */
+export function propCoinMult(st: Station): number {
+  if (!st.courseId || !st.props?.length) return 1;
+  return 1 + st.props.reduce((a, id) => a + (propDef(st.courseId!, id)?.coinBonus ?? 0), 0);
+}
+
 export function courseReward(
   st: Station,
   s: Pick<Student, 'house' | 'mood'> & { year?: number },
@@ -115,6 +122,7 @@ export function courseReward(
   const def = COURSES[st.courseId!];
   let r = def.reward * levelCoinMult(st.level);
   if (seatIndex !== undefined && st.seats[seatIndex]) r *= seatCoinMult(st.seats[seatIndex].level);
+  r *= propCoinMult(st);
   if ((s.year ?? 1) >= YEARS.max) r *= YEARS.advanced.rewardMult;
   if (state) {
     r *= metaMult(state);

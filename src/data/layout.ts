@@ -31,6 +31,8 @@ export interface PlotDef {
   shiftY?: number;
   /** Côté de la porte : 'x' = face avant droite (défaut), 'y' = face avant gauche (entrée). */
   door?: 'x' | 'y';
+  /** Terrain en plein air (pas de murs) : le terrain de Balais volants. */
+  outdoor?: boolean;
   /** Couleur du sol (tapis / dalles). */
   floor: string;
   floorAlt: string;
@@ -46,7 +48,17 @@ export const PLOTS: Record<string, PlotDef> = {
   'course-history': { px: 3, py: 3, floor: '#9C6B44', floorAlt: '#8F613D' },
   'course-charms': { px: 0, py: 2, floor: '#4D78A8', floorAlt: '#456D99' },
   'course-astronomy': { px: 1, py: 2, floor: '#33406E', floorAlt: '#2C3862' },
-  'course-flying': { px: 2, py: 2, floor: '#7FB069', floorAlt: '#75A35F' },
+  // Balais volants : grand terrain en plein air, au fond de l'école (à droite des Examens).
+  'course-flying': {
+    px: 3,
+    py: -1,
+    shiftY: -6,
+    spanX: 2,
+    door: 'y',
+    outdoor: true,
+    floor: '#7FB069',
+    floorAlt: '#75A35F',
+  },
   'course-divination': { px: 3, py: 2, floor: '#7E4A86', floorAlt: '#72427A' },
   'course-transfiguration': { px: 1, py: 1, floor: '#5E7C82', floorAlt: '#557177' },
   'course-defense': { px: 2, py: 1, floor: '#6B3A3A', floorAlt: '#603434' },
@@ -67,6 +79,8 @@ export const GARDENS: { px: number; py: number; spanX?: number }[] = [
   { px: 0, py: 4 },
   { px: 4, py: 4 },
   { px: 0, py: 0, spanX: 2 },
+  // Cour intérieure (ancienne salle de Balais volants, partie dehors).
+  { px: 2, py: 2 },
 ];
 
 /** Décor d'une salle : sprite posé à une position de grille relative à la salle. */
@@ -87,66 +101,20 @@ const COURSE_COMMON: DecorItem[] = [
 
 /** Décorations par type de salle (matière ou lieu). Positions hors des places. */
 export const ROOM_DECOR: Record<string, DecorItem[]> = {
-  potions: [
-    ...COURSE_COMMON,
-    { sprite: 'jarShelf', x: 3.2, y: 0.55, width: 34 },
-    { sprite: 'barrel', x: 6.6, y: 0.8, width: 24 },
-    { sprite: 'crates', x: 7.35, y: 1.9, width: 30 },
-  ],
-  botany: [
-    ...COURSE_COMMON,
-    { sprite: 'planterTree', x: 3.0, y: 0.8, width: 34 },
-    { sprite: 'planterTree', x: 6.5, y: 0.8, width: 30 },
-    { sprite: 'barrel', x: 7.35, y: 2.0, width: 22 },
-  ],
-  history: [
-    ...COURSE_COMMON,
-    { sprite: 'clock', x: 3.0, y: 0.5, width: 22 },
-    { sprite: 'globe', x: 6.6, y: 0.9, width: 28 },
-    { sprite: 'books', x: 7.3, y: 7.1, width: 28 },
-  ],
-  charms: [
-    ...COURSE_COMMON,
-    { sprite: 'books', x: 3.2, y: 0.8, width: 28 },
-    { sprite: 'easel', x: 6.6, y: 0.8, width: 28 },
-    { sprite: 'armchair', x: 7.2, y: 7.0, width: 32 },
-  ],
-  astronomy: [
-    ...COURSE_COMMON,
-    { sprite: 'globe', x: 3.0, y: 0.8, width: 28 },
-    { sprite: 'chest', x: 6.6, y: 0.8, width: 30 },
-    { sprite: 'owl', x: 7.35, y: 7.2, width: 20 },
-  ],
+  potions: COURSE_COMMON,
+  botany: COURSE_COMMON,
+  history: COURSE_COMMON,
+  charms: COURSE_COMMON,
+  astronomy: COURSE_COMMON,
   flying: [
-    ...COURSE_COMMON,
-    { sprite: 'coatStand', x: 3.0, y: 0.7, width: 24 },
-    { sprite: 'chest', x: 6.6, y: 0.8, width: 30 },
-    { sprite: 'barrel', x: 7.35, y: 7.1, width: 22 },
+    { sprite: 'lamp', x: 0.6, y: 7.4, width: 18 },
+    { sprite: 'haystack', x: 16.8, y: 1.4, width: 36 },
+    { sprite: 'barrel', x: 0.7, y: 3.2, width: 20 },
   ],
-  divination: [
-    ...COURSE_COMMON,
-    { sprite: 'easel', x: 3.0, y: 0.8, width: 28 },
-    { sprite: 'armchair', x: 6.6, y: 0.9, width: 32 },
-    { sprite: 'owl', x: 7.35, y: 7.2, width: 20 },
-  ],
-  transfiguration: [
-    ...COURSE_COMMON,
-    { sprite: 'cat', x: 3.2, y: 0.9, width: 20 },
-    { sprite: 'chest', x: 6.6, y: 0.8, width: 30 },
-    { sprite: 'jarShelf', x: 7.4, y: 6.9, width: 30 },
-  ],
-  defense: [
-    ...COURSE_COMMON,
-    { sprite: 'chest', x: 3.1, y: 0.8, width: 30 },
-    { sprite: 'noticeBoard', x: 6.6, y: 0.8, width: 30 },
-    { sprite: 'candelabra', x: 7.35, y: 7.2, width: 22 },
-  ],
-  duel: [
-    ...COURSE_COMMON,
-    { sprite: 'candelabra', x: 3.0, y: 0.7, width: 22 },
-    { sprite: 'noticeBoard', x: 6.6, y: 0.8, width: 30 },
-    { sprite: 'chest', x: 7.35, y: 7.1, width: 28 },
-  ],
+  divination: COURSE_COMMON,
+  transfiguration: COURSE_COMMON,
+  defense: COURSE_COMMON,
+  duel: COURSE_COMMON,
   dorm: [
     { sprite: 'coatStand', x: 7.4, y: 0.7, width: 24 },
     { sprite: 'planterTree', x: 0.8, y: 7.3, width: 28 },

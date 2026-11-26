@@ -221,6 +221,60 @@
         "crest_azurea (Corvencre)",
         "crest_aurelis (Cerfronce)"
       ]
+    },
+    {
+      "asset_id": "f1f47702-8948-44b7-8a58-f9495795a00d",
+      "label": "mobilier spécial 1 (sortilèges, astronomie, balais, divination)",
+      "slices": [
+        "floatCandles",
+        "spellLectern",
+        "armillary",
+        "orrery",
+        "starChart",
+        "broomRack",
+        "flyRing",
+        "windSock",
+        "teaTable",
+        "cardTable",
+        "incense",
+        "mistMirror"
+      ]
+    },
+    {
+      "asset_id": "1a4ad8f5-14ce-4690-ae58-75ed42240f5a",
+      "label": "mobilier spécial 2 (duel, métamorphose, défense, potions)",
+      "slices": [
+        "wandRack",
+        "shieldTarget",
+        "duelBanner",
+        "owlCage",
+        "teapotTortoise",
+        "creatureJars",
+        "chainedCrate",
+        "runePillar",
+        "armorStand",
+        "herbRack",
+        "alembic",
+        "ingredients"
+      ]
+    },
+    {
+      "asset_id": "b91a8432-b8cd-426f-abb5-860b086d0a02",
+      "label": "mobilier spécial 3 (botanique, histoire, terrain de balais)",
+      "slices": [
+        "toolRack",
+        "snapPlant",
+        "glowCloche",
+        "pottingBench",
+        "worldMap",
+        "relicCase",
+        "runeTablet",
+        "scrollTable",
+        "bleachers",
+        "flyMarker",
+        "gearBench",
+        "lanternPost"
+      ]
     }
   ],
   "notes": "Planches découpées localement dans src/assets/sprites/. Les variantes *-unsorted.png sont des versions désaturées (élèves pas encore répartis). Les sprites teacherDeskM* sont des miroirs (bureau tourné vers les élèves). Ancienne planche tier-3 dorée (54244606…) remplacée. Index régénéré par `npm run assets`.",

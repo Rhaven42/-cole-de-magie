@@ -4,11 +4,13 @@ import type { SpriteName } from '../assets';
 import { ENVIRONMENTS, type EnvDef } from '../data/environments';
 import { HOUSE_IDS, HOUSES } from '../data/houses';
 import { FLOOR_TEXTURE, GARDENS, ISO, PLOT, PLOTS, ROOM_DECOR, ROOM_SCALE } from '../data/layout';
+import { COURSE_PROPS } from '../data/roomProps';
+import type { CourseId } from '../data/courses';
 import type { Station } from '../engine';
 import {
   courtyard,
   courtyardLamps,
-  examCorridor,
+  backCorridor,
   floorPoly,
   fountainPoint,
   GRID_X,
@@ -45,6 +47,8 @@ export interface RoomSnapshot {
   seats: Pt[];
   /** Palier visuel de chaque place (0, 1, 2). */
   seatTiers: number[];
+  /** Mobilier spécial débloqué. */
+  props: string[];
 }
 
 /** Tapis des salles de cours (teintes sourdes, une par matière). */
@@ -177,9 +181,9 @@ interface Outdoor {
   w: number;
 }
 
-/** Long couloir qui monte du fond de l'école jusqu'à la Salle des Examens. */
-function ExamCorridor({ env }: { env: EnvDef }) {
-  const c = examCorridor();
+/** Long couloir qui monte du fond de l'école jusqu'à un lieu du dernier rang. */
+function BackCorridor({ id, env }: { id: string; env: EnvDef }) {
+  const c = backCorridor(id);
   if (!c) return null;
   const tinted = env.id !== 'manor';
   const lamps: ReactElement[] = [];
@@ -201,7 +205,7 @@ function ExamCorridor({ env }: { env: EnvDef }) {
         fill="#585046"
       />
       <TexFloor
-        id="examCorridor"
+        id={`${id}-corridor`}
         gx={c.x - 1.3}
         gy={c.y0}
         w={2.6}
@@ -300,11 +304,6 @@ const LANDSCAPE: Placed[] = [
   { name: 'grove', x: 2.6, y: 18.5, w: 104 },
   { name: 'owlery', x: 33, y: 10, w: 80 },
   { name: 'wildGrass', x: 36.5, y: 14.5, w: 40 },
-  { name: 'campfire', x: 46.5, y: 12, w: 88 },
-  { name: 'targets', x: 55, y: 18, w: 76 },
-  { name: 'fenceM', x: 58.5, y: 13.4, w: 60 },
-  { name: 'fenceM', x: 64.5, y: 13.4, w: 60 },
-  { name: 'haystack', x: 63, y: 8.5, w: 82 },
   { name: 'swingOak', x: 72.5, y: 17.5, w: 100 },
   // Côté droit : serre et potager, kiosque, bordures fleuries le long du mur
   { name: 'flowerBorder', x: 65.9, y: 30, w: 66 },
@@ -345,7 +344,6 @@ const LANDSCAPE: Placed[] = [
   { name: 'flowerBed', x: 75.5, y: 59.5, w: 42 },
   { name: 'bush', x: 67.5, y: 51, w: 30 },
   { name: 'flowerBed', x: 76, y: 33.5, w: 40 },
-  { name: 'flowerBed', x: 41.5, y: 6.5, w: 42 },
   { name: 'bush', x: 29, y: 15.5, w: 30 },
   { name: 'flowerBed', x: 12.5, y: 94, w: 42 },
   { name: 'pumpkins', x: 67.5, y: 44.5, w: 36 },
@@ -476,7 +474,8 @@ function Ground({ env }: { env: EnvDef }) {
         fill="#7C7262"
       />
       <Polygon points={floorPoly(pathX + PATH_HALF, y1, 0.25, gateY + 1.1 - y1)} fill="#7C7262" />
-      <ExamCorridor env={env} />
+      <BackCorridor id="exam" env={env} />
+      <BackCorridor id="course-flying" env={env} />
       <Landscape env={env} front={false} />
       {yardEls}
       <Fountain p={iso(fountainPoint().x, fountainPoint().y)} />
@@ -613,23 +612,24 @@ function Garden({ px, py, env }: { px: number; py: number; env: EnvDef }) {
   );
 }
 
-function ConstructionPlot({ px, py, available }: { px: number; py: number; available: boolean }) {
-  const o = plotOrigin(px, py);
+function ConstructionPlot({ id, available }: { id: string; available: boolean }) {
+  const o = roomOrigin(PLOTS[id]);
+  const { w: W, h: H } = roomSize(id);
   return (
     <G opacity={available ? 1 : 0.6}>
       <TexFloor
-        id={`plot-${px}-${py}`}
+        id={`plot-${id}`}
         gx={o.x}
         gy={o.y}
-        w={S}
-        h={S}
+        w={W}
+        h={H}
         tex="grass"
         tile={4}
         tint="#8A7350"
         tintOpacity={0.35}
       />
       <Polygon
-        points={floorPoly(o.x, o.y, S, S)}
+        points={floorPoly(o.x, o.y, W, H)}
         fill="none"
         stroke={available ? '#E0B04A' : '#5E7A48'}
         strokeWidth={2}
@@ -821,6 +821,164 @@ function Porch({ ox, oy, w, h }: { ox: number; oy: number; w: number; h: number 
   );
 }
 
+/** Petit générateur pseudo-aléatoire stable (étoiles, herbe). */
+function rand(seed: number) {
+  let t = seed;
+  return () => {
+    t = (t * 9301 + 49297) % 233280;
+    return t / 233280;
+  };
+}
+
+/** Terrain de Balais volants : pelouse tondue en bandes, ligne blanche, clôture basse. */
+function OutdoorField({
+  id,
+  ox,
+  oy,
+  w,
+  h,
+}: {
+  id: string;
+  ox: number;
+  oy: number;
+  w: number;
+  h: number;
+}) {
+  const stripes: ReactElement[] = [];
+  for (let i = 0; i < w; i += 2)
+    stripes.push(
+      <Polygon
+        key={i}
+        points={floorPoly(ox + i, oy, Math.min(1, w - i), h)}
+        fill="#FFFFFF"
+        opacity={0.06}
+      />,
+    );
+  const posts: ReactElement[] = [];
+  for (let x = 0; x <= w; x += 2.2)
+    posts.push(
+      <Box key={`a${x}`} gx={ox + x - 0.1} gy={oy - 0.1} w={0.2} d={0.2} h={9} color="#6B4A30" />,
+    );
+  for (let y = 2.2; y <= h; y += 2.2)
+    posts.push(
+      <Box key={`b${y}`} gx={ox - 0.1} gy={oy + y - 0.1} w={0.2} d={0.2} h={9} color="#6B4A30" />,
+    );
+  return (
+    <G>
+      <TexFloor
+        id={`${id}-grass`}
+        gx={ox}
+        gy={oy}
+        w={w}
+        h={h}
+        tex="grass"
+        tile={3}
+        tint="#7FB069"
+        tintOpacity={0.25}
+      />
+      {stripes}
+      <Polygon
+        points={floorPoly(ox + 1, oy + 1, w - 2, h - 2)}
+        fill="none"
+        stroke="#F4F1E6"
+        strokeOpacity={0.7}
+        strokeWidth={1.5}
+      />
+      <Line
+        x1={iso(ox + w / 2, oy + 1).x}
+        y1={iso(ox + w / 2, oy + 1).y}
+        x2={iso(ox + w / 2, oy + h - 1).x}
+        y2={iso(ox + w / 2, oy + h - 1).y}
+        stroke="#F4F1E6"
+        strokeOpacity={0.6}
+        strokeWidth={1.2}
+      />
+      {/* clôture basse au fond (rails + poteaux) */}
+      <Line
+        x1={iso(ox, oy).x}
+        y1={iso(ox, oy).y - 6}
+        x2={iso(ox + w, oy).x}
+        y2={iso(ox + w, oy).y - 6}
+        stroke="#7A5434"
+        strokeWidth={2}
+      />
+      <Line
+        x1={iso(ox, oy).x}
+        y1={iso(ox, oy).y - 6}
+        x2={iso(ox, oy + h).x}
+        y2={iso(ox, oy + h).y - 6}
+        stroke="#7A5434"
+        strokeWidth={2}
+      />
+      {posts}
+    </G>
+  );
+}
+
+/** Salle d'Astronomie : sol en ciel étoilé lumineux (voûte peinte), étoiles scintillantes. */
+function StarryFloor({ ox, oy, w, h }: { ox: number; oy: number; w: number; h: number }) {
+  const r = rand(17);
+  const stars: ReactElement[] = [];
+  for (let i = 0; i < 70; i++) {
+    const p = iso(ox + 0.4 + r() * (w - 0.8), oy + 0.4 + r() * (h - 0.8));
+    const big = r() > 0.85;
+    stars.push(
+      <Circle
+        key={i}
+        cx={p.x}
+        cy={p.y}
+        r={big ? 1.6 : 0.8}
+        fill={big ? '#FFF6D0' : '#DDE8FF'}
+        opacity={0.55 + r() * 0.45}
+      />,
+    );
+  }
+  const c = iso(ox + w * 0.55, oy + h * 0.5);
+  return (
+    <G>
+      <Polygon points={floorPoly(ox, oy, w, h)} fill="#1F3D7A" opacity={0.72} />
+      <Ellipse cx={c.x} cy={c.y} rx={95} ry={45} fill="#5C8DE0" opacity={0.25} />
+      <Ellipse cx={c.x - 30} cy={c.y - 8} rx={60} ry={18} fill="#B9A6F0" opacity={0.14} />
+      {stars}
+      {/* constellation */}
+      <Path
+        d={`M${c.x - 40} ${c.y - 10} L${c.x - 15} ${c.y - 20} L${c.x + 10} ${c.y - 6} L${c.x + 35} ${c.y - 18}`}
+        stroke="#EAF0FF"
+        strokeOpacity={0.45}
+        strokeWidth={0.8}
+        fill="none"
+      />
+    </G>
+  );
+}
+
+/** Salle de Potions : pénombre, avec les lueurs vertes des chaudrons. */
+function DimRoom({
+  ox,
+  oy,
+  w,
+  h,
+  seats,
+}: {
+  ox: number;
+  oy: number;
+  w: number;
+  h: number;
+  seats: Pt[];
+}) {
+  return (
+    <G>
+      <Polygon points={floorPoly(ox, oy, w, h)} fill="#0A0E12" opacity={0.38} />
+      {seats.map((sp, i) => {
+        const p = iso(ox + sp.x, oy + sp.y);
+        return (
+          <Ellipse key={i} cx={p.x} cy={p.y - 6} rx={22} ry={11} fill="#7CFF8A" opacity={0.12} />
+        );
+      })}
+    </G>
+  );
+}
+
 function Room({ r, env }: { r: RoomSnapshot; env: EnvDef }) {
   const def = PLOTS[r.id];
   const o = roomOrigin(def);
@@ -893,6 +1051,10 @@ function Room({ r, env }: { r: RoomSnapshot; env: EnvDef }) {
       o.y + d.y * R,
       d.width,
     );
+  if (r.courseId)
+    for (const p of COURSE_PROPS[r.courseId as CourseId] ?? [])
+      if (!p.cost || r.props.includes(p.id))
+        decor(`p-${p.id}`, p.sprite as SpriteName, o.x + p.x * R, o.y + p.y * R, p.width);
   r.seats.forEach((sp, i) => {
     const gx = o.x + sp.x;
     const gy = o.y + sp.y;
@@ -908,6 +1070,13 @@ function Room({ r, env }: { r: RoomSnapshot; env: EnvDef }) {
   objects.sort((a, b) => a.order - b.order);
 
   const center = iso(o.x + RW / 2, o.y + RH / 2);
+  if (def.outdoor)
+    return (
+      <G>
+        <OutdoorField id={r.id} ox={o.x} oy={o.y} w={RW} h={RH} />
+        {objects.map((x) => x.el)}
+      </G>
+    );
   return (
     <G>
       <Walls id={r.id} ox={o.x} oy={o.y} w={RW} h={RH} env={env} />
@@ -921,6 +1090,7 @@ function Room({ r, env }: { r: RoomSnapshot; env: EnvDef }) {
         tintColor={def.floor}
         env={env}
       />
+      {r.courseId === 'astronomy' ? <StarryFloor ox={o.x} oy={o.y} w={RW} h={RH} /> : null}
       {r.kind === 'sorting' ? (
         <G>
           <Ellipse cx={center.x} cy={center.y} rx={50} ry={25} fill="#4B3B6E" opacity={0.85} />
@@ -943,7 +1113,7 @@ function Room({ r, env }: { r: RoomSnapshot; env: EnvDef }) {
           />
         </G>
       ) : null}
-      {isCourse || r.kind === 'exam' ? (
+      {(isCourse && r.courseId !== 'astronomy') || r.kind === 'exam' ? (
         <G>
           <Polygon
             points={floorPoly(o.x + 2.1 * R, o.y + 0.9 * R, RW - 3.4 * R, RH - 2.1 * R)}
@@ -986,6 +1156,9 @@ function Room({ r, env }: { r: RoomSnapshot; env: EnvDef }) {
       <WallShadow id={`${r.id}-shy`} axis="y" ox={o.x} oy={o.y} len={RH} />
       {wall}
       {objects.map((x) => x.el)}
+      {r.courseId === 'potions' ? (
+        <DimRoom ox={o.x} oy={o.y} w={RW} h={RH} seats={r.seats} />
+      ) : null}
       <FrontLips ox={o.x} oy={o.y} w={RW} h={RH} door={doorSide} />
       {doorSide === 'y' ? <Porch ox={o.x} oy={o.y} w={RW} h={RH} /> : null}
     </G>
@@ -1011,7 +1184,7 @@ function MapArtBase({ rooms, plots, env: envIndex }: Props) {
     if (p)
       items.push({
         order: p.px + p.py,
-        el: <ConstructionPlot key={pl.id} px={p.px} py={p.py} available={pl.available} />,
+        el: <ConstructionPlot key={pl.id} id={pl.id} available={pl.available} />,
       });
   }
   GARDENS.forEach((g, i) =>

@@ -37,6 +37,8 @@ export interface Station {
   pending: number;
   /** Fin de l'arrêt de la salle (explosion…), en temps de jeu. */
   closedUntil: number;
+  /** Mobilier spécial débloqué (ids de `COURSE_PROPS`). Absent = aucun. */
+  props?: string[];
 }
 
 export interface StationStats {

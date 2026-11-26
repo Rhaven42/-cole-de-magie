@@ -12,6 +12,7 @@ import {
   upgradeSeat,
   seatTier,
   upgradeTrack,
+  buyProp,
   setSortingBias,
   tick,
   collect,
@@ -95,6 +96,7 @@ interface Store {
   addSeat(id: string): boolean;
   upgradeSeat(id: string, seat: number): boolean;
   upgradeTrack(id: string, track: string): boolean;
+  buyProp(id: string, prop: string): boolean;
   buyCourse(id: CourseId): boolean;
   buyDorm(): boolean;
   setBias(h: HouseId | null): boolean;
@@ -378,6 +380,7 @@ export const useGame = create<Store>((set, get) => {
       return ok;
     },
     upgradeTrack: (id, tr) => purchased(upgradeTrack(get().game, id, tr)),
+    buyProp: (id, pr) => purchased(buyProp(get().game, id, pr)),
     buyCourse: (id) => purchased(buyCourse(get().game, id)),
     buyDorm: () => purchased(buyDorm(get().game)),
     setBias: (h) => purchased(setSortingBias(get().game, h)),

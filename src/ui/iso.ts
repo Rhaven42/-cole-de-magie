@@ -48,11 +48,17 @@ export function stationOrigin(id: string): Pt | null {
   return p ? roomOrigin(p) : null;
 }
 
-/** Couloir qui monte vers la Salle des Examens (de sa porte jusqu'au couloir du fond). */
-export function examCorridor(): { x: number; y0: number; y1: number } | null {
-  const d = doorOf('exam');
+/** Couloir qui monte du fond de l'école vers un lieu du dernier rang (Examens, terrain de Balais). */
+export function backCorridor(id: string): { x: number; y0: number; y1: number } | null {
+  if (!PLOTS[id] || PLOTS[id].py >= 0) return null;
+  const d = doorOf(id);
   if (!d) return null;
   return { x: d.outside.x, y0: d.outside.y - PLOT.gap / 2, y1: plotOrigin(0, 0).y - PLOT.gap / 2 };
+}
+
+/** Couloir de la Salle des Examens (compatibilité). */
+export function examCorridor() {
+  return backCorridor('exam');
 }
 
 /** Taille d'une salle en cases (les grandes salles occupent plusieurs parcelles). */

@@ -117,6 +117,7 @@ function snapshot(game: GameState) {
       level: s.level,
       seats: seatsOf(s),
       seatTiers: s.seats.map((x) => seatTier(x.level)),
+      props: s.props ?? [],
     };
   });
   const plots: { id: string; available: boolean }[] = [];
