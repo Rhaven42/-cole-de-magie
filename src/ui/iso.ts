@@ -171,6 +171,20 @@ function freeCorridorX(): number[] {
   );
 }
 
+/**
+ * Passage direct entre le fond de l'Accueil et l'avant du Salon des Destinées
+ * (même axe x) : les nouveaux élèves vont tout droit au Chaporacle.
+ */
+export function sortingPassage(): { x: number; yRec: number; ySort: number } | null {
+  const r = stationOrigin('reception');
+  const s = stationOrigin('sorting');
+  if (!r || !s) return null;
+  const x = s.x + roomSize('sorting').w / 2;
+  const rw = roomSize('reception').w;
+  if (x < r.x + 1 || x > r.x + rw - 1) return null;
+  return { x, yRec: r.y, ySort: s.y + roomSize('sorting').h };
+}
+
 /** Grille d'entrée de l'école. */
 /**
  * Cour d'entrée : le portail est à la pointe avant de la carte ; une allée en « L »
@@ -205,6 +219,15 @@ export function route(from: Anchor, to: Anchor): Pt[] {
   const toDoor = to.room ? doorOf(to.room) : null;
   // Même salle : déplacement direct à l'intérieur.
   if (from.room && from.room === to.room) return [to.g];
+  // Passage direct de l'Accueil vers le Chaporacle (porte au fond de l'Accueil).
+  const sp = sortingPassage();
+  if (sp && from.room === 'reception' && to.room === 'sorting')
+    return clean([
+      { x: sp.x, y: sp.yRec + 0.7 },
+      { x: sp.x, y: sp.yRec - 1 },
+      { x: sp.x, y: sp.ySort - 0.7 },
+      to.g,
+    ]);
   // Deux points de couloir alignés (allée, file d'attente) : ligne droite.
   if (!from.room && !to.room && (near(from.g.x, to.g.x) || near(from.g.y, to.g.y))) return [to.g];
   // Sur l'allée qui mène à une porte « y » (l'entrée) : tout droit jusqu'à la porte.

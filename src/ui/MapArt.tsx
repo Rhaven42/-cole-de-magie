@@ -11,6 +11,7 @@ import {
   courtyard,
   courtyardLamps,
   backCorridor,
+  sortingPassage,
   floorPoly,
   fountainPoint,
   GRID_X,
@@ -782,15 +783,29 @@ function FrontLips({
   w,
   h,
   door,
+  back = false,
 }: {
   ox: number;
   oy: number;
   w: number;
   h: number;
   door: 'x' | 'y';
+  back?: boolean;
 }) {
   const c = '#8A7F72';
   const gap = door === 'y' ? 3.2 : 0.75;
+  if (back) {
+    // Salon des Destinées : ouverture au milieu du muret avant (passage depuis l'Accueil).
+    const g = 1.4;
+    return (
+      <G>
+        <Box gx={ox + w - 0.18} gy={oy} w={0.18} d={h / 2 - gap} h={11} color={c} />
+        <Box gx={ox + w - 0.18} gy={oy + h / 2 + gap} w={0.18} d={h / 2 - gap} h={11} color={c} />
+        <Box gx={ox} gy={oy + h - 0.18} w={w / 2 - g} d={0.18} h={11} color={c} />
+        <Box gx={ox + w / 2 + g} gy={oy + h - 0.18} w={w / 2 - g} d={0.18} h={11} color={c} />
+      </G>
+    );
+  }
   if (door === 'y') {
     return (
       <G>
@@ -805,6 +820,42 @@ function FrontLips({
       <Box gx={ox + w - 0.18} gy={oy} w={0.18} d={h / 2 - gap} h={11} color={c} />
       <Box gx={ox + w - 0.18} gy={oy + h / 2 + gap} w={0.18} d={h / 2 - gap} h={11} color={c} />
       <Box gx={ox} gy={oy + h - 0.18} w={w} d={0.18} h={11} color={c} />
+    </G>
+  );
+}
+
+/** Grande porte voûtée au fond de l'Accueil, vers le Salon des Destinées, et son tapis. */
+function BackDoorway({ ox, oy }: { ox: number; oy: number }) {
+  const sp = sortingPassage();
+  if (!sp) return null;
+  const t = sp.x - ox;
+  return (
+    <G>
+      <WallQuad
+        axis="x"
+        ox={ox}
+        oy={oy}
+        t1={t - 1.5}
+        t2={t + 1.5}
+        h1={0}
+        h2={H - 6}
+        fill="#5A3A22"
+      />
+      <WallQuad
+        axis="x"
+        ox={ox}
+        oy={oy}
+        t1={t - 1.2}
+        t2={t + 1.2}
+        h1={0}
+        h2={H - 9}
+        fill="#1C120B"
+      />
+      <Polygon
+        points={floorPoly(sp.x - 0.9, sp.ySort - 1.5, 1.8, sp.yRec - sp.ySort + 4)}
+        fill="#7A2E34"
+        opacity={0.75}
+      />
     </G>
   );
 }
@@ -1152,6 +1203,7 @@ function Room({ r, env }: { r: RoomSnapshot; env: EnvDef }) {
           opacity={0.55}
         />
       ) : null}
+      {r.kind === 'reception' ? <BackDoorway ox={o.x} oy={o.y} /> : null}
       <WallShadow id={`${r.id}-shx`} axis="x" ox={o.x} oy={o.y} len={RW} />
       <WallShadow id={`${r.id}-shy`} axis="y" ox={o.x} oy={o.y} len={RH} />
       {wall}
@@ -1159,7 +1211,7 @@ function Room({ r, env }: { r: RoomSnapshot; env: EnvDef }) {
       {r.courseId === 'potions' ? (
         <DimRoom ox={o.x} oy={o.y} w={RW} h={RH} seats={r.seats} />
       ) : null}
-      <FrontLips ox={o.x} oy={o.y} w={RW} h={RH} door={doorSide} />
+      <FrontLips ox={o.x} oy={o.y} w={RW} h={RH} door={doorSide} back={r.kind === 'sorting'} />
       {doorSide === 'y' ? <Porch ox={o.x} oy={o.y} w={RW} h={RH} /> : null}
     </G>
   );

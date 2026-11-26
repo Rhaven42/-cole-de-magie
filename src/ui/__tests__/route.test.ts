@@ -64,4 +64,17 @@ describe('déplacements par les couloirs', () => {
     expect(pts.length).toBeGreaterThan(0);
     expect(pts[pts.length - 1]).toEqual({ x: d.outside.x, y: d.outside.y + 1 });
   });
+
+  it('de l’Accueil au Chaporacle : passage direct par la porte du fond', () => {
+    const r = stationOrigin('reception')!;
+    const so = stationOrigin('sorting')!;
+    const target = { x: so.x + 5, y: so.y + 4 };
+    const pts = route(
+      { g: { x: r.x + 17, y: r.y + 5 }, room: 'reception' },
+      { g: target, room: 'sorting' },
+    );
+    expect(pts.length).toBeLessThanOrEqual(4);
+    expect(pts.every((p, i) => i === pts.length - 1 || Math.abs(p.x - pts[0].x) < 0.01)).toBe(true);
+    expect(pts[pts.length - 1]).toEqual(target);
+  });
 });
