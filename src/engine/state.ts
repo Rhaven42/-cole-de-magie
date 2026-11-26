@@ -5,7 +5,7 @@ import { EVENT_RULES } from '../data/events';
 import { SERVICES, type ServiceKind } from '../data/stations';
 import type { GameState, Meta, Seat, Station, StationKind } from './types';
 
-export const SCHEMA_VERSION = 2;
+export const SCHEMA_VERSION = 3;
 
 export function makeSeat(level = 1): Seat {
   return { level, occupant: null, remaining: 0, total: 0 };
@@ -54,6 +54,7 @@ export function createGame(seed = 1, now = 0, meta: Meta = defaultMeta()): GameS
     makeCourseStation('potions'),
     makeServiceStation('hall'),
     makeServiceStation('dorm', 0),
+    makeServiceStation('exam'),
   ];
   return {
     schemaVersion: SCHEMA_VERSION,

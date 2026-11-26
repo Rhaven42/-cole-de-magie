@@ -40,6 +40,7 @@ export const fr = {
   'service.sorting': 'Salon des Destinées',
   'service.hall': 'Grande Salle',
   'service.dorm': 'Dortoir {n}',
+  'service.exam': 'Salle des Examens',
 
   'seat.cauldron': 'Chaudron',
   'seat.plant': 'Plant',
@@ -54,6 +55,7 @@ export const fr = {
   'seat.stool': 'Tabouret',
   'seat.tableSeat': 'Place à table',
   'seat.bed': 'Lit',
+  'seat.examDesk': 'Table d’examen',
   'seat.counter': 'Guichet',
 
   'track.waitingRoom': 'Salle d’attente confortable',
@@ -65,6 +67,8 @@ export const fr = {
   'track.starryCeiling': 'Plafond étoilé',
   'track.houseTables': 'Tables de Maison',
   'track.rugs': 'Tapis & rideaux',
+  'track.proctors': 'Surveillants d’examen',
+  'track.silence': 'Sortilège de silence',
   'track.fireplace': 'Cheminée',
 
   'effect.patience': '+{v} s de patience',

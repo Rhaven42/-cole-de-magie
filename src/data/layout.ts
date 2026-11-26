@@ -16,7 +16,7 @@ export const ISO = {
 };
 
 /** front : profondeur de la cour d'entrée devant l'école (portail, allée, jardin). */
-export const PLOT = { size: 10, gap: 2, cols: 5, rows: 4, margin: 5, front: 13 };
+export const PLOT = { size: 10, gap: 2, cols: 5, rows: 4, margin: 5, front: 13, top: 18 };
 
 /** Échelle des aménagements intérieurs (conçus pour une salle de 8 cases). */
 export const ROOM_SCALE = PLOT.size / 8;
@@ -26,6 +26,9 @@ export interface PlotDef {
   py: number;
   /** Nombre de parcelles occupées le long de x (grande salle sur 2 parcelles). */
   spanX?: number;
+  /** Décalage (cases) de la salle par rapport à sa parcelle. */
+  shiftX?: number;
+  shiftY?: number;
   /** Côté de la porte : 'x' = face avant droite (défaut), 'y' = face avant gauche (entrée). */
   door?: 'x' | 'y';
   /** Couleur du sol (tapis / dalles). */
@@ -48,6 +51,8 @@ export const PLOTS: Record<string, PlotDef> = {
   'course-transfiguration': { px: 2, py: 1, floor: '#5E7C82', floorAlt: '#557177' },
   'course-defense': { px: 0, py: 0, floor: '#6B3A3A', floorAlt: '#603434' },
   'course-duel': { px: 1, py: 1, floor: '#7A4B3A', floorAlt: '#6C4233' },
+  // Tout en haut : la Salle des Examens, au bout d'un long couloir (centrée sur un axe de couloir).
+  exam: { px: 0, py: -1, shiftX: 6, shiftY: -6, door: 'y', floor: '#6E6250', floorAlt: '#625746' },
   'dorm-0': { px: 4, py: 1, floor: '#4A5A8C', floorAlt: '#42517F' },
   'dorm-1': { px: 3, py: 1, floor: '#4A5A8C', floorAlt: '#42517F' },
   'dorm-2': { px: 4, py: 0, floor: '#4A5A8C', floorAlt: '#42517F' },
@@ -161,6 +166,14 @@ export const ROOM_DECOR: Record<string, DecorItem[]> = {
     { sprite: 'globe', x: 21.0, y: 5.0, width: 26 },
     { sprite: 'candelabra', x: 1.2, y: 9.0, width: 22 },
   ],
+  exam: [
+    { sprite: 'clock', x: 0.6, y: 1.2, width: 22 },
+    { sprite: 'bookshelf', x: 0.6, y: 6.8, width: 30 },
+    { sprite: 'candelabra', x: 7.3, y: 0.8, width: 22 },
+    { sprite: 'candelabra', x: 7.3, y: 7.2, width: 22 },
+    { sprite: 'books', x: 1.2, y: 7.4, width: 26 },
+    { sprite: 'owl', x: 3.0, y: 0.6, width: 20 },
+  ],
   sorting: [
     { sprite: 'candelabra', x: 1.0, y: 1.0, width: 22 },
     { sprite: 'candelabra', x: 1.0, y: 7.0, width: 22 },
@@ -177,4 +190,5 @@ export const FLOOR_TEXTURE: Record<string, { tex: 'wood' | 'stone' | 'carpet'; t
   hall: { tex: 'stone', tile: 4 },
   reception: { tex: 'stone', tile: 4 },
   sorting: { tex: 'carpet', tile: 3 },
+  exam: { tex: 'stone', tile: 4 },
 };

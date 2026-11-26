@@ -87,7 +87,9 @@ describe('migration v1 → v2', () => {
     v1.coins = 1234;
     v1.students = { 1: { id: 1, name: 'Test', activity: { mode: 'free', since: 0 } } };
     const g = deserialize(JSON.stringify(v1))!;
-    expect(g.schemaVersion).toBe(2);
+    expect(g.schemaVersion).toBe(3);
+    expect(g.stations.exam).toBeDefined();
+    expect(g.stationOrder).toContain('exam');
     expect(g.coins).toBe(1234);
     expect(g.meta.prestige).toBe(0);
     expect(g.stations.reception.pending).toBe(0);

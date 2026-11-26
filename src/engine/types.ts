@@ -4,7 +4,7 @@ import type { TraitId } from '../data/traits';
 import type { CareerId } from '../data/progression';
 import type { EventId, TimedEventId } from '../data/events';
 
-export type StationKind = 'reception' | 'sorting' | 'hall' | 'dorm' | 'course';
+export type StationKind = 'reception' | 'sorting' | 'hall' | 'dorm' | 'course' | 'exam';
 
 export interface Seat {
   /** Qualité de la place, 1→5. */
@@ -78,6 +78,8 @@ export interface Student {
   mood: number;
   trait: TraitId;
   arrivedAt: number;
+  /** 7e année terminée : doit passer l'examen final avant le diplôme. */
+  graduating?: boolean;
   activity: Activity;
 }
 

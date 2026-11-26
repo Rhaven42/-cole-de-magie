@@ -78,6 +78,33 @@
       "asset_id": "e84886f5-7dbb-4db8-9a8a-50d8c6caa055",
       "label": "students-back + ghost",
       "slices": ["<maison>-<0|1>-back", "ghost"]
+    },
+    {
+      "asset_id": "7d9781b8-da43-49c7-abe9-bb9957bc0409",
+      "label": "outdoor",
+      "slices": [
+        "lamp",
+        "hedge",
+        "flowerBed",
+        "statue",
+        "well",
+        "signpost",
+        "wheelbarrow",
+        "oak",
+        "pine",
+        "bush",
+        "rocks",
+        "parkBench",
+        "birdbath",
+        "pumpkins",
+        "picnic",
+        "owlPost"
+      ]
+    },
+    {
+      "asset_id": "e8a94f7b-123a-4299-9bec-53005426725f",
+      "label": "students-civilian + owl flying",
+      "slices": ["<maison>-<0|1>-unsorted", "owlFly"]
     }
   ],
   "notes": "Planches découpées localement dans src/assets/sprites/. Les variantes *-unsorted.png sont des versions désaturées (élèves pas encore répartis). Les sprites teacherDeskM* sont des miroirs (bureau tourné vers les élèves). Ancienne planche tier-3 dorée (54244606…) remplacée. Index régénéré par `npm run assets`.",

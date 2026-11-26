@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.9.0 — Grande entrée, examen final, école vivante
+
+- **Grande entrée** : le portail est à l'avant de la carte ; une allée droite, bordée de lampadaires, de haies et de massifs, mène au **grand Accueil** (2 parcelles), qui a un **porche à colonnes et fronton**. La cour d'entrée accueille une fontaine, une statue, des bancs, un puits, des arbres et un potager.
+- **Élèves en civil** (jean, pulls, sacs à dos, petite valise) jusqu'à leur répartition dans une Maison.
+- **Salle des Examens** tout en haut de l'école, au bout d'un long couloir au tapis rouge : à la fin de leur 7e année, les élèves y passent l'examen final, qui décide de leur métier (Gardien·ne des Arcanes, Oracle, Alchimiste…). Le diplôme est remis ensuite.
+- **L'école vit** : nuages qui passent, hiboux qui volent, chat qui fait sa ronde dans les couloirs, vapeur des chaudrons, feu de la Grande Salle, reflets de la fontaine.
+- **Cycle jour/nuit** (10 min de jeu) : crépuscule, nuit bleutée avec les lampadaires allumés, aube. Icône ☀️/🌙 dans le bandeau. L'Astronomie rapporte ×1,5 la nuit.
+- Arbres, sapins, buissons, rochers et citrouilles autour de l'école (planche « extérieur » SpriteCook).
+- Sauvegarde v3 (ajout de la Salle des Examens).
+
 ## 0.8.0 — Plan de l'école réorganisé
 
 - **Salles plus grandes** (10 × 10 cases au lieu de 8 × 8) et couloirs plus larges ; les aménagements s'espacent en proportion.

@@ -2,7 +2,7 @@ import { ISO, PLOT, PLOTS, ROOM_SCALE } from '../data/layout';
 
 /** Taille de la grille complète, en tuiles. */
 export const GRID_X = PLOT.margin + PLOT.front + PLOT.cols * (PLOT.size + PLOT.gap);
-export const GRID_Y = PLOT.margin + PLOT.front + PLOT.rows * (PLOT.size + PLOT.gap);
+export const GRID_Y = PLOT.margin + PLOT.top + PLOT.front + PLOT.rows * (PLOT.size + PLOT.gap);
 
 export const OFFSET_X = GRID_Y * (ISO.tileW / 2);
 export const OFFSET_Y = ISO.wallH + 30;
@@ -33,13 +33,26 @@ export function unIso(x: number, y: number): Pt {
 export function plotOrigin(px: number, py: number): Pt {
   return {
     x: PLOT.margin + px * (PLOT.size + PLOT.gap),
-    y: PLOT.margin + py * (PLOT.size + PLOT.gap),
+    y: PLOT.margin + PLOT.top + py * (PLOT.size + PLOT.gap),
   };
+}
+
+/** Origine d'une salle : sa parcelle, plus un éventuel décalage. */
+export function roomOrigin(p: { px: number; py: number; shiftX?: number; shiftY?: number }): Pt {
+  const o = plotOrigin(p.px, p.py);
+  return { x: o.x + (p.shiftX ?? 0), y: o.y + (p.shiftY ?? 0) };
 }
 
 export function stationOrigin(id: string): Pt | null {
   const p = PLOTS[id];
-  return p ? plotOrigin(p.px, p.py) : null;
+  return p ? roomOrigin(p) : null;
+}
+
+/** Couloir qui monte vers la Salle des Examens (de sa porte jusqu'au couloir du fond). */
+export function examCorridor(): { x: number; y0: number; y1: number } | null {
+  const d = doorOf('exam');
+  if (!d) return null;
+  return { x: d.outside.x, y0: d.outside.y - PLOT.gap / 2, y1: plotOrigin(0, 0).y - PLOT.gap / 2 };
 }
 
 /** Taille d'une salle en cases (les grandes salles occupent plusieurs parcelles). */
@@ -60,7 +73,7 @@ export function floorPoly(gx: number, gy: number, w: number, h: number): string 
 /** Lieu (id) situé sous un point de la grille, ou null. */
 export function hitPlot(g: Pt): string | null {
   for (const [id, p] of Object.entries(PLOTS)) {
-    const o = plotOrigin(p.px, p.py);
+    const o = roomOrigin(p);
     const { w, h } = roomSize(id);
     if (g.x >= o.x && g.x <= o.x + w && g.y >= o.y && g.y <= o.y + h) return id;
   }

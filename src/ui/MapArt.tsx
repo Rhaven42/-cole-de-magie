@@ -8,6 +8,7 @@ import type { Station } from '../engine';
 import {
   courtyard,
   courtyardLamps,
+  examCorridor,
   floorPoly,
   fountainPoint,
   GRID_X,
@@ -16,6 +17,7 @@ import {
   MAP_H,
   MAP_W,
   plotOrigin,
+  roomOrigin,
   poly,
   roomSize,
   type Pt,
@@ -125,6 +127,46 @@ interface Outdoor {
   x: number;
   y: number;
   w: number;
+}
+
+/** Long couloir qui monte du fond de l'école jusqu'à la Salle des Examens. */
+function ExamCorridor({ env }: { env: EnvDef }) {
+  const c = examCorridor();
+  if (!c) return null;
+  const tinted = env.id !== 'manor';
+  const lamps: ReactElement[] = [];
+  for (let y = c.y0 + 1.2; y < c.y1 - 0.8; y += 2.6) {
+    lamps.push(
+      <Decor key={`a${y}`} name="candelabra" p={iso(c.x - 1.5, y)} width={20} />,
+      <Decor key={`b${y}`} name="candelabra" p={iso(c.x + 1.5, y + 1.3)} width={20} />,
+    );
+  }
+  return (
+    <G>
+      <Polygon
+        points={poly([
+          iso(c.x + 1.3, c.y0),
+          iso(c.x + 1.3, c.y1),
+          drop(iso(c.x + 1.3, c.y1), 8),
+          drop(iso(c.x + 1.3, c.y0), 8),
+        ])}
+        fill="#585046"
+      />
+      <TexFloor
+        id="examCorridor"
+        gx={c.x - 1.3}
+        gy={c.y0}
+        w={2.6}
+        h={c.y1 - c.y0}
+        tex="wood"
+        tile={2.5}
+        tint={tinted ? env.corridor : '#2B1A0E'}
+        tintOpacity={tinted ? 0.45 : 0.18}
+      />
+      <Polygon points={floorPoly(c.x - 0.5, c.y0, 1, c.y1 - c.y0)} fill="#6B1F2A" opacity={0.7} />
+      {lamps}
+    </G>
+  );
 }
 
 /** Arbres autour de l'école (le décor change selon l'environnement). */
@@ -264,6 +306,7 @@ function Ground({ env }: { env: EnvDef }) {
         tint={env.path}
         tintOpacity={tinted ? 0.4 : 0}
       />
+      <ExamCorridor env={env} />
       <Perimeter env={env} />
       {yardEls}
       <Fountain p={iso(fountainPoint().x, fountainPoint().y)} />
@@ -559,7 +602,7 @@ function Porch({ ox, oy, w, h }: { ox: number; oy: number; w: number; h: number 
 
 function Room({ r, env }: { r: RoomSnapshot; env: EnvDef }) {
   const def = PLOTS[r.id];
-  const o = plotOrigin(def.px, def.py);
+  const o = roomOrigin(def);
   const { w: RW, h: RH } = roomSize(r.id);
   const doorSide = def.door ?? 'x';
   const t = tier(r.level);
@@ -591,7 +634,7 @@ function Room({ r, env }: { r: RoomSnapshot; env: EnvDef }) {
       ),
     );
 
-  if (isCourse) {
+  if (isCourse || r.kind === 'exam') {
     // Tableau sur chevalet et bureau du professeur, tournés vers les élèves.
     decor('board', 'easel', o.x + 0.9 * R, o.y + 2.4 * R, 34);
     decor('desk', tiered('teacherDeskM' as SpriteName, t), o.x + 1.25 * R, o.y + 4.2 * R, 50);

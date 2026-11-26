@@ -34,7 +34,7 @@ import {
   iso,
   MAP_H,
   MAP_W,
-  plotOrigin,
+  roomOrigin,
   queueSpotFor,
   roomSize,
   seatPos,
@@ -71,12 +71,13 @@ function placeStudents(game: GameState): Placed[] {
   for (const st of Object.values(game.stations)) {
     const def = PLOTS[st.id];
     if (!def) continue;
-    const o = plotOrigin(def.px, def.py);
+    const o = roomOrigin(def);
     st.seats.forEach((seat, i) => {
       if (seat.occupant === null) return;
       const sp = seatPos(st.kind, i, seat.pos);
       // En classe, l'élève se tient derrière son poste, tourné vers le tableau (vu de dos).
-      const course = st.kind === 'course';
+      // En classe et à l'examen, l'élève est tourné vers le professeur (vu de dos).
+      const course = st.kind === 'course' || st.kind === 'exam';
       const dx = st.kind === 'dorm' ? -0.2 : st.kind === 'hall' ? 0 : course ? 0.6 : 0.35;
       const dy = st.kind === 'hall' ? 0 : course ? 0.15 : 0.1;
       out.push({
@@ -129,7 +130,7 @@ function snapshot(game: GameState) {
 
 function roomCenter(id: string): Pt {
   const def = PLOTS[id];
-  const o = plotOrigin(def.px, def.py);
+  const o = roomOrigin(def);
   const { w, h } = roomSize(id);
   return iso(o.x + w / 2, o.y + h / 2);
 }
@@ -137,14 +138,14 @@ function roomCenter(id: string): Pt {
 /** Position du coffre (écran carte) : coin avant de la salle. */
 function cofferPos(id: string): Pt {
   const def = PLOTS[id];
-  const o = plotOrigin(def.px, def.py);
+  const o = roomOrigin(def);
   const p = iso(o.x + PLOT.size - 1.2, o.y + PLOT.size * 0.42);
   return { x: p.x, y: p.y - 22 };
 }
 
 function RoomLabel({ st, managed }: { st: Station; managed: boolean }) {
   const def = PLOTS[st.id];
-  const o = plotOrigin(def.px, def.py);
+  const o = roomOrigin(def);
   // Panneau posé devant le coin avant de la salle (dans le couloir).
   const { w: rw, h: rh } = roomSize(st.id);
   const front = iso(o.x + rw - PLOT.size * 0.2, o.y + rh - PLOT.size * 0.2);
@@ -201,7 +202,7 @@ function BuildSign({ id, game }: { id: string; game: GameState }) {
 /** Méliandre sur son piédestal, au centre du Salon des Destinées. */
 function SortingHat({ game }: { game: GameState }) {
   const st = game.stations.sorting;
-  const o = plotOrigin(PLOTS.sorting.px, PLOTS.sorting.py);
+  const o = roomOrigin(PLOTS.sorting);
   const c = iso(o.x + PLOT.size / 2, o.y + PLOT.size / 2);
   const busy = st.seats.some((x) => x.occupant !== null);
   return (

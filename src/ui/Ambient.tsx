@@ -70,7 +70,7 @@ function Owl({ y, duration, delay }: { y: number; duration: number; delay: numbe
   const bob = useLoop(700, 0, Easing.inOut(Easing.sin));
   const x = v.interpolate({ inputRange: [0, 1], outputRange: [MAP_W + 60, -120] });
   const dy = bob.interpolate({ inputRange: [0, 0.5, 1], outputRange: [0, -10, 0] });
-  const d = SPRITES.owl;
+  const d = SPRITES.owlFly;
   return (
     <Animated.View
       pointerEvents="none"

@@ -7,7 +7,7 @@ import { HAT_LINES_FR } from '../i18n/fr';
 import { EVENT_RULES } from '../data/events';
 import { handleEvents, isClosed, startEvent } from './events';
 import { deposit } from './meta';
-import { advanceYear, handleDonations } from './progression';
+import { advanceYear, graduate, handleDonations } from './progression';
 import {
   arrivalInterval,
   courseReward,
@@ -158,7 +158,9 @@ export function chooseCourse(state: GameState, s: Student): Station | null {
 
 function decide(state: GameState, s: Student): void {
   let target: Station | null;
-  if (s.fatigue >= NEEDS.fatigueThreshold) {
+  if (s.graduating && state.stations.exam) {
+    target = state.stations.exam;
+  } else if (s.fatigue >= NEEDS.fatigueThreshold) {
     const dorms = Object.values(state.stations).filter((st) => st.kind === 'dorm');
     target = bestOf(dorms, (st) => -estimatedWait(st));
   } else if (s.hunger >= NEEDS.hungerThreshold) {
@@ -200,6 +202,10 @@ function complete(
       });
       break;
     }
+    case 'exam':
+      // Examen réussi : diplôme et métier, l'élève quitte l'école.
+      graduate(state, s, events);
+      return;
     case 'hall':
       s.hunger = 0;
       s.mood = clamp(s.mood + NEEDS.moodOnMeal);

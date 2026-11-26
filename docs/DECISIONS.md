@@ -82,3 +82,12 @@ Temps réel = `base × 0,96^(niv−1) × (1 − 0,05·(niveauPlace−1)) × (1 �
 - **Murs bas** (22 px) partout : chaque salle est bordée de couloirs, et des murs hauts cachaient les élèves qui marchaient derrière. La texture murale n'y montre que le lambris. Ce qui était accroché aux murs devient des objets posés (tableau sur chevalet) ou des tentures basses.
 
 - **Plan 0.8.0** : parcelles de 10 cases, couloirs de 2 cases. Les positions intérieures (places, décor) sont définies pour 8 cases et multipliées par `ROOM_SCALE` (`src/data/layout.ts`). Les places déjà déplacées par le joueur gardent leurs coordonnées, qui restent dans la zone autorisée.
+
+## Mise à jour 0.9.0
+
+- **Entrée** : l'Accueil occupe 2 parcelles (`spanX: 2`) et sa porte est sur la face avant gauche (`door: 'y'`). Le portail est au bout d'une allée droite. Pour les portes « y », `route()` rejoint d'abord un axe de couloir libre (qui ne passe pas sous une grande salle). Sur l'allée, la file d'attente et les arrivées vont tout droit jusqu'au porche.
+- **Examen final** : à la fin de la 7e année, `graduating = true` ; l'élève va alors en priorité à la Salle des Examens (lieu de service générique, 4 places, 30 s). Le diplôme et le métier sont attribués à la fin de l'examen. Migration v2 → v3.
+- **Salle des Examens** : parcelle (0, −1) décalée (`shiftX/shiftY`) pour que sa porte soit sur un axe de couloir. Elle est reliée au couloir du fond par un long couloir (`examCorridor()`).
+- **Vie** (`src/ui/Ambient.tsx`) : animations natives en boucle, purement visuelles, qui ne touchent pas à la simulation.
+- **Jour/nuit** (`src/data/daynight.ts`) : la phase dépend du temps de jeu, donc reste déterministe ; bonus de nuit de l'Astronomie.
+- Crédits SpriteCook restants : 672 (planches « extérieur » et « élèves en civil » ajoutées).

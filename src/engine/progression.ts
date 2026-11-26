@@ -37,8 +37,9 @@ export function advanceYear(state: GameState, s: Student, events: GameEvent[]): 
     events.push({ type: 'yearUp', studentId: s.id, name: s.name, year: s.year, coins });
     return false;
   }
-  graduate(state, s, events);
-  return true;
+  // 7e année terminée : direction la Salle des Examens (le métier se décide à l'examen).
+  s.graduating = true;
+  return false;
 }
 
 export function graduate(state: GameState, s: Student, events: GameEvent[]): void {

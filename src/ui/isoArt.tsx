@@ -266,6 +266,7 @@ const SEAT_SPRITES: Record<string, { name: SpriteName; width: number; lift: numb
   dorm: { name: 'bed', width: 46, lift: 12 },
   reception: { name: 'counter', width: 44, lift: 10 },
   sorting: { name: 'stool', width: 18, lift: 4 },
+  exam: { name: 'desk', width: 40, lift: 8 },
 };
 
 export function Furniture({

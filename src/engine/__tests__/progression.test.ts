@@ -7,7 +7,8 @@ import {
   handleDonations,
 } from '../progression';
 import { courseReward, serviceTime } from '../modifiers';
-import { addStudent, quietGame } from './helpers';
+import { addStudent, quietGame, run } from './helpers';
+import { tick } from '../tick';
 import type { GameEvent } from '../types';
 
 describe('années, diplômes et métiers', () => {
@@ -23,16 +24,32 @@ describe('années, diplômes et métiers', () => {
     expect(events[0]).toMatchObject({ type: 'yearUp', year: 2 });
   });
 
-  it('diplôme en fin de 7e année : bonus, réputation, métier, ancien élève', () => {
+  it('fin de 7e année : l’élève part passer l’examen final', () => {
     const g = quietGame(11);
     const s = addStudent(g, {
       year: 7,
       yearPassed: coursesForYear(7) - 1,
       passedBy: { defense: 9, potions: 3 },
     });
-    const events: GameEvent[] = [];
+    expect(advanceYear(g, s, [])).toBe(false);
+    expect(s.graduating).toBe(true);
+    expect(g.students[s.id]).toBeDefined();
+  });
+
+  it('examen réussi : diplôme, réputation, métier, ancien élève', () => {
+    const g = quietGame(11);
+    const s = addStudent(g, {
+      year: 7,
+      graduating: true,
+      house: 'pyrraxe',
+      passedBy: { defense: 9, potions: 3 },
+    });
+    g.stations.reception.queue = [];
+    s.activity = { mode: 'free', since: 0 };
     const rep = g.reputation;
-    expect(advanceYear(g, s, events)).toBe(true);
+    tick(g);
+    expect(s.activity).toMatchObject({ stationId: 'exam' });
+    const events = run(g, 31);
     expect(g.students[s.id]).toBeUndefined();
     expect(g.totals.graduated).toBe(1);
     expect(g.meta.lifetimeGraduates).toBe(1);

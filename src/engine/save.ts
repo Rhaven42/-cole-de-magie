@@ -1,4 +1,4 @@
-import { SCHEMA_VERSION } from './state';
+import { makeServiceStation, SCHEMA_VERSION } from './state';
 import type { GameState } from './types';
 
 /** Migrations de schéma : version N → N+1. Ne jamais casser une sauvegarde. */
@@ -33,6 +33,16 @@ export const MIGRATIONS: Record<number, Migration> = {
         lifetimeGraduates: 0,
       },
       schemaVersion: 2,
+    };
+  },
+  /** v2 → v3 : Salle des Examens (examen final avant le diplôme). */
+  2: (raw) => {
+    const exam = makeServiceStation('exam');
+    return {
+      ...raw,
+      stations: { ...raw.stations, exam },
+      stationOrder: [...raw.stationOrder, 'exam'],
+      schemaVersion: 3,
     };
   },
 };

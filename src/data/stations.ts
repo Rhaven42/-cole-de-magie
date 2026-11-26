@@ -2,7 +2,7 @@
  * Lieux « de service » génériques (§5 bis) : Accueil, Salon des Destinées,
  * Grande Salle, Dortoirs. Les salles de cours utilisent `courses.ts`.
  */
-export type ServiceKind = 'reception' | 'sorting' | 'hall' | 'dorm';
+export type ServiceKind = 'reception' | 'sorting' | 'hall' | 'dorm' | 'exam';
 
 /** Effets possibles d'une piste d'amélioration spécifique. */
 export type UpgradeEffect =
@@ -136,6 +136,36 @@ export const SERVICES: Record<ServiceKind, ServiceDef> = {
         costBase: 200,
         costGrowth: 2,
         effect: { type: 'mood', perLevel: 4 },
+      },
+    ],
+  },
+  /** Salle des Examens : examen final des 7e années, qui décide de leur métier. */
+  exam: {
+    kind: 'exam',
+    icon: '📝',
+    seatKey: 'examDesk',
+    seats: 4,
+    maxSeats: 12,
+    duration: 30,
+    upgradeBase: 400,
+    seatPrice: 600,
+    wall: '#5A4A3A',
+    tracks: [
+      {
+        id: 'proctors',
+        icon: '🧐',
+        maxLevel: 5,
+        costBase: 800,
+        costGrowth: 2,
+        effect: { type: 'time', perLevel: 0.08 },
+      },
+      {
+        id: 'silence',
+        icon: '🤫',
+        maxLevel: 5,
+        costBase: 600,
+        costGrowth: 1.9,
+        effect: { type: 'comfort', perLevel: 3 },
       },
     ],
   },
