@@ -173,22 +173,25 @@
       "role": "Sortilèges"
     },
     {
-      "asset_id": "a60523d1-c563-40ad-a436-ba2ac72795c9",
+      "asset_id": "4b72c174-4b9c-4123-bf22-f75d4181becc",
       "name": "Tenarius D'Arvay",
       "file": "portraits/tenarius.png",
-      "role": "Métamorphose"
+      "role": "Métamorphose",
+      "note": "source pleine résolution (raw), recadrée avec marge"
     },
     {
-      "asset_id": "0afde667-79b4-4e8e-bb2d-846e05700e02",
+      "asset_id": "785ef399-c361-490b-8ace-f2ad450518bc",
       "name": "Harvald Brennoch",
       "file": "portraits/harvald.png",
-      "role": "Défense contre les Forces du Mal"
+      "role": "Défense contre les Forces du Mal",
+      "note": "source pleine résolution (raw), recadrée avec marge"
     },
     {
-      "asset_id": "742e1f6d-6321-4938-a131-f99839984f6b",
+      "asset_id": "c484779e-43e6-42f5-a3dd-374f1452c6a9",
       "name": "Rhaven Morvard",
       "file": "portraits/rhaven.png",
-      "role": "Divination"
+      "role": "Divination",
+      "note": "source pleine résolution (raw), recadrée avec marge"
     },
     {
       "asset_id": "f4580aff-8499-4be8-a84b-91694583036e",
@@ -197,16 +200,18 @@
       "role": "Histoire de la magie"
     },
     {
-      "asset_id": "78952aa2-4659-45a7-bfbc-e5a563db8589",
+      "asset_id": "01ca4468-b183-4cfb-b913-c485964ee5e3",
       "name": "Delan Lanatre",
       "file": "portraits/delan.png",
-      "role": "Duel"
+      "role": "Duel",
+      "note": "source pleine résolution (raw), recadrée avec marge"
     },
     {
-      "asset_id": "851b7839-8abf-4759-aad8-618292e385e2",
+      "asset_id": "4118fe30-098e-4b91-8580-ad58a0a6e20f",
       "name": "Alva Ilan Arsolle",
       "file": "portraits/alva.png",
-      "role": "Astronomie"
+      "role": "Astronomie",
+      "note": "source pleine résolution (raw), recadrée avec marge"
     },
     {
       "asset_id": "d019dfa4-1882-4a33-936a-034f20bd3835",
