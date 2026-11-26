@@ -9,7 +9,7 @@ import type { CourseId } from './courses';
 export interface ProfessorName {
   firstName: string | null;
   lastName: string | null;
-  /** Titre ou surnom (ex. « le Chevalier du Sinople »). */
+  /** Titre ou surnom. */
   title?: string;
   gender?: 'f' | 'm';
 }
