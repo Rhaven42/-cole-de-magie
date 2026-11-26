@@ -167,7 +167,7 @@
     },
     {
       "asset_id": "0afde667-79b4-4e8e-bb2d-846e05700e02",
-      "name": "Harvald",
+      "name": "Harvald Brennoch",
       "file": "portraits/harvald.png",
       "role": "Défense contre les Forces du Mal"
     },
@@ -179,7 +179,7 @@
     },
     {
       "asset_id": "f4580aff-8499-4be8-a84b-91694583036e",
-      "name": "Morgenvar",
+      "name": "Morgenvar Kaldrec",
       "file": "portraits/morgenvar.png",
       "role": "Histoire de la magie"
     },
@@ -197,7 +197,7 @@
     },
     {
       "asset_id": "d019dfa4-1882-4a33-936a-034f20bd3835",
-      "name": "Dolohov",
+      "name": "Corvin Dolmar",
       "file": "portraits/dolohov.png",
       "role": "Potions",
       "note": "source pleine résolution (raw), recadrée avec marge"

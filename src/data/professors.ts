@@ -15,16 +15,16 @@ export interface ProfessorName {
 }
 
 export const NAMED_PROFESSORS: Partial<Record<CourseId, ProfessorName>> = {
-  defense: { firstName: 'Harvald', lastName: null, gender: 'm' },
+  defense: { firstName: 'Harvald', lastName: 'Brennoch', gender: 'm' },
   charms: { firstName: 'Taladon', lastName: 'Morvard', gender: 'm' },
   transfiguration: { firstName: 'Tenarius', lastName: 'D’Arvay', gender: 'm' },
-  potions: { firstName: null, lastName: 'Dolohov' },
+  potions: { firstName: 'Corvin', lastName: 'Dolmar', gender: 'm' },
   botany: { firstName: 'Solomon', lastName: 'Tregahl', gender: 'm' },
   astronomy: { firstName: 'Alva Ilan', lastName: 'Arsolle', gender: 'f' },
   divination: { firstName: 'Rhaven', lastName: 'Morvard', gender: 'f' },
-  history: { firstName: 'Morgenvar', lastName: null, gender: 'm' },
+  history: { firstName: 'Morgenvar', lastName: 'Kaldrec', gender: 'm' },
   duel: { firstName: 'Delan', lastName: 'Lanatre', title: 'le Chevalier du Sinople', gender: 'm' },
-  // Balais volants : professeur·e à venir.
+  flying: { firstName: 'Harwen', lastName: 'Malkin' },
 };
 
 export function professorLabel(p: ProfessorName): string {
