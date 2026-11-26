@@ -37,7 +37,7 @@ export const fr = {
   'course.duel': 'Duel',
 
   'service.reception': 'Accueil',
-  'service.sorting': 'Salon des Destinées',
+  'service.sorting': 'Le Chaporacle',
   'service.hall': 'Grande Salle',
   'service.dorm': 'Dortoir {n}',
   'service.exam': 'Salle des Examens',
@@ -153,7 +153,7 @@ export const fr = {
   'offline.ok': 'Super !',
 
   'event.left': '{name} en a assez d’attendre et s’en va…',
-  'event.sorted': '{name} → {house} !',
+  'event.sorted': 'Le Chaporacle : {name} → {house} !',
   'event.cupWon': '{house} remporte la Coupe des Maisons !',
   'event.fail': 'Raté !',
 

@@ -7,7 +7,8 @@ import { HAT_LINES_FR } from '../i18n/fr';
 import { EVENT_RULES } from '../data/events';
 import { handleEvents, isClosed, startEvent } from './events';
 import { deposit } from './meta';
-import { advanceYear, graduate, handleDonations } from './progression';
+import { COURSE_PATIENCE, ENROLLMENT } from '../data/progression';
+import { advanceYear, distinctCourses, graduate, handleDonations } from './progression';
 import {
   arrivalInterval,
   courseReward,
@@ -84,6 +85,25 @@ function removeStudent(state: GameState, s: Student): void {
   delete state.students[s.id];
 }
 
+/** Départ définitif d'un élève (attente trop longue, ou plus rien à apprendre ici). */
+function leaveSchool(
+  state: GameState,
+  s: Student,
+  events: GameEvent[],
+  reason: 'wait' | 'done',
+): void {
+  state.totals.left++;
+  if (reason === 'wait') state.reputation = Math.max(0, state.reputation + POPULATION.repOnLeave);
+  events.push({ type: 'left', studentId: s.id, name: s.name, reason });
+  removeStudent(state, s);
+}
+
+/** Frais d'inscription versés à l'Accueil (augmentent avec son niveau). */
+export function enrollmentFee(state: GameState): number {
+  const lvl = state.stations.reception.level;
+  return Math.round(ENROLLMENT.fee * (1 + ENROLLMENT.feePerLevel * (lvl - 1)));
+}
+
 /** Patience : départ à l'Accueil, perte d'humeur au Salon des Destinées. */
 function handlePatience(state: GameState, dt: number, events: GameEvent[]): void {
   const reception = state.stations.reception;
@@ -101,6 +121,19 @@ function handlePatience(state: GameState, dt: number, events: GameEvent[]): void
     }
     return true;
   });
+
+  // Attente trop longue devant une salle de cours : l'élève quitte l'école.
+  for (const st of Object.values(state.stations)) {
+    if (st.kind !== 'course') continue;
+    st.queue = st.queue.filter((id) => {
+      const s = state.students[id];
+      if (!s || s.activity.mode !== 'queue') return false;
+      if (state.time - s.activity.since <= COURSE_PATIENCE) return true;
+      st.stats.left++;
+      leaveSchool(state, s, events, 'wait');
+      return false;
+    });
+  }
 
   const sorting = state.stations.sorting;
   const sortingPatience = POPULATION.sortingPatience + trackSum(sorting, 'patience');
@@ -145,20 +178,44 @@ function bestOf(stations: Station[], score: (st: Station) => number): Station | 
 }
 
 export function chooseCourse(state: GameState, s: Student): Station | null {
-  const options = Object.values(state.stations).filter(
-    (st) => st.kind === 'course' && COURSES[st.courseId!].yearMin <= s.year,
-  );
+  const options = Object.values(state.stations).filter((st) => st.kind === 'course');
   return bestOf(options, (st) => {
     const def = COURSES[st.courseId!];
     const time = serviceTime(st, 0, s, state) + estimatedWait(st) + (isClosed(state, st) ? 30 : 0);
     const noise = 1 + (random(state) * 2 - 1) * COURSE_AI.randomness;
-    return (def.reward / time) * noise;
+    // Les élèves cherchent d'abord les matières qu'ils n'ont pas encore suivies.
+    const fresh = (s.passedBy[st.courseId!] ?? 0) === 0 ? 4 : 1;
+    return (def.reward / time) * noise * fresh;
   });
 }
 
-function decide(state: GameState, s: Student): void {
+/**
+ * Fin de scolarité : dès une matière suivie, l'élève peut tenter l'examen (plus il en a
+ * suivi, plus il est tenté — et meilleur sera son grade). S'il a suivi toutes les
+ * matières proposées par l'école, il passe l'examen, ou part s'il n'y en a pas.
+ * Renvoie true si l'élève a quitté l'école.
+ */
+function endOfStudies(state: GameState, s: Student, events: GameEvent[]): Station | 'left' | null {
+  const done = distinctCourses(s);
+  if (done === 0) return null;
+  const offered = Object.values(state.stations).filter((st) => st.kind === 'course').length;
+  const exam = state.stations.exam ?? null;
+  if (done >= offered) {
+    if (exam) return exam;
+    leaveSchool(state, s, events, 'done');
+    return 'left';
+  }
+  if (exam && random(state) < 0.25 * (done / Math.max(1, offered))) return exam;
+  return null;
+}
+
+function decide(state: GameState, s: Student, events: GameEvent[]): void {
   let target: Station | null;
-  if (s.graduating && state.stations.exam) {
+  const end = s.activity.mode === 'free' && s.house ? endOfStudies(state, s, events) : null;
+  if (end === 'left') return;
+  if (end) {
+    target = end;
+  } else if (s.graduating && state.stations.exam) {
     target = state.stations.exam;
   } else if (s.fatigue >= NEEDS.fatigueThreshold) {
     const dorms = Object.values(state.stations).filter((st) => st.kind === 'dorm');
@@ -185,10 +242,15 @@ function complete(
   s.mood = clamp(s.mood + moodBonus);
 
   switch (st.kind) {
-    case 'reception':
+    case 'reception': {
       state.reputation += POPULATION.repOnEnroll;
+      const fee = enrollmentFee(state);
+      state.coins += fee;
+      state.totals.coinsEarned += fee;
+      events.push({ type: 'coins', stationId: st.id, amount: fee, studentId: s.id });
       joinQueue(state, s, state.stations.sorting);
       return;
+    }
     case 'sorting': {
       const house = chooseHouse(state, s);
       s.house = house;
@@ -217,7 +279,7 @@ function complete(
     case 'course': {
       const def = COURSES[st.courseId!];
       const house = s.house ? HOUSES[s.house].bonus : {};
-      const trait = TRAITS[s.trait];
+      const trait = TRAITS[s.trait] ?? {};
       const failed = random(state) < failChance(st, seatIndex);
       const xpMult = (house.xpMult ?? 1) * (trait.xpMult ?? 1) * (failed ? 0.3 : 1);
       s.xp += Math.round(def.xp * xpMult);
@@ -327,7 +389,7 @@ export function tick(state: GameState, dt: number = TICK_SECONDS): GameEvent[] {
   const stations = state.stationOrder.map((id) => state.stations[id]);
   for (const st of stations) advanceSeats(state, st, dt, events);
   for (const s of Object.values(state.students)) {
-    if (s.activity.mode === 'free') decide(state, s);
+    if (s.activity.mode === 'free') decide(state, s, events);
   }
   for (const st of stations) fillSeats(state, st);
   // Managers : récolte automatique des coffres

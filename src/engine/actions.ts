@@ -1,4 +1,5 @@
 import { propDef } from '../data/roomProps';
+import { EXAM_PRICE } from '../data/progression';
 import { COURSES, type CourseId } from '../data/courses';
 import { ECONOMY } from '../data/economy';
 import { expCost } from '../data/formulas';
@@ -122,6 +123,20 @@ export function buyProp(state: GameState, stationId: string, propId: string): bo
   const st = state.stations[stationId];
   if (!st || !pay(state, propCost(st, propId))) return false;
   st.props = [...(st.props ?? []), propId];
+  return true;
+}
+
+/** Prix de la Salle des Examens (null si déjà construite). */
+export function examCost(state: GameState): number | null {
+  return state.stations.exam ? null : EXAM_PRICE;
+}
+
+export function buyExam(state: GameState): boolean {
+  if (!pay(state, examCost(state))) return false;
+  const st = makeServiceStation('exam');
+  st.seats = [st.seats[0]];
+  state.stations.exam = st;
+  state.stationOrder.push(st.id);
   return true;
 }
 

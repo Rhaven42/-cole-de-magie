@@ -1,4 +1,4 @@
-import { CAREER_IDS, CAREERS, GRADUATION, YEARS, type CareerId } from '../data/progression';
+import { CAREER_IDS, CAREERS, GRADES, GRADUATION, YEARS, type CareerId } from '../data/progression';
 import { POPULATION } from '../data/economy';
 import { grantRelic } from './meta';
 import { random } from './rng';
@@ -42,10 +42,25 @@ export function advanceYear(state: GameState, s: Student, events: GameEvent[]): 
   return false;
 }
 
+/** Nombre de matières différentes suivies au moins une fois. */
+export function distinctCourses(s: Student): number {
+  return Object.values(s.passedBy).filter((n) => (n ?? 0) > 0).length;
+}
+
+/** Grade selon le nombre de matières suivies. */
+export function gradeOf(s: Student) {
+  const n = distinctCourses(s);
+  let g: (typeof GRADES)[number] = GRADES[0];
+  for (const x of GRADES) if (n >= x.min) g = x;
+  return g;
+}
+
 export function graduate(state: GameState, s: Student, events: GameEvent[]): void {
   const career = chooseCareer(s);
-  state.coins += GRADUATION.coins;
-  state.totals.coinsEarned += GRADUATION.coins;
+  const grade = gradeOf(s);
+  const coins = Math.round(GRADUATION.coins * grade.coinMult);
+  state.coins += coins;
+  state.totals.coinsEarned += coins;
   state.reputation += GRADUATION.reputation;
   state.totals.graduated++;
   state.meta.lifetimeGraduates++;
@@ -58,7 +73,8 @@ export function graduate(state: GameState, s: Student, events: GameEvent[]): voi
     name: s.name,
     house: s.house,
     career,
-    coins: GRADUATION.coins,
+    grade: grade.id,
+    coins,
     relic,
   });
   delete state.students[s.id];

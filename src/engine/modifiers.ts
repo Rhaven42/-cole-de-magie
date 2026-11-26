@@ -1,11 +1,11 @@
 import { propDef } from '../data/roomProps';
+import { ENROLLMENT , YEARS } from '../data/progression';
 import { COURSES } from '../data/courses';
 import { ECONOMY, NEEDS, POPULATION } from '../data/economy';
 import { applyTime, comfortReduction } from '../data/formulas';
 import { HOUSES } from '../data/houses';
 import { SERVICES, type UpgradeEffect } from '../data/stations';
 import { TRAITS } from '../data/traits';
-import { YEARS } from '../data/progression';
 import { EVENT_RULES } from '../data/events';
 import { DAY_NIGHT, dayPhase } from '../data/daynight';
 import { RELIC_BONUS, RELIC_SETS, RELICS } from '../data/collection';
@@ -51,7 +51,7 @@ export function studentTimeMult(st: Station, s: Student | undefined): number {
   if (st.kind === 'course') {
     const houseMods = s.house ? HOUSES[s.house].bonus.courseTimeMult : undefined;
     m *= houseMods?.[st.courseId!] ?? 1;
-    m *= TRAITS[s.trait].courseTimeMult ?? 1;
+    m *= TRAITS[s.trait]?.courseTimeMult ?? 1;
     if (s.hunger >= NEEDS.starvingHunger) m *= NEEDS.starvingTimeMult;
     if (s.year >= YEARS.max) m *= YEARS.advanced.timeMult;
   }
@@ -158,7 +158,10 @@ export function populationCap(state: GameState): number {
 export function arrivalInterval(state: GameState): number {
   return Math.max(
     POPULATION.minArrivalInterval,
-    POPULATION.arrivalInterval / (1 + state.reputation * POPULATION.arrivalPerRep),
+    POPULATION.arrivalInterval /
+      (1 + state.reputation * POPULATION.arrivalPerRep) /
+      // Un Accueil amélioré fait venir plus d'élèves.
+      (1 + ENROLLMENT.arrivalPerLevel * ((state.stations.reception?.level ?? 1) - 1)),
   );
 }
 

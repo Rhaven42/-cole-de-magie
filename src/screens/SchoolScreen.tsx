@@ -16,6 +16,7 @@ import { PLOT, PLOTS } from '../data/layout';
 import { DORM_PURCHASE } from '../data/stations';
 import {
   courseCost,
+  examCost,
   dormCount,
   estimatedWait,
   isClosed,
@@ -125,6 +126,7 @@ function snapshot(game: GameState) {
     const id = `course-${cid}`;
     if (!game.stations[id]) plots.push({ id, available: true });
   }
+  if (!game.stations.exam) plots.push({ id: 'exam', available: true });
   const nextDorm = dormCount(game);
   if (nextDorm < DORM_PURCHASE.max) plots.push({ id: `dorm-${nextDorm}`, available: true });
   return { rooms, plots, env: game.meta.env };
@@ -183,10 +185,13 @@ function BuildSign({ id, game }: { id: string; game: GameState }) {
   const p = roomCenter(id);
   const isCourse = id.startsWith('course-');
   const cid = id.slice(7) as CourseId;
-  const cost = isCourse ? courseCost(game, cid) : null;
+  const cost = isCourse ? courseCost(game, cid) : id === 'exam' ? examCost(game) : null;
+  const isExam = id === 'exam';
   const text = isCourse
     ? `${COURSES[cid].icon} ${stationName({ kind: 'course', courseId: cid } as Station)}`
-    : '🛏️ Dortoir';
+    : isExam
+      ? '📝 Salle des Examens'
+      : '🛏️ Dortoir';
   const affordable = cost !== null && game.coins >= cost;
   return (
     <View pointerEvents="none" style={[styles.sign, { left: p.x - 65, top: p.y - 26 }]}>
@@ -342,7 +347,12 @@ export function SchoolScreen() {
     // 3. Salles et parcelles
     const id = hitPlot(unIso(mx, my));
     if (!id) return;
-    if (g.stations[id] || id.startsWith('course-') || id === `dorm-${dormCount(g)}`)
+    if (
+      g.stations[id] ||
+      id.startsWith('course-') ||
+      id === 'exam' ||
+      id === `dorm-${dormCount(g)}`
+    )
       store.select(id);
   };
 

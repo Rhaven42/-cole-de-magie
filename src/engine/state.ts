@@ -1,4 +1,3 @@
-import { COURSES, type CourseId } from '../data/courses';
 import { ECONOMY } from '../data/economy';
 import { HOUSE_CUP } from '../data/houses';
 import { EVENT_RULES } from '../data/events';
@@ -39,7 +38,8 @@ export function makeServiceStation(kind: ServiceKind, index = 0): Station {
 }
 
 export function makeCourseStation(courseId: CourseId): Station {
-  return makeStation(`course-${courseId}`, 'course', COURSES[courseId].seats, { courseId });
+  // Une salle qui ouvre commence avec une seule place de travail.
+  return makeStation(`course-${courseId}`, 'course', 1, { courseId });
 }
 
 export function defaultMeta(): Meta {
@@ -54,7 +54,6 @@ export function createGame(seed = 1, now = 0, meta: Meta = defaultMeta()): GameS
     makeCourseStation('potions'),
     makeServiceStation('hall'),
     makeServiceStation('dorm', 0),
-    makeServiceStation('exam'),
   ];
   return {
     schemaVersion: SCHEMA_VERSION,

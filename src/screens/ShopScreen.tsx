@@ -1,7 +1,7 @@
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { COURSE_IDS, COURSES } from '../data/courses';
 import { MANAGERS } from '../data/managers';
-import { courseCost, dormCost, dormCount, managerCost } from '../engine';
+import { courseCost, dormCost, dormCount, examCost, managerCost } from '../engine';
 import { t } from '../i18n';
 import { BuyButton, Title } from '../ui/kit';
 import { colors, formatDuration, radius, space } from '../ui/theme';
@@ -18,7 +18,7 @@ export function ShopScreen() {
       {COURSE_IDS.map((id) => {
         const def = COURSES[id];
         const owned = !!game.stations[`course-${id}`];
-        const sub = `${def.seats} places · ${formatDuration(def.duration)} · ${def.reward} 💰 · ${t('shop.yearMin', { n: def.yearMin })}`;
+        const sub = `1 place à l’ouverture · ${formatDuration(def.duration)} · ${def.reward} 💰 · ${t('shop.yearMin', { n: def.yearMin })}`;
         if (owned) {
           return (
             <View key={id} style={styles.owned}>
@@ -41,6 +41,21 @@ export function ShopScreen() {
           />
         );
       })}
+      {game.stations.exam ? (
+        <View style={styles.owned}>
+          <Text style={styles.ownedText}>📝 Salle des Examens</Text>
+          <Text style={styles.ownedTag}>✓ {t('shop.owned')}</Text>
+        </View>
+      ) : (
+        <BuyButton
+          icon="📝"
+          label="Salle des Examens"
+          sub="Examen final : diplôme, métier et grade selon les matières suivies"
+          cost={examCost(game)}
+          coins={game.coins}
+          onPress={() => store.buyExam()}
+        />
+      )}
       <Title style={{ marginTop: space.lg }}>{t('shop.dorms')}</Title>
       <BuyButton
         icon="🛏️"

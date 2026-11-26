@@ -167,7 +167,7 @@ export type GameEvent =
   | { type: 'coins'; stationId: string; amount: number; studentId: number }
   | { type: 'fail'; stationId: string; studentId: number }
   | { type: 'arrived'; studentId: number }
-  | { type: 'left'; studentId: number; name: string }
+  | { type: 'left'; studentId: number; name: string; reason?: 'wait' | 'done' }
   | { type: 'sorted'; studentId: number; name: string; house: HouseId; line: number }
   | { type: 'cupWon'; house: HouseId; coins: number }
   | { type: 'yearUp'; studentId: number; name: string; year: number; coins: number }
@@ -176,6 +176,8 @@ export type GameEvent =
       name: string;
       house: HouseId | null;
       career: CareerId;
+      /** Grade obtenu (id de GRADES). */
+      grade: string;
       coins: number;
       relic: string | null;
     }

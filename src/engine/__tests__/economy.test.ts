@@ -37,11 +37,13 @@ describe('économie et achats', () => {
     g.coins = 1e6;
     const st = g.stations['course-potions'];
     expect(levelUpCost(st)).toBe(Math.round(40 * 1.55));
+    // Une salle qui ouvre n'a qu'une place ; +1 place aux niveaux 3, 5, 7…
+    expect(st.seats.length).toBe(1);
     levelUp(g, st.id);
-    expect(st.seats.length).toBe(4);
+    expect(st.seats.length).toBe(1);
     levelUp(g, st.id);
     expect(st.level).toBe(3);
-    expect(st.seats.length).toBe(5);
+    expect(st.seats.length).toBe(2);
     for (let i = 0; i < 20; i++) levelUp(g, st.id);
     expect(st.level).toBe(10);
     expect(levelUpCost(st)).toBeNull();
@@ -63,11 +65,11 @@ describe('économie et achats', () => {
     const g = createGame();
     g.coins = 1e9;
     const st = g.stations['course-potions'];
-    const c1 = seatUpgradeCost(st, 1)!;
-    expect(upgradeSeat(g, st.id, 1)).toBe(true);
-    expect(seatUpgradeCost(st, 1)!).toBeGreaterThan(c1);
-    while (upgradeSeat(g, st.id, 1));
-    expect(st.seats[1].level).toBe(5);
+    const c1 = seatUpgradeCost(st, 0)!;
+    expect(upgradeSeat(g, st.id, 0)).toBe(true);
+    expect(seatUpgradeCost(st, 0)!).toBeGreaterThan(c1);
+    while (upgradeSeat(g, st.id, 0));
+    expect(st.seats[0].level).toBe(5);
     expect(seatUpgradeCost(st, 99)).toBeNull();
   });
 

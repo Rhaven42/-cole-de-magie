@@ -28,6 +28,7 @@ import {
   storageCap,
   trackCost,
   propCost,
+  examCost,
   type Purchase,
   type Station,
 } from '../engine';
@@ -430,11 +431,16 @@ function BuildSheet({ id }: { id: string }) {
   const store = useGame.getState();
   const close = () => store.select(null);
   const isCourse = id.startsWith('course-');
+  const isExam = id === 'exam';
   const cid = id.slice(7) as CourseId;
   const def = isCourse ? COURSES[cid] : null;
-  const title = def ? `${def.icon} ${t(`course.${cid}`)}` : `🛏️ ${t('shop.newDorm')}`;
+  const title = def
+    ? `${def.icon} ${t(`course.${cid}`)}`
+    : isExam
+      ? '📝 Salle des Examens'
+      : `🛏️ ${t('shop.newDorm')}`;
   const buy = () => {
-    const ok = def ? store.buyCourse(cid) : store.buyDorm();
+    const ok = def ? store.buyCourse(cid) : isExam ? store.buyExam() : store.buyDorm();
     if (ok) store.select(id);
   };
   return (
@@ -461,6 +467,13 @@ function BuildSheet({ id }: { id: string }) {
               </Body>
             ) : null}
           </>
+        ) : isExam ? (
+          <Body style={styles.hint}>
+            Dès qu’ils ont suivi une matière, les élèves peuvent venir passer l’examen final. Plus
+            ils ont suivi de matières différentes, plus leur grade est élevé (Apprenti·e → Grand·e
+            Maître) et plus ils rapportent. Sans Salle des Examens, un élève qui a suivi toutes les
+            matières proposées quitte l’école sans diplôme.
+          </Body>
         ) : (
           <Body style={styles.hint}>
             4 lits : plus de places de sommeil, et l’école peut accueillir plus d’élèves.
@@ -470,7 +483,7 @@ function BuildSheet({ id }: { id: string }) {
           <BuyButton
             icon="🔨"
             label={t('shop.buy')}
-            cost={def ? courseCost(game, cid) : dormCost(game)}
+            cost={def ? courseCost(game, cid) : isExam ? examCost(game) : dormCost(game)}
             coins={game.coins}
             onPress={buy}
           />

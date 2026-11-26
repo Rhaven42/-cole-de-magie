@@ -1,9 +1,11 @@
+import { GRADES } from '../data/progression';
 import * as Haptics from 'expo-haptics';
 import { create } from 'zustand';
 import {
   applyPurchase,
   buyCourse,
   buyDorm,
+  buyExam,
   catchUp,
   createGame,
   elapsedSince,
@@ -99,10 +101,19 @@ interface Store {
   buyProp(id: string, prop: string): boolean;
   buyCourse(id: CourseId): boolean;
   buyDorm(): boolean;
+  buyExam(): boolean;
   setBias(h: HouseId | null): boolean;
 }
 
 let keySeq = 1;
+/** Dernière annonce par type : le Chaporacle et les départs ne s'affichent pas à chaque fois. */
+const lastToast: Record<string, number> = {};
+const TOAST_GAP_MS = { sorted: 40_000, left: 30_000 } as const;
+function throttled(kind: keyof typeof TOAST_GAP_MS, now: number): boolean {
+  if (now - (lastToast[kind] ?? -Infinity) < TOAST_GAP_MS[kind]) return true;
+  lastToast[kind] = now;
+  return false;
+}
 const FLOATER_MS = 1200;
 const TOAST_MS = 3500;
 
@@ -149,6 +160,7 @@ export const useGame = create<Store>((set, get) => {
           born: now,
         });
       } else if (e.type === 'sorted') {
+        if (throttled('sorted', now)) continue;
         toasts.push({
           key: keySeq++,
           kind: 'sorted',
@@ -158,7 +170,14 @@ export const useGame = create<Store>((set, get) => {
           born: now,
         });
       } else if (e.type === 'left') {
-        toasts.push({ key: keySeq++, kind: 'left', title: e.name, born: now });
+        // Départ normal (scolarité terminée) : pas d'annonce ; attente trop longue : de temps en temps.
+        if (e.reason === 'done' || throttled('left', now)) continue;
+        toasts.push({
+          key: keySeq++,
+          kind: 'left',
+          title: e.name,
+          born: now,
+        });
       } else if (e.type === 'cupWon') {
         toasts.push({
           key: keySeq++,
@@ -186,7 +205,7 @@ export const useGame = create<Store>((set, get) => {
           icon: '🎓',
           title: t('event.graduated', {
             name: e.name,
-            career: t(`career.${e.career}`),
+            career: `${t(`career.${e.career}`)} (${GRADES.find((g) => g.id === e.grade)?.label ?? ''})`,
             coins: e.coins,
           }),
           born: now,
@@ -383,6 +402,7 @@ export const useGame = create<Store>((set, get) => {
     buyProp: (id, pr) => purchased(buyProp(get().game, id, pr)),
     buyCourse: (id) => purchased(buyCourse(get().game, id)),
     buyDorm: () => purchased(buyDorm(get().game)),
+    buyExam: () => purchased(buyExam(get().game)),
     setBias: (h) => purchased(setSortingBias(get().game, h)),
   };
 });

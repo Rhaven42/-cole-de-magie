@@ -49,7 +49,7 @@ describe('formules', () => {
     expect(reputationStars(0)).toBe(0);
     expect(reputationStars(25)).toBe(2);
     const g = createGame();
-    expect(populationCap(g)).toBe(4 + 4 * 2 + 4 * 0.5);
+    expect(populationCap(g)).toBe(Math.floor(4 + 4 * 2 + 1 * 0.5));
     const slow = arrivalInterval(g);
     g.reputation = 100;
     expect(arrivalInterval(g)).toBeLessThan(slow);

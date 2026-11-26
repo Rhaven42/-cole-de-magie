@@ -12,6 +12,27 @@ export const YEARS = {
 };
 
 /** Diplôme : gros bonus, réputation, métier. */
+/**
+ * Grade obtenu à l'examen selon le nombre de matières différentes suivies
+ * (au moins une fois). Plus l'élève a suivi de cours, plus son grade est haut.
+ */
+export const GRADES = [
+  { min: 1, id: 'apprentice', label: 'Apprenti·e', coinMult: 0.5 },
+  { min: 3, id: 'journeyman', label: 'Compagnon', coinMult: 1 },
+  { min: 5, id: 'adept', label: 'Adepte', coinMult: 1.8 },
+  { min: 7, id: 'master', label: 'Maître', coinMult: 3 },
+  { min: 9, id: 'grandmaster', label: 'Grand·e Maître', coinMult: 5 },
+] as const;
+
+/** Prix d'ouverture de la Salle des Examens (la plus chère de l'école). */
+export const EXAM_PRICE = 2_500_000;
+
+/** Attente maximale dans la file d'une salle de cours avant de quitter l'école (s). */
+export const COURSE_PATIENCE = 150;
+
+/** Inscription : frais payés à l'Accueil par chaque nouvel élève. */
+export const ENROLLMENT = { fee: 20, feePerLevel: 0.12, arrivalPerLevel: 0.12 };
+
 export const GRADUATION = {
   coins: 600,
   reputation: 3,

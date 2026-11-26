@@ -45,6 +45,8 @@ describe('années, diplômes et métiers', () => {
       passedBy: { defense: 9, potions: 3 },
     });
     g.stations.reception.queue = [];
+    g.coins = 1e9;
+    expect(jest.requireActual('../actions').buyExam(g)).toBe(true);
     s.activity = { mode: 'free', since: 0 };
     const rep = g.reputation;
     tick(g);
@@ -85,16 +87,53 @@ describe('années, diplômes et métiers', () => {
     expect(serviceTime(st, 0, y7)).toBeCloseTo(serviceTime(st, 0, y1) * 1.5);
   });
 
-  it('un élève ne va qu’aux cours de son année', () => {
+  it('un élève va surtout vers les matières qu’il n’a pas encore suivies', () => {
     const g = quietGame();
     g.coins = 1e7;
     const { buyCourse } = jest.requireActual('../actions');
-    buyCourse(g, 'defense');
+    buyCourse(g, 'charms');
     const { chooseCourse } = jest.requireActual('../tick');
-    for (let i = 0; i < 20; i++)
-      expect(chooseCourse(g, addStudent(g, { year: 1 }))?.id).toBe('course-potions');
-    const vet = addStudent(g, { year: 6 });
-    const picks = new Set(Array.from({ length: 30 }, () => chooseCourse(g, vet)?.id));
-    expect(picks.has('course-defense')).toBe(true);
+    const s = addStudent(g, { passedBy: { potions: 3 } });
+    const picks = Array.from({ length: 30 }, () => chooseCourse(g, s)?.id);
+    expect(picks.filter((x) => x === 'course-charms').length).toBeGreaterThan(20);
+  });
+
+  it('grade selon le nombre de matières suivies', () => {
+    const { gradeOf } = jest.requireActual('../progression');
+    expect(gradeOf({ passedBy: { potions: 5 } }).id).toBe('apprentice');
+    expect(
+      gradeOf({ passedBy: { potions: 1, botany: 1, history: 1, charms: 1, duel: 1 } }).id,
+    ).toBe('adept');
+  });
+
+  it('a suivi toutes les matières sans Salle des Examens : il part', () => {
+    const g = quietGame();
+    const s = addStudent(g, { house: 'pyrraxe', passedBy: { potions: 1 } });
+    g.stations.reception.queue = [];
+    s.activity = { mode: 'free', since: 0 };
+    const events = run(g, 0.25);
+    expect(g.students[s.id]).toBeUndefined();
+    expect(events.some((e) => e.type === 'left' && e.reason === 'done')).toBe(true);
+  });
+
+  it('attente trop longue devant une salle : il part', () => {
+    const g = quietGame();
+    const st = g.stations['course-potions'];
+    const s = addStudent(g, { house: 'pyrraxe' });
+    g.stations.reception.queue = [];
+    st.seats[0].occupant = -1;
+    st.seats[0].remaining = 1e9;
+    st.queue.push(s.id);
+    s.activity = { mode: 'queue', stationId: st.id, since: 0 };
+    run(g, 200);
+    expect(g.students[s.id]).toBeUndefined();
+  });
+
+  it('l’Accueil encaisse des frais d’inscription', () => {
+    const g = quietGame();
+    const before = g.coins;
+    addStudent(g);
+    run(g, 20);
+    expect(g.coins).toBeGreaterThan(before);
   });
 });
