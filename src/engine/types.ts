@@ -1,6 +1,8 @@
 import type { CourseId } from '../data/courses';
 import type { HouseId } from '../data/houses';
 import type { TraitId } from '../data/traits';
+import type { CareerId } from '../data/progression';
+import type { EventId, TimedEventId } from '../data/events';
 
 export type StationKind = 'reception' | 'sorting' | 'hall' | 'dorm' | 'course';
 
@@ -12,6 +14,8 @@ export interface Seat {
   remaining: number;
   /** Durée totale calculée à l'installation de l'occupant. */
   total: number;
+  /** Position personnalisée dans la salle (grille relative), sinon emplacement par défaut. */
+  pos?: { x: number; y: number };
 }
 
 /** Système générique « file + places + temps de traitement + modificateurs » (§5 bis). */
@@ -29,6 +33,10 @@ export interface Station {
   /** Niveaux des pistes d'aménagement (salle d'attente, cheminée…). */
   tracks: Record<string, number>;
   stats: StationStats;
+  /** Éclats produits, en attente de récolte (coffre de la salle). */
+  pending: number;
+  /** Fin de l'arrêt de la salle (explosion…), en temps de jeu. */
+  closedUntil: number;
 }
 
 export interface StationStats {
@@ -38,6 +46,8 @@ export interface StationStats {
   avgWait: number;
   /** Moyenne glissante du temps de traitement (s). */
   avgService: number;
+  /** Éclats produits au total. */
+  earned: number;
 }
 
 export interface Look {
@@ -57,7 +67,11 @@ export interface Student {
   look: Look;
   house: HouseId | null;
   year: number;
+  /** Cours validés dans l'année en cours. */
+  yearPassed: number;
   coursesPassed: number;
+  /** Cours validés par matière (oriente le métier). */
+  passedBy: Partial<Record<string, number>>;
   xp: number;
   fatigue: number;
   hunger: number;
@@ -81,6 +95,35 @@ export interface Totals {
   arrived: number;
   left: number;
   sorted: number;
+  graduated: number;
+  yearUps: number;
+}
+
+export interface ActiveEvent {
+  id: EventId;
+  until: number;
+  stationId?: string;
+}
+
+export interface Alumnus {
+  name: string;
+  house: HouseId | null;
+  career: CareerId;
+  at: number;
+}
+
+export interface Meta {
+  /** Niveau de prestige (nombre de reconstructions). */
+  prestige: number;
+  /** Index de l'environnement actuel. */
+  env: number;
+  /** Reliques possédées (id → nombre). */
+  relics: Record<string, number>;
+  /** Jour (numéro de jour UTC) de la dernière récompense quotidienne. */
+  dailyDay: number | null;
+  dailyStreak: number;
+  /** Diplômé·es au total, toutes reconstructions confondues. */
+  lifetimeGraduates: number;
 }
 
 export interface GameState {
@@ -101,6 +144,17 @@ export interface GameState {
   /** Orientation forcée du Chapeau (niveau 5+). */
   sortingBias: HouseId | null;
   totals: Totals;
+  /** Salles avec un manager (récolte automatique). */
+  managers: Record<string, boolean>;
+  /** Anciens élèves par métier (dons réguliers). */
+  careers: Partial<Record<CareerId, number>>;
+  /** Derniers diplômé·es (20 max). */
+  alumni: Alumnus[];
+  events: ActiveEvent[];
+  nextEventAt: number;
+  /** Accumulateur des dons des anciens élèves (fraction d'Éclat). */
+  donationAcc: number;
+  meta: Meta;
   /** Horodatage réel (ms) de la dernière sauvegarde, pour le hors-ligne. */
   lastSavedAt: number;
 }
@@ -111,4 +165,10 @@ export type GameEvent =
   | { type: 'arrived'; studentId: number }
   | { type: 'left'; studentId: number; name: string }
   | { type: 'sorted'; studentId: number; name: string; house: HouseId; line: number }
-  | { type: 'cupWon'; house: HouseId; coins: number };
+  | { type: 'cupWon'; house: HouseId; coins: number }
+  | { type: 'yearUp'; studentId: number; name: string; year: number; coins: number }
+  | { type: 'graduated'; name: string; house: HouseId | null; career: CareerId; coins: number; relic: string | null }
+  | { type: 'event'; id: EventId; stationId?: string; value?: number }
+  | { type: 'relic'; id: string };
+
+export type { TimedEventId };

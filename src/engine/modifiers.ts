@@ -4,6 +4,10 @@ import { applyTime, comfortReduction } from '../data/formulas';
 import { HOUSES } from '../data/houses';
 import { SERVICES, type UpgradeEffect } from '../data/stations';
 import { TRAITS } from '../data/traits';
+import { YEARS } from '../data/progression';
+import { EVENT_RULES } from '../data/events';
+import { RELIC_BONUS, RELIC_SETS, RELICS } from '../data/collection';
+import { PRESTIGE } from '../data/environments';
 import type { GameState, Station, Student } from './types';
 
 /** Durée de base du service d'un lieu. */
@@ -47,6 +51,17 @@ export function studentTimeMult(st: Station, s: Student | undefined): number {
     m *= houseMods?.[st.courseId!] ?? 1;
     m *= TRAITS[s.trait].courseTimeMult ?? 1;
     if (s.hunger >= NEEDS.starvingHunger) m *= NEEDS.starvingTimeMult;
+    if (s.year >= YEARS.max) m *= YEARS.advanced.timeMult;
+  }
+  return m;
+}
+
+/** Effets globaux liés à l'état (événements, managers). */
+function stateTimeMult(state: GameState | undefined, st: Station): number {
+  if (!state) return 1;
+  let m = state.managers[st.id] ? 0.95 : 1;
+  if (st.kind === 'hall' && state.events.some((e) => e.id === 'banquet' && e.until > state.time)) {
+    m *= EVENT_RULES.banquetHallTimeMult;
   }
   return m;
 }
@@ -55,7 +70,7 @@ export function studentTimeMult(st: Station, s: Student | undefined): number {
  * Temps de traitement réel :
  * base × niveauSalle × place × confort × aménagements × élève, plancher 25 %.
  */
-export function serviceTime(st: Station, seatIndex: number, s?: Student): number {
+export function serviceTime(st: Station, seatIndex: number, s?: Student, state?: GameState): number {
   const base = baseDuration(st);
   const seat = st.seats[seatIndex];
   const mults = [
@@ -64,6 +79,7 @@ export function serviceTime(st: Station, seatIndex: number, s?: Student): number
     1 - comfortReduction(comfortOf(st)),
     Math.max(1 - trackSum(st, 'time'), 0),
     studentTimeMult(st, s),
+    stateTimeMult(state, st),
   ];
   return applyTime(base, mults);
 }
@@ -73,9 +89,19 @@ export function receptionPatience(state: GameState): number {
 }
 
 /** Gain d'Éclats pour un cours validé. */
-export function courseReward(st: Station, s: Pick<Student, 'house' | 'mood'>): number {
+export function courseReward(
+  st: Station,
+  s: Pick<Student, 'house' | 'mood'> & { year?: number },
+  state?: GameState,
+): number {
   const def = COURSES[st.courseId!];
   let r = def.reward * levelCoinMult(st.level);
+  if ((s.year ?? 1) >= YEARS.max) r *= YEARS.advanced.rewardMult;
+  if (state) {
+    r *= metaMult(state);
+    const stars = state.events.some((e) => e.id === 'shootingStars' && e.until > state.time);
+    if (stars && (st.courseId === 'astronomy' || st.courseId === 'divination')) r *= EVENT_RULES.shootingStarsMult;
+  }
   if (s.house) r *= HOUSES[s.house].bonus.coinMult ?? 1;
   if (s.mood < NEEDS.lowMood) r *= NEEDS.lowMoodCoinMult;
   return Math.max(1, Math.round(r));
@@ -122,4 +148,12 @@ export function estimatedWait(st: Station): number {
   if (ahead <= 0) return 0;
   const svc = st.stats.avgService || serviceTime(st, 0);
   return (ahead / Math.max(st.seats.length, 1)) * svc;
+}
+
+/** Bonus permanent d'Éclats : reliques + prestige. */
+export function metaMult(state: GameState): number {
+  const owned = (id: string) => (state.meta.relics[id] ?? 0) > 0;
+  const relics = RELICS.filter((r) => owned(r.id)).length;
+  const sets = RELIC_SETS.filter((set) => RELICS.filter((r) => r.set === set).every((r) => owned(r.id))).length;
+  return (1 + relics * RELIC_BONUS.perRelic + sets * RELIC_BONUS.perSet) * (1 + state.meta.prestige * PRESTIGE.coinBonusPerLevel);
 }

@@ -90,7 +90,7 @@ export const COURSES: Record<CourseId, CourseDef> = {
     duration: 35,
     reward: 22,
     yearMin: 2,
-    price: 2500,
+    price: 4000,
     upgradeBase: 200,
     failRate: 0.08,
     fatigue: 16,
@@ -106,7 +106,7 @@ export const COURSES: Record<CourseId, CourseDef> = {
     duration: 40,
     reward: 26,
     yearMin: 2,
-    price: 6000,
+    price: 15000,
     upgradeBase: 400,
     failRate: 0.06,
     fatigue: 18,
@@ -122,7 +122,7 @@ export const COURSES: Record<CourseId, CourseDef> = {
     duration: 45,
     reward: 35,
     yearMin: 3,
-    price: 15000,
+    price: 50000,
     upgradeBase: 900,
     failRate: 0.1,
     fatigue: 26,
@@ -138,7 +138,7 @@ export const COURSES: Record<CourseId, CourseDef> = {
     duration: 50,
     reward: 42,
     yearMin: 4,
-    price: 40000,
+    price: 150000,
     upgradeBase: 2000,
     failRate: 0.08,
     fatigue: 16,
@@ -154,7 +154,7 @@ export const COURSES: Record<CourseId, CourseDef> = {
     duration: 60,
     reward: 60,
     yearMin: 5,
-    price: 100000,
+    price: 500000,
     upgradeBase: 5000,
     failRate: 0.1,
     fatigue: 20,
@@ -170,7 +170,7 @@ export const COURSES: Record<CourseId, CourseDef> = {
     duration: 75,
     reward: 90,
     yearMin: 6,
-    price: 250000,
+    price: 1500000,
     upgradeBase: 12000,
     failRate: 0.12,
     fatigue: 30,
@@ -181,9 +181,3 @@ export const COURSES: Record<CourseId, CourseDef> = {
 };
 
 export const COURSE_IDS = Object.keys(COURSES) as CourseId[];
-
-/**
- * Matières achetables à ce stade du développement.
- * J4 ajoutera le système d'années qui rendra les 9 matières accessibles.
- */
-export const UNLOCKED_COURSES: CourseId[] = ['potions', 'botany', 'history'];

@@ -8,6 +8,7 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import {
   applyPurchase,
+  collectAll,
   createGame,
   estimatedWait,
   globalTarget,
@@ -36,7 +37,10 @@ function seen(id: string) {
 
 for (let sec = 0; sec < totalSeconds; sec++) {
   for (let q = 0; q < 4; q++) tick(g, 0.25);
-  // Le bot agit chaque seconde
+  // Le bot récolte ses coffres et agit chaque seconde
+  collectAll(g);
+  if (g.totals.graduated > 0 && !seen('first-graduate')) milestones.push(`first-graduate,${(sec / 60).toFixed(1)}`);
+  if (g.totals.graduated >= 10 && !seen('graduates-10')) milestones.push(`graduates-10,${(sec / 60).toFixed(1)}`);
   for (let n = 0; n < 5; n++) {
     const target = globalTarget(g);
     if (!target || target.cost > g.coins) break;

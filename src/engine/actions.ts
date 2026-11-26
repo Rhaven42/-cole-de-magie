@@ -1,4 +1,4 @@
-import { COURSES, UNLOCKED_COURSES, type CourseId } from '../data/courses';
+import { COURSES, type CourseId } from '../data/courses';
 import { ECONOMY } from '../data/economy';
 import { expCost } from '../data/formulas';
 import type { HouseId } from '../data/houses';
@@ -63,7 +63,7 @@ export function dormCost(state: GameState): number | null {
 }
 
 export function courseCost(state: GameState, id: CourseId): number | null {
-  if (state.stations[`course-${id}`] || !UNLOCKED_COURSES.includes(id)) return null;
+  if (state.stations[`course-${id}`]) return null;
   return COURSES[id].price;
 }
 
@@ -130,5 +130,36 @@ export function buyDorm(state: GameState): boolean {
 export function setSortingBias(state: GameState, house: HouseId | null): boolean {
   if (house !== null && state.stations.sorting.level < 5) return false;
   state.sortingBias = house;
+  return true;
+}
+
+// ─── Réaménagement : déplacer une place dans la zone de la salle ─────────────
+
+/** Zone utilisable d'une salle (coordonnées de grille relatives à la salle). */
+export const ROOM_ZONE = { min: 0.9, max: 7.1, minSpacing: 0.95 };
+
+/**
+ * Déplace une place. Elle doit rester dans la zone de la salle et ne pas
+ * chevaucher une autre place. `defaults` donne la position des places non déplacées.
+ */
+export function moveSeat(
+  state: GameState,
+  stationId: string,
+  seatIndex: number,
+  x: number,
+  y: number,
+  defaults: (i: number) => { x: number; y: number },
+): boolean {
+  const st = state.stations[stationId];
+  const seat = st?.seats[seatIndex];
+  if (!st || !seat) return false;
+  if (x < ROOM_ZONE.min || x > ROOM_ZONE.max || y < ROOM_ZONE.min || y > ROOM_ZONE.max) return false;
+  const clash = st.seats.some((o, i) => {
+    if (i === seatIndex) return false;
+    const p = o.pos ?? defaults(i);
+    return Math.hypot(p.x - x, p.y - y) < ROOM_ZONE.minSpacing;
+  });
+  if (clash) return false;
+  seat.pos = { x, y };
   return true;
 }

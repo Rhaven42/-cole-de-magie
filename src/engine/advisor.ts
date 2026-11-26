@@ -1,4 +1,4 @@
-import { UNLOCKED_COURSES } from '../data/courses';
+import { COURSE_IDS, type CourseId } from '../data/courses';
 import { SERVICES } from '../data/stations';
 import {
   addSeat,
@@ -22,7 +22,7 @@ export type Purchase =
   | { kind: 'addSeat'; stationId: string; cost: number }
   | { kind: 'seat'; stationId: string; seat: number; cost: number }
   | { kind: 'track'; stationId: string; trackId: string; cost: number }
-  | { kind: 'course'; courseId: (typeof UNLOCKED_COURSES)[number]; cost: number }
+  | { kind: 'course'; courseId: CourseId; cost: number }
   | { kind: 'dorm'; cost: number };
 
 /** Achats possibles pour un lieu (indépendamment du solde). */
@@ -96,27 +96,37 @@ export function bottleneck(state: GameState): Station {
 
 /** Prochain achat global visé (pour le bot d'équilibrage). */
 export function globalTarget(state: GameState): Purchase | null {
-  for (const id of UNLOCKED_COURSES) {
+  // 1. La prochaine salle, dès qu'elle est abordable.
+  let next: Purchase | null = null;
+  for (const id of COURSE_IDS) {
     const c = courseCost(state, id);
-    if (c !== null) return { kind: 'course', courseId: id, cost: c };
+    if (c !== null) {
+      next = { kind: 'course', courseId: id, cost: c };
+      break;
+    }
   }
+  if (next && next.cost <= state.coins) return next;
+  // En attendant, on n'achète que ce qui coûte moins de 25 % de la prochaine salle.
+  const budget = next ? next.cost * 0.25 : Infinity;
+  const within = (p: Purchase | null) => (p && p.cost <= budget ? p : null);
+
+  // 2. Le goulot d'étranglement.
   const neck = bottleneck(state);
   if (estimatedWait(neck) > 20) {
-    if (neck.kind === 'dorm') {
-      const seat = addSeatCost(neck);
-      if (seat === null) {
-        const d = dormCost(state);
-        if (d !== null) return { kind: 'dorm', cost: d };
-      }
+    if (neck.kind === 'dorm' && addSeatCost(neck) === null) {
+      const d = dormCost(state);
+      if (d !== null && d <= budget) return { kind: 'dorm', cost: d };
     }
     const opts = stationPurchases(neck).filter((p) => p.kind === 'addSeat' || p.kind === 'levelUp');
-    if (opts.length) return opts.reduce((a, b) => (b.cost < a.cost ? b : a));
+    const cheapest = opts.length ? opts.reduce((a, b) => (b.cost < a.cost ? b : a)) : null;
+    if (within(cheapest)) return cheapest;
   }
-  // Sinon : améliorer le cours le plus rentable, au moins cher.
+  // 3. Sinon : l'amélioration de cours la moins chère.
   const all = Object.values(state.stations)
     .filter((s) => s.kind === 'course')
     .flatMap(stationPurchases);
-  return all.length ? all.reduce((a, b) => (b.cost < a.cost ? b : a)) : null;
+  const cheapest = all.length ? all.reduce((a, b) => (b.cost < a.cost ? b : a)) : null;
+  return within(cheapest) ?? next;
 }
 
 export function applyPurchase(state: GameState, p: Purchase): boolean {

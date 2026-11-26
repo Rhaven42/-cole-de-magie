@@ -4,6 +4,10 @@ import { HOUSE_CUP, HOUSE_IDS, HOUSES, type HouseId } from '../data/houses';
 import { FIRST_NAMES, LAST_NAMES } from '../data/names';
 import { TRAIT_IDS, TRAITS } from '../data/traits';
 import { HAT_LINES_FR } from '../i18n/fr';
+import { EVENT_RULES } from '../data/events';
+import { handleEvents, isClosed, startEvent } from './events';
+import { deposit } from './meta';
+import { advanceYear, handleDonations } from './progression';
 import {
   arrivalInterval,
   courseReward,
@@ -38,7 +42,9 @@ export function spawnStudent(state: GameState, events: GameEvent[]): Student {
     look: { skin: randInt(state, 6), hair: randInt(state, 8), hairStyle: randInt(state, 4) },
     house: null,
     year: 1,
+    yearPassed: 0,
     coursesPassed: 0,
+    passedBy: {},
     xp: 0,
     fatigue: randInt(state, 20),
     hunger: randInt(state, 20),
@@ -144,7 +150,7 @@ export function chooseCourse(state: GameState, s: Student): Station | null {
   );
   return bestOf(options, (st) => {
     const def = COURSES[st.courseId!];
-    const time = serviceTime(st, 0, s) + estimatedWait(st);
+    const time = serviceTime(st, 0, s, state) + estimatedWait(st) + (isClosed(state, st) ? 30 : 0);
     const noise = 1 + (random(state) * 2 - 1) * COURSE_AI.randomness;
     return (def.reward / time) * noise;
   });
@@ -218,15 +224,24 @@ function complete(
       if (failed) {
         state.totals.coursesFailed++;
         events.push({ type: 'fail', stationId: st.id, studentId: s.id });
+        if (st.courseId === 'potions' && random(state) < EVENT_RULES.explosionChance) {
+          startEvent(state, 'explosion', events, st.id);
+        }
+        if (st.courseId === 'flying') {
+          s.fatigue = clamp(s.fatigue + EVENT_RULES.broomFallFatigue);
+          startEvent(state, 'broomFall', events, st.id);
+        }
       } else {
-        const amount = courseReward(st, s);
-        state.coins += amount;
-        state.totals.coinsEarned += amount;
+        const amount = courseReward(st, s, state);
+        const stored = deposit(st, amount);
+        st.stats.earned += stored;
         state.totals.coursesPassed++;
         s.coursesPassed++;
+        s.passedBy[st.courseId!] = (s.passedBy[st.courseId!] ?? 0) + 1;
         state.reputation += POPULATION.repOnCourse;
         if (s.house) state.cup.points[s.house] += HOUSE_CUP.pointsPerCourse;
-        events.push({ type: 'coins', stationId: st.id, amount, studentId: s.id });
+        events.push({ type: 'coins', stationId: st.id, amount: stored, studentId: s.id });
+        if (advanceYear(state, s, events)) return; // diplômé·e : quitte l'école
       }
       break;
     }
@@ -235,6 +250,7 @@ function complete(
 }
 
 function advanceSeats(state: GameState, st: Station, dt: number, events: GameEvent[]): void {
+  if (isClosed(state, st)) return;
   st.seats.forEach((seat, i) => {
     if (seat.occupant === null) return;
     seat.remaining -= dt;
@@ -247,6 +263,7 @@ function advanceSeats(state: GameState, st: Station, dt: number, events: GameEve
 }
 
 function fillSeats(state: GameState, st: Station): void {
+  if (isClosed(state, st)) return;
   for (let i = 0; i < st.seats.length && st.queue.length > 0; i++) {
     const seat = st.seats[i];
     if (seat.occupant !== null) continue;
@@ -258,7 +275,7 @@ function fillSeats(state: GameState, st: Station): void {
     }
     const since = s.activity.since;
     const wait = state.time - since;
-    const dur = serviceTime(st, i, s);
+    const dur = serviceTime(st, i, s, state);
     seat.occupant = id;
     seat.total = dur;
     seat.remaining = dur;
@@ -307,6 +324,18 @@ export function tick(state: GameState, dt: number = TICK_SECONDS): GameEvent[] {
     if (s.activity.mode === 'free') decide(state, s);
   }
   for (const st of stations) fillSeats(state, st);
+  // Managers : récolte automatique des coffres
+  for (const id of Object.keys(state.managers)) {
+    const st = state.stations[id];
+    if (st && st.pending >= 1) {
+      const n = Math.floor(st.pending);
+      st.pending -= n;
+      state.coins += n;
+      state.totals.coinsEarned += n;
+    }
+  }
+  handleDonations(state, dt);
+  handleEvents(state, events);
   handleCup(state, events);
   return events;
 }

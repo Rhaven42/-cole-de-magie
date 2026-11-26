@@ -90,3 +90,68 @@ export function queueSpot(k: number): Pt {
   const row = k % 10;
   return { x: PLOT.size + 0.45 + col * 0.55, y: 0.6 + row * 0.7 };
 }
+
+// ─── Déplacements : couloirs et portes ───────────────────────────────────────
+
+/** Point d'ancrage d'un élève : position (grille absolue) et salle éventuelle. */
+export interface Anchor {
+  g: Pt;
+  room: string | null;
+}
+
+const HALF_GAP = PLOT.gap / 2;
+
+/** Axes des couloirs (le long de y, à x fixe) et (le long de x, à y fixe). */
+export const CORRIDOR_X = [PLOT.margin - HALF_GAP, ...Array.from({ length: PLOT.cols }, (_, p) => plotOrigin(p, 0).x + PLOT.size + HALF_GAP)];
+export const CORRIDOR_Y = [PLOT.margin - HALF_GAP, ...Array.from({ length: PLOT.rows }, (_, q) => plotOrigin(0, q).y + PLOT.size + HALF_GAP)];
+
+/** Porte d'une salle : au milieu du mur avant droit. */
+export function doorOf(id: string): { inside: Pt; outside: Pt } | null {
+  const o = stationOrigin(id);
+  if (!o) return null;
+  const y = o.y + PLOT.size / 2;
+  return { inside: { x: o.x + PLOT.size - 0.7, y }, outside: { x: o.x + PLOT.size + HALF_GAP, y } };
+}
+
+/** Grille d'entrée de l'école. */
+export function gatePoint(): Pt {
+  const rec = plotOrigin(PLOTS.reception.px, PLOTS.reception.py);
+  return { x: GRID_X - 1.2, y: rec.y + PLOT.size / 2 };
+}
+
+function nearest(values: number[], v: number): number {
+  return values.reduce((a, b) => (Math.abs(b - v) < Math.abs(a - v) ? b : a));
+}
+
+/**
+ * Chemin (points de grille) d'un ancrage à un autre, en passant par les portes
+ * et en suivant les couloirs (déplacements en « L » sur le réseau de couloirs).
+ */
+export function route(from: Anchor, to: Anchor): Pt[] {
+  const pts: Pt[] = [];
+  const fromDoor = from.room ? doorOf(from.room) : null;
+  const toDoor = to.room ? doorOf(to.room) : null;
+  // Même salle : déplacement direct à l'intérieur.
+  if (from.room && from.room === to.room) return [to.g];
+
+  let c1: Pt;
+  if (fromDoor) {
+    pts.push(fromDoor.inside, fromDoor.outside);
+    c1 = fromDoor.outside;
+  } else {
+    c1 = { x: nearest(CORRIDOR_X, from.g.x), y: from.g.y };
+    pts.push(c1);
+  }
+  const c2: Pt = toDoor ? toDoor.outside : { x: nearest(CORRIDOR_X, to.g.x), y: to.g.y };
+  if (Math.abs(c1.x - c2.x) > 0.01) {
+    const yLine = CORRIDOR_Y.reduce((best, y) =>
+      Math.abs(c1.y - y) + Math.abs(c2.y - y) < Math.abs(c1.y - best) + Math.abs(c2.y - best) ? y : best,
+    );
+    pts.push({ x: c1.x, y: yLine }, { x: c2.x, y: yLine });
+  }
+  pts.push(c2);
+  if (toDoor) pts.push(toDoor.inside);
+  pts.push(to.g);
+  // Retire les points consécutifs identiques.
+  return pts.filter((p, i) => i === 0 || Math.hypot(p.x - pts[i - 1].x, p.y - pts[i - 1].y) > 0.01);
+}

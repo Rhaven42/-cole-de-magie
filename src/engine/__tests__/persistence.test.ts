@@ -65,3 +65,24 @@ describe('déterminisme', () => {
     expect(serialize(a)).toBe(serialize(b));
   });
 });
+
+describe('migration v1 → v2', () => {
+  it('ajoute les nouveaux champs sans perdre la partie', () => {
+    const v1 = JSON.parse(serialize(createGame(4)));
+    v1.schemaVersion = 1;
+    for (const k of ['managers', 'careers', 'alumni', 'events', 'nextEventAt', 'donationAcc', 'meta']) delete v1[k];
+    for (const st of Object.values(v1.stations) as Record<string, unknown>[]) {
+      delete st.pending;
+      delete st.closedUntil;
+    }
+    v1.coins = 1234;
+    v1.students = { 1: { id: 1, name: 'Test', activity: { mode: 'free', since: 0 } } };
+    const g = deserialize(JSON.stringify(v1))!;
+    expect(g.schemaVersion).toBe(2);
+    expect(g.coins).toBe(1234);
+    expect(g.meta.prestige).toBe(0);
+    expect(g.stations.reception.pending).toBe(0);
+    expect(g.students[1].passedBy).toEqual({});
+    for (let i = 0; i < 100; i++) tick(g);
+  });
+});

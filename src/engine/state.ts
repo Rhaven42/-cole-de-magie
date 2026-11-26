@@ -1,10 +1,11 @@
 import { COURSES, type CourseId } from '../data/courses';
 import { ECONOMY } from '../data/economy';
 import { HOUSE_CUP } from '../data/houses';
+import { EVENT_RULES } from '../data/events';
 import { SERVICES, type ServiceKind } from '../data/stations';
-import type { GameState, Seat, Station, StationKind } from './types';
+import type { GameState, Meta, Seat, Station, StationKind } from './types';
 
-export const SCHEMA_VERSION = 1;
+export const SCHEMA_VERSION = 2;
 
 export function makeSeat(level = 1): Seat {
   return { level, occupant: null, remaining: 0, total: 0 };
@@ -24,7 +25,9 @@ function makeStation(
     boughtSeats: 0,
     queue: [],
     tracks: {},
-    stats: { served: 0, left: 0, avgWait: 0, avgService: 0 },
+    stats: { served: 0, left: 0, avgWait: 0, avgService: 0, earned: 0 },
+    pending: 0,
+    closedUntil: 0,
     ...extra,
   };
 }
@@ -39,8 +42,12 @@ export function makeCourseStation(courseId: CourseId): Station {
   return makeStation(`course-${courseId}`, 'course', COURSES[courseId].seats, { courseId });
 }
 
+export function defaultMeta(): Meta {
+  return { prestige: 0, env: 0, relics: {}, dailyDay: null, dailyStreak: 0, lifetimeGraduates: 0 };
+}
+
 /** Nouvelle partie : manoir délabré avec Accueil, Salon, Grande Salle, 1 dortoir et Potions. */
-export function createGame(seed = 1, now = 0): GameState {
+export function createGame(seed = 1, now = 0, meta: Meta = defaultMeta()): GameState {
   const stations = [
     makeServiceStation('reception'),
     makeServiceStation('sorting'),
@@ -67,7 +74,14 @@ export function createGame(seed = 1, now = 0): GameState {
       lastWinner: null,
     },
     sortingBias: null,
-    totals: { coinsEarned: 0, coursesPassed: 0, coursesFailed: 0, arrived: 0, left: 0, sorted: 0 },
+    totals: { coinsEarned: 0, coursesPassed: 0, coursesFailed: 0, arrived: 0, left: 0, sorted: 0, graduated: 0, yearUps: 0 },
+    managers: {},
+    careers: {},
+    alumni: [],
+    events: [],
+    nextEventAt: EVENT_RULES.minInterval,
+    donationAcc: 0,
+    meta,
     lastSavedAt: now,
   };
 }

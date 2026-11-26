@@ -23,7 +23,8 @@ export function elapsedSince(state: GameState, nowMs: number): number {
 
 export function catchUp(state: GameState, seconds: number): OfflineSummary {
   const before = { ...state.totals };
-  const coinsBefore = state.totals.coinsEarned;
+  const pendingOf = () => Object.values(state.stations).reduce((a, st) => a + st.pending, 0);
+  const coinsBefore = state.totals.coinsEarned + pendingOf();
   let remaining = seconds;
   while (remaining > 0) {
     const dt = Math.min(OFFLINE_STEP, remaining);
@@ -32,7 +33,7 @@ export function catchUp(state: GameState, seconds: number): OfflineSummary {
   }
   return {
     seconds,
-    coins: state.totals.coinsEarned - coinsBefore,
+    coins: Math.round(state.totals.coinsEarned + pendingOf() - coinsBefore),
     courses: state.totals.coursesPassed - before.coursesPassed,
     arrived: state.totals.arrived - before.arrived,
     left: state.totals.left - before.left,
