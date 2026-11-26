@@ -5,18 +5,9 @@ import type { Student } from '../engine';
 import { t } from '../i18n';
 import { Chibi } from '../ui/Chibi';
 import { Crest } from '../ui/Crest';
-import { Bar, stationName } from '../ui/kit';
+import { activityLabel, StudentDetails } from './StudentSheet';
 import { colors, radius, space } from '../ui/theme';
 import { useGame, useTick } from '../state/store';
-
-function activityLabel(s: Student): string {
-  const game = useGame.getState().game;
-  const a = s.activity;
-  if (a.mode === 'free') return t('state.free');
-  const st = game.stations[a.stationId];
-  const place = st ? stationName(st) : '?';
-  return a.mode === 'queue' ? t('state.queue', { place }) : t('state.service', { place });
-}
 
 function StudentRow({ s, open, onPress }: { s: Student; open: boolean; onPress: () => void }) {
   return (
@@ -29,36 +20,17 @@ function StudentRow({ s, open, onPress }: { s: Student; open: boolean; onPress: 
         <View style={{ flex: 1, marginLeft: space.sm }}>
           <Text style={styles.name}>{s.name}</Text>
           <Text style={styles.sub}>
-            {t(`trait.${s.trait}`)} · {activityLabel(s)}
+            {t('students.year', { n: s.year })} · {activityLabel(s)}
           </Text>
         </View>
         {s.house ? <Crest house={s.house} size={32} /> : null}
       </View>
       {open ? (
         <View style={styles.details}>
-          <Text style={styles.sub}>
-            {s.house ? t(`house.${s.house}`) : t('students.unsorted')} ·{' '}
-            {t('students.year', { n: s.year })} · {t('students.passed', { n: s.coursesPassed })} ·{' '}
-            {s.xp} XP
-          </Text>
-          <Gauge label={t('students.fatigue')} v={s.fatigue} color="#7FA7D9" />
-          <Gauge label={t('students.hunger')} v={Math.min(s.hunger, 100)} color="#E39B4F" />
-          <Gauge label={t('students.mood')} v={s.mood} color={colors.good} />
+          <StudentDetails s={s} />
         </View>
       ) : null}
     </Pressable>
-  );
-}
-
-function Gauge({ label, v, color }: { label: string; v: number; color: string }) {
-  return (
-    <View style={styles.gauge}>
-      <Text style={styles.gaugeLabel}>{label}</Text>
-      <View style={{ flex: 1 }}>
-        <Bar value={v / 100} color={color} height={8} />
-      </View>
-      <Text style={styles.gaugeVal}>{Math.round(v)}</Text>
-    </View>
   );
 }
 

@@ -1,3 +1,4 @@
+import { COURSES } from '../../data/courses';
 import { createGame } from '../state';
 import {
   addSeat,
@@ -85,7 +86,7 @@ describe('économie et achats', () => {
     const g = createGame();
     g.coins = 1e9;
     expect(courseCost(g, 'botany')).toBe(120);
-    expect(courseCost(g, 'defense')).toBe(250000);
+    expect(courseCost(g, 'defense')).toBe(COURSES.defense.price);
     expect(buyCourse(g, 'botany')).toBe(true);
     expect(buyCourse(g, 'botany')).toBe(false);
     expect(g.stationOrder.indexOf('course-botany')).toBeLessThan(g.stationOrder.indexOf('hall'));
@@ -121,7 +122,17 @@ describe('économie et achats', () => {
     const g = createGame();
     expect(globalTarget(g)).toMatchObject({ kind: 'course', courseId: 'botany' });
     g.coins = 1e6;
-    for (const c of ['botany', 'history', 'charms', 'astronomy', 'flying', 'divination', 'transfiguration', 'defense'] as const) buyCourse(g, c);
+    for (const c of [
+      'botany',
+      'history',
+      'charms',
+      'astronomy',
+      'flying',
+      'divination',
+      'transfiguration',
+      'defense',
+    ] as const)
+      buyCourse(g, c);
     g.coins = 1e6;
     g.stations['dorm-0'].queue = Array.from({ length: 40 }, (_, i) => i + 1);
     expect(bottleneck(g).id).toBe('dorm-0');

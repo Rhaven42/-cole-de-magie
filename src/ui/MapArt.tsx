@@ -1,7 +1,8 @@
 import { memo, type ReactElement } from 'react';
-import Svg, { Ellipse, G, Line, Polygon } from 'react-native-svg';
+import Svg, { Circle, Ellipse, G, Line, Path, Polygon } from 'react-native-svg';
 import { HOUSE_IDS, HOUSES } from '../data/houses';
 import { GARDENS, ISO, PLOT, PLOTS } from '../data/layout';
+import { ENVIRONMENTS, type EnvDef } from '../data/environments';
 import type { Station } from '../engine';
 import {
   BackWalls,
@@ -14,7 +15,7 @@ import {
   Window,
   WallQuad,
 } from './isoArt';
-import { floorPoly, GRID_X, GRID_Y, iso, MAP_H, MAP_W, plotOrigin, seatSpot } from './iso';
+import { floorPoly, GRID_X, GRID_Y, iso, MAP_H, MAP_W, plotOrigin, type Pt } from './iso';
 
 const S = PLOT.size;
 const BLANKETS = ['#C0392B', '#1E8449', '#F4C430', '#2471A3'];
@@ -24,14 +25,69 @@ export interface RoomSnapshot {
   kind: Station['kind'];
   courseId?: string;
   level: number;
-  seats: number;
+  /** Position (grille relative) de chaque place. */
+  seats: Pt[];
 }
 
 function tier(level: number): number {
   return level >= 8 ? 2 : level >= 4 ? 1 : 0;
 }
 
-function Ground() {
+/** Élément de décor extérieur selon l'environnement. */
+function Deco({ p, s = 1, env }: { p: Pt; s?: number; env: EnvDef }) {
+  switch (env.deco) {
+    case 'coral':
+      return (
+        <G>
+          <Ellipse cx={p.x} cy={p.y} rx={10 * s} ry={5 * s} fill="rgba(0,0,0,0.18)" />
+          <Path
+            d={`M${p.x} ${p.y} C${p.x - 12 * s} ${p.y - 10 * s} ${p.x - 4 * s} ${p.y - 22 * s} ${p.x - 9 * s} ${p.y - 30 * s} M${p.x} ${p.y} C${p.x + 2 * s} ${p.y - 14 * s} ${p.x + 12 * s} ${p.y - 18 * s} ${p.x + 8 * s} ${p.y - 28 * s}`}
+            stroke="#F2789F"
+            strokeWidth={5 * s}
+            strokeLinecap="round"
+            fill="none"
+          />
+          <Circle cx={p.x + 12 * s} cy={p.y - 40 * s} r={3 * s} fill="#DFF6FF" opacity={0.7} />
+          <Circle cx={p.x + 8 * s} cy={p.y - 50 * s} r={2 * s} fill="#DFF6FF" opacity={0.6} />
+        </G>
+      );
+    case 'cloud':
+      return (
+        <G>
+          <Circle cx={p.x - 10 * s} cy={p.y - 8 * s} r={10 * s} fill="#FFFFFF" />
+          <Circle cx={p.x + 4 * s} cy={p.y - 14 * s} r={13 * s} fill="#FFFFFF" />
+          <Circle cx={p.x + 16 * s} cy={p.y - 6 * s} r={9 * s} fill="#F2F7FF" />
+        </G>
+      );
+    case 'mushroom':
+      return (
+        <G>
+          <Ellipse cx={p.x} cy={p.y} rx={10 * s} ry={5 * s} fill="rgba(0,0,0,0.2)" />
+          <Path
+            d={`M${p.x - 3 * s} ${p.y} L${p.x - 3 * s} ${p.y - 16 * s} L${p.x + 3 * s} ${p.y - 16 * s} L${p.x + 3 * s} ${p.y} Z`}
+            fill="#F3E6C8"
+          />
+          <Path
+            d={`M${p.x - 16 * s} ${p.y - 14 * s} Q${p.x} ${p.y - 40 * s} ${p.x + 16 * s} ${p.y - 14 * s} Z`}
+            fill="#C0392B"
+          />
+          <Circle cx={p.x - 5 * s} cy={p.y - 22 * s} r={2.5 * s} fill="#FFFFFF" />
+          <Circle cx={p.x + 6 * s} cy={p.y - 20 * s} r={2 * s} fill="#FFFFFF" />
+        </G>
+      );
+    case 'crater':
+      return (
+        <G>
+          <Ellipse cx={p.x} cy={p.y} rx={18 * s} ry={9 * s} fill="#6E6E84" />
+          <Ellipse cx={p.x} cy={p.y + 1} rx={13 * s} ry={6 * s} fill="#5A5A70" />
+        </G>
+      );
+    default:
+      return <Tree p={p} s={s} />;
+  }
+}
+
+function Ground({ env }: { env: EnvDef }) {
   const school0 = plotOrigin(0, 0);
   const w = PLOT.cols * (S + PLOT.gap) - PLOT.gap;
   const h = PLOT.rows * (S + PLOT.gap) - PLOT.gap;
@@ -42,14 +98,22 @@ function Ground() {
     const a = iso(school0.x - pad + i, school0.y - pad);
     const b = iso(school0.x - pad + i, school0.y + h + pad);
     lines.push(
-      <Line key={`l${i}`} x1={a.x} y1={a.y} x2={b.x} y2={b.y} stroke="#9A6B3F" strokeWidth={0.6} />,
+      <Line
+        key={`l${i}`}
+        x1={a.x}
+        y1={a.y}
+        x2={b.x}
+        y2={b.y}
+        stroke={env.corridorLine}
+        strokeWidth={0.6}
+      />,
     );
   }
   // Chemin d'entrée vers la grille
   const rec = plotOrigin(4, 3);
   return (
     <G>
-      <Polygon points={floorPoly(0, 0, GRID_X, GRID_Y)} fill="#6FA552" />
+      <Polygon points={floorPoly(0, 0, GRID_X, GRID_Y)} fill={env.ground} />
       <Polygon
         points={floorPoly(
           school0.x - pad - 0.4,
@@ -57,11 +121,11 @@ function Ground() {
           w + 2 * pad + 0.8,
           h + 2 * pad + 0.8,
         )}
-        fill="#7A4A2A"
+        fill={env.border}
       />
       <Polygon
         points={floorPoly(school0.x - pad, school0.y - pad, w + 2 * pad, h + 2 * pad)}
-        fill="#B07A4A"
+        fill={env.corridor}
       />
       {lines}
       <Polygon
@@ -70,7 +134,7 @@ function Ground() {
       />
       <Polygon
         points={floorPoly(rec.x + S + pad, rec.y + 1.4, GRID_X - rec.x - S - pad, 2.2)}
-        fill="#D9C7A3"
+        fill={env.path}
       />
       <Box gx={GRID_X - 2} gy={rec.y + 0.2} w={0.5} d={0.5} h={34} color="#6B6B78" />
       <Box gx={GRID_X - 2} gy={rec.y + 4.3} w={0.5} d={0.5} h={34} color="#6B6B78" />
@@ -96,20 +160,30 @@ function Ground() {
         [10, GRID_Y - 2.5],
         [28, GRID_Y - 2.5],
       ].map(([x, y], i) => (
-        <Tree key={i} p={iso(x, y)} s={1.1} />
+        <Deco key={i} p={iso(x, y)} s={1.1} env={env} />
       ))}
     </G>
   );
 }
 
-function Garden({ px, py, fountain }: { px: number; py: number; fountain: boolean }) {
+function Garden({
+  px,
+  py,
+  fountain,
+  env,
+}: {
+  px: number;
+  py: number;
+  fountain: boolean;
+  env: EnvDef;
+}) {
   const o = plotOrigin(px, py);
   const c = iso(o.x + S / 2, o.y + S / 2);
   return (
     <G>
-      <Polygon points={floorPoly(o.x, o.y, S, S)} fill="#7DB35C" />
-      <Polygon points={floorPoly(o.x + 3.4, o.y, 1.2, S)} fill="#D9C7A3" />
-      <Polygon points={floorPoly(o.x, o.y + 3.4, S, 1.2)} fill="#D9C7A3" />
+      <Polygon points={floorPoly(o.x, o.y, S, S)} fill={env.groundAlt} />
+      <Polygon points={floorPoly(o.x + 3.4, o.y, 1.2, S)} fill={env.path} />
+      <Polygon points={floorPoly(o.x, o.y + 3.4, S, 1.2)} fill={env.path} />
       {fountain ? (
         <G>
           <Ellipse cx={c.x} cy={c.y} rx={34} ry={17} fill="#9AA5A8" />
@@ -119,22 +193,32 @@ function Garden({ px, py, fountain }: { px: number; py: number; fountain: boolea
         </G>
       ) : (
         <G>
-          <Tree p={iso(o.x + 1.6, o.y + 1.6)} />
-          <Tree p={iso(o.x + 6.2, o.y + 1.8)} s={0.9} />
-          <Tree p={iso(o.x + 1.8, o.y + 6.3)} s={0.8} />
+          <Deco p={iso(o.x + 1.6, o.y + 1.6)} env={env} />
+          <Deco p={iso(o.x + 6.2, o.y + 1.8)} s={0.9} env={env} />
+          <Deco p={iso(o.x + 1.8, o.y + 6.3)} s={0.8} env={env} />
         </G>
       )}
     </G>
   );
 }
 
-function ConstructionPlot({ px, py, available }: { px: number; py: number; available: boolean }) {
+function ConstructionPlot({
+  px,
+  py,
+  available,
+  env,
+}: {
+  px: number;
+  py: number;
+  available: boolean;
+  env: EnvDef;
+}) {
   const o = plotOrigin(px, py);
   return (
     <G opacity={available ? 1 : 0.55}>
       <Polygon
         points={floorPoly(o.x, o.y, S, S)}
-        fill="#8FB36E"
+        fill={env.groundAlt}
         stroke={available ? '#F2B83B' : '#5E7A48'}
         strokeWidth={2}
         strokeDasharray="6 5"
@@ -223,7 +307,7 @@ function CourseDecor({
   return <G>{items}</G>;
 }
 
-function Room({ r }: { r: RoomSnapshot }) {
+function Room({ r, env }: { r: RoomSnapshot; env: EnvDef }) {
   const def = PLOTS[r.id];
   const o = plotOrigin(def.px, def.py);
   const t = tier(r.level);
@@ -239,13 +323,12 @@ function Room({ r }: { r: RoomSnapshot }) {
           />,
         );
 
-  const plaster = t === 2 ? '#F3E3C3' : t === 1 ? '#E9D6B0' : '#D8C49C';
-  const wood = '#6B4423';
+  const plaster = shade(env.plaster, t === 2 ? 1.12 : t === 1 ? 1.06 : 1);
+  const wood = env.wood;
   const kind = r.kind === 'course' ? r.courseId! : r.kind;
-  const furniture = Array.from({ length: r.seats }, (_, i) => {
-    const sp = seatSpot(r.kind, i);
-    return { i, gx: o.x + sp.x, gy: o.y + sp.y };
-  }).sort((a, b) => a.gx + a.gy - (b.gx + b.gy));
+  const furniture = r.seats
+    .map((sp, i) => ({ i, gx: o.x + sp.x, gy: o.y + sp.y }))
+    .sort((a, b) => a.gx + a.gy - (b.gx + b.gy));
 
   return (
     <G>
@@ -358,35 +441,37 @@ function Room({ r }: { r: RoomSnapshot }) {
 }
 
 interface Props {
+  env: number;
   rooms: RoomSnapshot[];
   /** Parcelles de construction proposées (id → achetable maintenant). */
   plots: { id: string; available: boolean }[];
 }
 
-function MapArtBase({ rooms, plots }: Props) {
+function MapArtBase({ rooms, plots, env: envIndex }: Props) {
+  const env = ENVIRONMENTS[envIndex] ?? ENVIRONMENTS[0];
   const items: { order: number; el: ReactElement }[] = [];
   for (const r of rooms) {
     const p = PLOTS[r.id];
-    if (p) items.push({ order: p.px + p.py, el: <Room key={r.id} r={r} /> });
+    if (p) items.push({ order: p.px + p.py, el: <Room key={r.id} r={r} env={env} /> });
   }
   for (const pl of plots) {
     const p = PLOTS[pl.id];
     if (p)
       items.push({
         order: p.px + p.py,
-        el: <ConstructionPlot key={pl.id} px={p.px} py={p.py} available={pl.available} />,
+        el: <ConstructionPlot key={pl.id} px={p.px} py={p.py} available={pl.available} env={env} />,
       });
   }
   GARDENS.forEach((g, i) =>
     items.push({
       order: g.px + g.py,
-      el: <Garden key={`g${i}`} px={g.px} py={g.py} fountain={i === 0} />,
+      el: <Garden key={`g${i}`} px={g.px} py={g.py} fountain={i === 0} env={env} />,
     }),
   );
   items.sort((a, b) => a.order - b.order);
   return (
     <Svg width={MAP_W} height={MAP_H}>
-      <Ground />
+      <Ground env={env} />
       {items.map((x) => x.el)}
     </Svg>
   );

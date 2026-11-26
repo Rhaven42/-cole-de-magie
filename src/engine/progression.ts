@@ -52,13 +52,23 @@ export function graduate(state: GameState, s: Student, events: GameEvent[]): voi
   state.alumni.unshift({ name: s.name, house: s.house, career, at: state.time });
   state.alumni = state.alumni.slice(0, 20);
   const relic = random(state) < GRADUATION.relicChance ? grantRelic(state, events) : null;
-  events.push({ type: 'graduated', name: s.name, house: s.house, career, coins: GRADUATION.coins, relic });
+  events.push({
+    type: 'graduated',
+    name: s.name,
+    house: s.house,
+    career,
+    coins: GRADUATION.coins,
+    relic,
+  });
   delete state.students[s.id];
 }
 
 /** Dons réguliers des anciens élèves (Éclats/min selon le métier). */
 export function donationsPerMin(state: GameState): number {
-  return CAREER_IDS.reduce((sum, id) => sum + (state.careers[id] ?? 0) * CAREERS[id].donationPerMin, 0);
+  return CAREER_IDS.reduce(
+    (sum, id) => sum + (state.careers[id] ?? 0) * CAREERS[id].donationPerMin,
+    0,
+  );
 }
 
 export function handleDonations(state: GameState, dt: number): void {

@@ -57,3 +57,18 @@ Temps réel = `base × 0,96^(niv−1) × (1 − 0,05·(niveauPlace−1)) × (1 �
 - Réputation avancée, agrandissements, missions, succès, prestige (J7)
 - Son (J8), tutoriel et build EAS (J9)
 - Monétisation : rien n'est branché (§15).
+
+## Mise à jour 0.5.0 — progression complète et méta
+
+- **Années (J4)** : 8 → 20 cours validés par année (`src/data/progression.ts`). Passage d'année = bonus (25 × année). Les 7e années suivent des cours « Avancés » (gains ×2, durée ×1,5). Les 9 matières sont achetables ; seuls les élèves de l'année requise peuvent y aller.
+- **Diplôme et métiers** : en fin de 7e année, l'élève quitte l'école (+600 Éclats, réputation +3, 30 % de chance de relique) et exerce le métier de la matière qu'il a le plus validée. Métiers **originaux** (pas de noms de licence) : Gardien·ne des Arcanes (Défense), Alchimiste, Herboriste, Archiviste des Mystères, Enchanteur·eresse, Cartographe des étoiles, Coursier·ère des nuées, Oracle, Métamorphiste. Les ancien·nes élèves envoient des **dons** réguliers selon leur métier.
+- **Coffres et récolte** : les Éclats d'un cours tombent dans le coffre de la salle (capacité = récompense × (15 + 5 × niveau)). On touche le coffre (ou « Tout récolter ») pour encaisser. Coffre plein = Éclats perdus : c'est la « relance de production » des jeux idle.
+- **Managers** (un par matière, noms originaux) : récoltent automatiquement (même hors-ligne), −5 % de durée. Prix = 1,5 × prix de la salle + 100.
+- **Événements** : toutes les 2,5 à 5 min, un événement est tiré au sort (Banquet, Étoiles filantes, Fantôme farceur, Hibou messager, Inspection). Incidents : explosion de chaudron après un échec en Potions (salle fermée 10 s), chute de balai après un échec en Balais volants.
+- **Déplacements** : les élèves suivent l'axe des couloirs et passent par la porte de chaque salle (milieu du mur avant droit). Le chemin est calculé par `route()` (`src/ui/iso.ts`, testé). Au plus 60 élèves sont dessinés à la fois ; la simulation, elle, gère tout le monde.
+- **Réaménagement** : chaque place peut être déplacée dans la zone de sa salle (de 0,9 à 7,1 tuiles, 0,95 d'écart minimum) depuis la fiche de la salle. Les places déplacées gardent leur position et la salle reste dans sa zone d'origine.
+- **Collection** : 16 reliques réparties en 4 collections. Chaque relique donne +1 % d'Éclats, chaque collection complète +5 %.
+- **Cadeau du jour** : cycle de 7 jours consécutifs. Une série cassée fait repartir au jour 1. Le 7e jour donne des Gemmes et une relique.
+- **Prestige — « Nouvelle légende »** : à partir de 40 diplômé·es (+15 par reconstruction), on repart de zéro dans l'environnement suivant : Vieux Manoir → Académie des Abysses (sous-marine) → Citadelle des Nuages → Forêt profonde → Observatoire lunaire. On garde les Gemmes (+10), les reliques et le cadeau du jour, et on gagne +25 % d'Éclats permanents par niveau.
+- **Sauvegarde v2** : la migration v1 → v2 ajoute les nouveaux champs ; une ancienne partie se charge sans perte.
+- **Professeur nommé** : Défense contre les Forces du Mal → **Harvald** (nom de famille à venir), dans `src/data/professors.ts`. Il sera repris au J5 (recrutement des professeurs).

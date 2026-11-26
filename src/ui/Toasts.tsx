@@ -14,6 +14,21 @@ export function Toasts() {
   return (
     <View style={styles.wrap} pointerEvents="none">
       {visible.map((x) => {
+        if (x.kind === 'graduated' || x.kind === 'event' || x.kind === 'relic') {
+          const border =
+            x.kind === 'graduated' && x.house
+              ? HOUSES[x.house].color
+              : x.kind === 'relic'
+                ? colors.gold
+                : colors.woodLight;
+          return (
+            <View key={x.key} style={[styles.toast, { borderColor: border }]}>
+              <Text style={{ fontSize: 26 }}>{x.icon}</Text>
+              <Text style={[styles.title, { flex: 1, marginLeft: space.sm }]}>{x.title}</Text>
+              {x.kind === 'graduated' && x.house ? <Crest house={x.house} size={32} /> : null}
+            </View>
+          );
+        }
         if (x.kind === 'sorted' && x.house) {
           return (
             <View key={x.key} style={[styles.toast, { borderColor: HOUSES[x.house].color }]}>

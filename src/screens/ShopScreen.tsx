@@ -1,6 +1,7 @@
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
-import { COURSE_IDS, COURSES, UNLOCKED_COURSES } from '../data/courses';
-import { courseCost, dormCost, dormCount } from '../engine';
+import { COURSE_IDS, COURSES } from '../data/courses';
+import { MANAGERS } from '../data/managers';
+import { courseCost, dormCost, dormCount, managerCost } from '../engine';
 import { t } from '../i18n';
 import { BuyButton, Title } from '../ui/kit';
 import { colors, formatDuration, radius, space } from '../ui/theme';
@@ -10,6 +11,7 @@ export function ShopScreen() {
   useTick();
   const game = useGame((s) => s.game);
   const store = useGame.getState();
+  const ownedCourses = COURSE_IDS.filter((id) => game.stations[`course-${id}`]);
   return (
     <ScrollView style={styles.bg} contentContainerStyle={styles.content}>
       <Title>{t('shop.rooms')}</Title>
@@ -24,14 +26,6 @@ export function ShopScreen() {
                 {def.icon} {t(`course.${id}`)}
               </Text>
               <Text style={styles.ownedTag}>✓ {t('shop.owned')}</Text>
-            </View>
-          );
-        }
-        if (!UNLOCKED_COURSES.includes(id)) {
-          return (
-            <View key={id} style={[styles.owned, { opacity: 0.55 }]}>
-              <Text style={styles.ownedText}>🔒 {t(`course.${id}`)}</Text>
-              <Text style={styles.ownedTag}>{t('shop.comingSoon')}</Text>
             </View>
           );
         }
@@ -56,6 +50,32 @@ export function ShopScreen() {
         coins={game.coins}
         onPress={() => store.buyDorm()}
       />
+      <Title style={{ marginTop: space.lg }}>👔 {t('shop.managers')}</Title>
+      <Text style={styles.note}>{t('room.managerSub')}</Text>
+      {ownedCourses.map((id) => {
+        const sid = `course-${id}`;
+        if (game.managers[sid]) {
+          return (
+            <View key={id} style={styles.owned}>
+              <Text style={styles.ownedText}>
+                {COURSES[id].icon} {MANAGERS[id]}
+              </Text>
+              <Text style={styles.ownedTag}>✓</Text>
+            </View>
+          );
+        }
+        return (
+          <BuyButton
+            key={id}
+            icon={COURSES[id].icon}
+            label={MANAGERS[id]}
+            sub={t(`course.${id}`)}
+            cost={managerCost(game, sid)}
+            coins={game.coins}
+            onPress={() => store.hireManager(sid)}
+          />
+        );
+      })}
       <Text style={styles.note}>
         Lits, décoration, matériel, fournisseurs et professeurs arrivent au jalon J5.
       </Text>
@@ -79,5 +99,5 @@ const styles = StyleSheet.create({
   },
   ownedText: { flex: 1, fontWeight: '600', color: colors.ink },
   ownedTag: { color: colors.good, fontWeight: '700' },
-  note: { marginTop: space.lg, color: colors.inkSoft, fontStyle: 'italic' },
+  note: { marginVertical: space.sm, color: colors.inkSoft, fontStyle: 'italic' },
 });

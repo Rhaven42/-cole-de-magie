@@ -3,56 +3,82 @@ import { Animated, Easing, StyleSheet, Text, View } from 'react-native';
 import { HOUSES } from '../data/houses';
 import type { Student } from '../engine';
 import { Chibi } from './Chibi';
+import { iso, route, type Anchor } from './iso';
 
 const SIZE = 20;
 /** Vitesse de marche (px de carte par seconde). */
-const SPEED = 90;
+const SPEED = 110;
+
+function same(a: Anchor, b: Anchor): boolean {
+  return a.room === b.room && Math.abs(a.g.x - b.g.x) < 0.01 && Math.abs(a.g.y - b.g.y) < 0.01;
+}
 
 /**
- * Élève sur la carte : se déplace en ligne droite (animation native) vers sa
- * position cible. Purement visuel : la simulation ne dépend pas de la marche.
+ * Élève sur la carte. Il suit les couloirs et passe par les portes
+ * (chemin calculé par `route`), segment par segment. Purement visuel.
  */
 export function Walker({
   student,
-  x,
-  y,
+  anchor,
   sleeping,
+  from,
 }: {
   student: Student;
-  x: number;
-  y: number;
+  anchor: Anchor;
   sleeping: boolean;
+  from?: Anchor;
 }) {
-  const [pos] = useState(() => new Animated.ValueXY({ x, y }));
+  const [init] = useState<Anchor>(() => from ?? anchor);
+  const [start] = useState(() => iso(init.g.x, init.g.y));
+  const [pos] = useState(() => new Animated.ValueXY(start));
   const [bob] = useState(() => new Animated.Value(0));
-  const last = useRef({ x, y });
+  const last = useRef<Anchor>(init);
+  const here = useRef(start);
+  const key = `${anchor.room}|${anchor.g.x.toFixed(2)}|${anchor.g.y.toFixed(2)}`;
 
   useEffect(() => {
-    const dist = Math.hypot(x - last.current.x, y - last.current.y);
-    if (dist < 0.5) return;
-    last.current = { x, y };
+    const target: Anchor = { g: { ...anchor.g }, room: anchor.room };
+    if (same(last.current, target)) return;
+    const pts = route(last.current, target).map((p) => iso(p.x, p.y));
+    last.current = target;
+    let cancelled = false;
+    let current: Animated.CompositeAnimation | null = null;
     const step = Animated.loop(
       Animated.sequence([
         Animated.timing(bob, { toValue: -2.5, duration: 140, useNativeDriver: true }),
         Animated.timing(bob, { toValue: 0, duration: 140, useNativeDriver: true }),
       ]),
     );
-    const move = Animated.timing(pos, {
-      toValue: { x, y },
-      duration: Math.min(4000, Math.max(150, (dist / SPEED) * 1000)),
-      easing: Easing.linear,
-      useNativeDriver: true,
-    });
     step.start();
-    move.start(() => {
-      step.stop();
-      bob.setValue(0);
-    });
+    const go = (i: number) => {
+      if (cancelled) return;
+      if (i >= pts.length) {
+        step.stop();
+        bob.setValue(0);
+        return;
+      }
+      const p = pts[i];
+      const dist = Math.hypot(p.x - here.current.x, p.y - here.current.y);
+      current = Animated.timing(pos, {
+        toValue: p,
+        duration: Math.max(30, (dist / SPEED) * 1000),
+        easing: Easing.linear,
+        useNativeDriver: true,
+      });
+      current.start(({ finished }) => {
+        if (!finished) return;
+        here.current = p;
+        go(i + 1);
+      });
+    };
+    go(0);
     return () => {
-      move.stop();
+      cancelled = true;
+      current?.stop();
       step.stop();
     };
-  }, [x, y, pos, bob]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [key]);
 
   const hat = student.house ? HOUSES[student.house].color : '#4B3B5E';
   return (

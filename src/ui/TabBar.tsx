@@ -2,13 +2,13 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { t } from '../i18n';
 import { colors, TOUCH } from './theme';
 
-export type Tab = 'school' | 'shop' | 'students' | 'houses' | 'settings';
+export type Tab = 'school' | 'shop' | 'students' | 'houses' | 'more';
 const TABS: { id: Tab; icon: string }[] = [
   { id: 'school', icon: '🏰' },
   { id: 'shop', icon: '🛒' },
   { id: 'students', icon: '🎓' },
   { id: 'houses', icon: '🏆' },
-  { id: 'settings', icon: '⚙️' },
+  { id: 'more', icon: '☰' },
 ];
 
 export function TabBar({ tab, onChange }: { tab: Tab; onChange: (t: Tab) => void }) {

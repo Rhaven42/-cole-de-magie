@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import {
   GestureDetector,
@@ -8,65 +8,124 @@ import {
   useTapGesture,
 } from 'react-native-gesture-handler';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
-import { COURSES, UNLOCKED_COURSES } from '../data/courses';
+import { COURSES, type CourseId } from '../data/courses';
+import { ENVIRONMENTS } from '../data/environments';
+import { EVENTS } from '../data/events';
 import { ISO, PLOT, PLOTS } from '../data/layout';
 import { DORM_PURCHASE } from '../data/stations';
-import { courseCost, dormCount, estimatedWait, type GameState, type Station } from '../engine';
+import {
+  courseCost,
+  dormCount,
+  estimatedWait,
+  isClosed,
+  storageCap,
+  type GameState,
+  type Station,
+} from '../engine';
 import { useGame, useTick } from '../state/store';
 import { FloatText } from '../ui/Floater';
-import { hitPlot, iso, MAP_H, MAP_W, plotOrigin, queueSpot, seatSpot, unIso } from '../ui/iso';
+import { Hat, ThinkingCrests } from '../ui/Hat';
+import {
+  gatePoint,
+  hitPlot,
+  iso,
+  MAP_H,
+  MAP_W,
+  plotOrigin,
+  queueSpot,
+  seatPos,
+  unIso,
+  type Anchor,
+  type Pt,
+} from '../ui/iso';
 import { MapArt, type RoomSnapshot } from '../ui/MapArt';
 import { stationName } from '../ui/kit';
 import { colors, formatDuration, formatNumber } from '../ui/theme';
 import { Walker } from '../ui/Walker';
-import { Hat, ThinkingCrests } from '../ui/Hat';
 
 const MIN_SCALE = 0.35;
 const MAX_SCALE = 1.8;
-const MAX_QUEUE_SHOWN = 20;
+const MAX_QUEUE_SHOWN = 16;
+/** Nombre max d'élèves dessinés (la simulation, elle, gère tout le monde). */
+const MAX_AGENTS = 60;
 
-/** Position écran (carte) de chaque élève visible. */
-function studentPositions(game: GameState) {
-  const out: { id: number; x: number; y: number; sleeping: boolean }[] = [];
+interface Placed {
+  id: number;
+  anchor: Anchor;
+  sleeping: boolean;
+  /** Priorité d'affichage (places d'abord, puis tête de file). */
+  prio: number;
+}
+
+/** Ancrage (grille absolue + salle) de chaque élève visible. */
+function placeStudents(game: GameState): Placed[] {
+  const out: Placed[] = [];
   for (const st of Object.values(game.stations)) {
     const def = PLOTS[st.id];
     if (!def) continue;
     const o = plotOrigin(def.px, def.py);
     st.seats.forEach((seat, i) => {
       if (seat.occupant === null) return;
-      const sp = seatSpot(st.kind, i);
+      const sp = seatPos(st.kind, i, seat.pos);
       const dx = st.kind === 'dorm' ? -0.2 : st.kind === 'hall' ? 0 : 0.35;
-      const p = iso(o.x + sp.x + dx, o.y + sp.y + (st.kind === 'hall' ? 0 : 0.1));
-      out.push({ id: seat.occupant, x: p.x, y: p.y, sleeping: st.kind === 'dorm' });
+      const dy = st.kind === 'hall' ? 0 : 0.1;
+      out.push({
+        id: seat.occupant,
+        anchor: { g: { x: o.x + sp.x + dx, y: o.y + sp.y + dy }, room: st.id },
+        sleeping: st.kind === 'dorm',
+        prio: 0,
+      });
     });
     st.queue.slice(0, MAX_QUEUE_SHOWN).forEach((id, k) => {
       const q = queueSpot(k);
-      const p = iso(o.x + q.x, o.y + q.y);
-      out.push({ id, x: p.x, y: p.y, sleeping: false });
+      out.push({
+        id,
+        anchor: { g: { x: o.x + q.x, y: o.y + q.y }, room: null },
+        sleeping: false,
+        prio: 1 + k,
+      });
     });
   }
-  return out;
+  return out.sort((a, b) => a.prio - b.prio).slice(0, MAX_AGENTS);
+}
+
+function seatsOf(st: Station): Pt[] {
+  return st.seats.map((seat, i) => seatPos(st.kind, i, seat.pos));
 }
 
 function snapshot(game: GameState) {
   const rooms: RoomSnapshot[] = game.stationOrder.map((id) => {
     const s = game.stations[id];
-    return { id, kind: s.kind, courseId: s.courseId, level: s.level, seats: s.seats.length };
+    return { id, kind: s.kind, courseId: s.courseId, level: s.level, seats: seatsOf(s) };
   });
   const plots: { id: string; available: boolean }[] = [];
   for (const cid of Object.keys(COURSES)) {
     const id = `course-${cid}`;
-    if (!game.stations[id]) plots.push({ id, available: UNLOCKED_COURSES.includes(cid as never) });
+    if (!game.stations[id]) plots.push({ id, available: true });
   }
   const nextDorm = dormCount(game);
   if (nextDorm < DORM_PURCHASE.max) plots.push({ id: `dorm-${nextDorm}`, available: true });
-  return { rooms, plots };
+  return { rooms, plots, env: game.meta.env };
 }
 
-function RoomLabel({ st }: { st: Station }) {
+function roomCenter(id: string): Pt {
+  const def = PLOTS[id];
+  const o = plotOrigin(def.px, def.py);
+  return iso(o.x + PLOT.size / 2, o.y + PLOT.size / 2);
+}
+
+/** Position du coffre (écran carte) : coin avant de la salle. */
+function cofferPos(id: string): Pt {
+  const def = PLOTS[id];
+  const o = plotOrigin(def.px, def.py);
+  const p = iso(o.x + PLOT.size - 1.4, o.y + PLOT.size - 1.4);
+  return { x: p.x, y: p.y - 26 };
+}
+
+function RoomLabel({ st, managed }: { st: Station; managed: boolean }) {
   const def = PLOTS[st.id];
   const o = plotOrigin(def.px, def.py);
-  const p = iso(o.x + PLOT.size / 2, o.y + PLOT.size / 2);
+  const p = roomCenter(st.id);
   const crowded = st.queue.length > st.seats.length * 1.5;
   return (
     <View
@@ -74,6 +133,7 @@ function RoomLabel({ st }: { st: Station }) {
       style={[styles.label, { left: p.x - 70, top: iso(o.x, o.y).y - ISO.wallH - 26 }]}
     >
       <Text style={styles.labelName} numberOfLines={1}>
+        {managed ? '👔 ' : ''}
         {stationName(st)} <Text style={styles.labelLvl}>· {st.level}</Text>
       </Text>
       <Text style={styles.labelSub}>
@@ -84,33 +144,37 @@ function RoomLabel({ st }: { st: Station }) {
   );
 }
 
-function BuildSign({ id, game }: { id: string; game: GameState }) {
-  const def = PLOTS[id];
-  const o = plotOrigin(def.px, def.py);
-  const p = iso(o.x + PLOT.size / 2, o.y + PLOT.size / 2);
-  const isCourse = id.startsWith('course-');
-  const cid = id.slice(7) as keyof typeof COURSES;
-  const cost = isCourse ? courseCost(game, cid) : null;
-  const locked = isCourse && !UNLOCKED_COURSES.includes(cid);
-  const text = isCourse
-    ? `${COURSES[cid].icon} ${stationName({ kind: 'course', courseId: cid } as Station)}`
-    : '🛏️ Dortoir';
+function Coffer({ st }: { st: Station }) {
+  const p = cofferPos(st.id);
+  const full = st.pending >= storageCap(st);
   return (
     <View
       pointerEvents="none"
-      style={[styles.sign, { left: p.x - 65, top: p.y - 22 }, locked && { opacity: 0.6 }]}
+      style={[styles.coffer, full && styles.cofferFull, { left: p.x - 32, top: p.y - 16 }]}
     >
+      <Text style={styles.cofferText}>💰 {formatNumber(st.pending)}</Text>
+    </View>
+  );
+}
+
+function BuildSign({ id, game }: { id: string; game: GameState }) {
+  const p = roomCenter(id);
+  const isCourse = id.startsWith('course-');
+  const cid = id.slice(7) as CourseId;
+  const cost = isCourse ? courseCost(game, cid) : null;
+  const text = isCourse
+    ? `${COURSES[cid].icon} ${stationName({ kind: 'course', courseId: cid } as Station)}`
+    : '🛏️ Dortoir';
+  const affordable = cost !== null && game.coins >= cost;
+  return (
+    <View pointerEvents="none" style={[styles.sign, { left: p.x - 65, top: p.y - 26 }]}>
       <Text style={styles.signText} numberOfLines={1}>
-        {locked ? '🔒 ' : '🔨 '}
-        {text}
+        🔨 {text}
       </Text>
-      <Text style={[styles.signPrice, cost !== null && game.coins >= cost && { color: '#8BE08F' }]}>
-        {locked
-          ? `Année ${COURSES[cid].yearMin}+`
-          : cost !== null
-            ? `${formatNumber(cost)} 💰`
-            : 'Construire'}
+      <Text style={[styles.signPrice, affordable && { color: '#8BE08F' }]}>
+        {cost !== null ? `${formatNumber(cost)} 💰` : 'Construire'}
       </Text>
+      {isCourse ? <Text style={styles.signYear}>Année {COURSES[cid].yearMin}+</Text> : null}
     </View>
   );
 }
@@ -118,8 +182,7 @@ function BuildSign({ id, game }: { id: string; game: GameState }) {
 /** Méliandre sur son piédestal, au centre du Salon des Destinées. */
 function SortingHat({ game }: { game: GameState }) {
   const st = game.stations.sorting;
-  const def = PLOTS.sorting;
-  const o = plotOrigin(def.px, def.py);
+  const o = plotOrigin(PLOTS.sorting.px, PLOTS.sorting.py);
   const c = iso(o.x + 4, o.y + 4);
   const busy = st.seats.some((x) => x.occupant !== null);
   return (
@@ -134,60 +197,139 @@ function SortingHat({ game }: { game: GameState }) {
   );
 }
 
-/** École en vue isométrique : glisser pour se déplacer, pincer pour zoomer, toucher une salle. */
+/** Marqueurs visuels des événements en cours (fumée, fantôme, étoiles, banquet). */
+function EventMarkers({ game }: { game: GameState }) {
+  const marks: { key: string; id: string; icon: string; big?: boolean }[] = [];
+  for (const st of Object.values(game.stations)) {
+    if (isClosed(game, st)) marks.push({ key: `x-${st.id}`, id: st.id, icon: '💨💥💨', big: true });
+  }
+  for (const e of game.events) {
+    if (e.until <= game.time) continue;
+    if (e.id === 'ghost' && e.stationId)
+      marks.push({ key: `g-${e.stationId}`, id: e.stationId, icon: EVENTS.ghost.icon, big: true });
+    if (e.id === 'banquet') marks.push({ key: 'banquet', id: 'hall', icon: '🍗🎉🥧', big: true });
+    if (e.id === 'shootingStars') {
+      for (const id of ['course-astronomy', 'course-divination'])
+        if (game.stations[id]) marks.push({ key: `s-${id}`, id, icon: '🌠✨🌠', big: true });
+    }
+  }
+  return (
+    <>
+      {marks.map((m) => {
+        const c = roomCenter(m.id);
+        return (
+          <Text
+            key={m.key}
+            pointerEvents="none"
+            style={[styles.mark, { left: c.x - 60, top: c.y - 70 }, m.big && { fontSize: 30 }]}
+          >
+            {m.icon}
+          </Text>
+        );
+      })}
+    </>
+  );
+}
+
+/** École en vue isométrique : glisser pour se déplacer, pincer pour zoomer, toucher une salle ou un élève. */
 export function SchoolScreen() {
   useTick();
   const game = useGame((s) => s.game);
   const floaters = useGame((s) => s.floaters);
-  const select = useGame((s) => s.select);
   const [size, setSize] = useState({ w: 390, h: 700 });
 
   // Cadrage initial : Accueil, Salon, Grande Salle et Potions visibles.
-  const start = iso(plotOrigin(3, 2).x + 7, plotOrigin(3, 2).y + 7);
-  const scale = useSharedValue(0.62);
-  const tx = useSharedValue(195 - start.x * 0.62);
-  const ty = useSharedValue(400 - start.y * 0.62);
+  const start = iso(plotOrigin(3, 3).x + 1, plotOrigin(3, 3).y - 1);
+  const scale = useSharedValue(0.55);
+  const tx = useSharedValue(195 - start.x * 0.55);
+  const ty = useSharedValue(380 - start.y * 0.55);
 
-  const clampT = (s: number, w: number, h: number) => {
-    'worklet';
-    tx.value = Math.min(w * 0.6, Math.max(w * 0.4 - MAP_W * s, tx.value));
-    ty.value = Math.min(h * 0.6, Math.max(h * 0.4 - MAP_H * s, ty.value));
-  };
   const W = size.w;
   const H = size.h;
+  const clampT = (s: number) => {
+    'worklet';
+    tx.value = Math.min(W * 0.6, Math.max(W * 0.4 - MAP_W * s, tx.value));
+    ty.value = Math.min(H * 0.6, Math.max(H * 0.4 - MAP_H * s, ty.value));
+  };
 
-  const pan = usePanGesture({
-    onUpdate: (e) => {
-      'worklet';
-      tx.value += e.changeX;
-      ty.value += e.changeY;
-      clampT(scale.value, W, H);
-    },
+  const placed = placeStudents(game);
+
+  const onTap = (sx: number, sy: number) => {
+    const store = useGame.getState();
+    const g = store.game;
+    const mx = (sx - tx.value) / scale.value;
+    const my = (sy - ty.value) / scale.value;
+    // 1. Coffres
+    for (const st of Object.values(g.stations)) {
+      if (st.kind !== 'course' || st.pending < 1) continue;
+      const p = cofferPos(st.id);
+      if (Math.abs(mx - p.x) < 36 && Math.abs(my - p.y) < 20) {
+        store.collect(st.id);
+        return;
+      }
+    }
+    // 2. Élèves (position cible)
+    let best: { id: number; d: number } | null = null;
+    for (const p of placeStudents(g)) {
+      const s = iso(p.anchor.g.x, p.anchor.g.y);
+      const d = Math.hypot(mx - s.x, my - (s.y - 10));
+      if (d < 16 && (!best || d < best.d)) best = { id: p.id, d };
+    }
+    if (best) {
+      store.selectStudent(best.id);
+      return;
+    }
+    // 3. Salles et parcelles
+    const id = hitPlot(unIso(mx, my));
+    if (!id) return;
+    if (g.stations[id] || id.startsWith('course-') || id === `dorm-${dormCount(g)}`)
+      store.select(id);
+  };
+
+  // Configurations de gestes stables : sinon chaque rendu (4×/s) recrée les gestes
+  // et un toucher en cours peut être annulé.
+  const tapRef = useRef(onTap);
+  useEffect(() => {
+    tapRef.current = onTap;
   });
-  const pinch = usePinchGesture({
-    onUpdate: (e) => {
-      'worklet';
-      const s0 = scale.value;
-      const s1 = Math.min(MAX_SCALE, Math.max(MIN_SCALE, s0 * e.scaleChange));
-      tx.value = e.focalX - (e.focalX - tx.value) * (s1 / s0);
-      ty.value = e.focalY - (e.focalY - ty.value) * (s1 / s0);
-      scale.value = s1;
-      clampT(s1, W, H);
-    },
-  });
-  const tap = useTapGesture({
-    runOnJS: true,
-    maxDistance: 12,
-    onActivate: (e) => {
-      const mx = (e.x - tx.value) / scale.value;
-      const my = (e.y - ty.value) / scale.value;
-      const id = hitPlot(unIso(mx, my));
-      if (!id) return;
-      const st = useGame.getState().game.stations[id];
-      if (st || id.startsWith('course-') || id === `dorm-${dormCount(useGame.getState().game)}`)
-        select(id);
-    },
-  });
+  const panConfig = useMemo(
+    () => ({
+      onUpdate: (e: { changeX: number; changeY: number }) => {
+        'worklet';
+        tx.value += e.changeX;
+        ty.value += e.changeY;
+        clampT(scale.value);
+      },
+    }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [W, H],
+  );
+  const pinchConfig = useMemo(
+    () => ({
+      onUpdate: (e: { scaleChange: number; focalX: number; focalY: number }) => {
+        'worklet';
+        const s0 = scale.value;
+        const s1 = Math.min(MAX_SCALE, Math.max(MIN_SCALE, s0 * e.scaleChange));
+        tx.value = e.focalX - (e.focalX - tx.value) * (s1 / s0);
+        ty.value = e.focalY - (e.focalY - ty.value) * (s1 / s0);
+        scale.value = s1;
+        clampT(s1);
+      },
+    }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [W, H],
+  );
+  const tapConfig = useMemo(
+    () => ({
+      runOnJS: true,
+      maxDistance: 12,
+      onActivate: (e: { x: number; y: number }) => tapRef.current(e.x, e.y),
+    }),
+    [],
+  );
+  const pan = usePanGesture(panConfig);
+  const pinch = usePinchGesture(pinchConfig);
+  const tap = useTapGesture(tapConfig);
   const gesture = useSimultaneousGestures(pan, pinch, tap);
 
   const zoom = (f: number) => {
@@ -208,35 +350,52 @@ export function SchoolScreen() {
   const snapKey = JSON.stringify(snap);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const stableSnap = useMemo(() => snap, [snapKey]);
-  const positions = studentPositions(game).sort((a, b) => a.y - b.y);
+  const ordered = [...placed].sort(
+    (a, b) => iso(a.anchor.g.x, a.anchor.g.y).y - iso(b.anchor.g.x, b.anchor.g.y).y,
+  );
+  const gate: Anchor = { g: gatePoint(), room: null };
+  const env = ENVIRONMENTS[game.meta.env] ?? ENVIRONMENTS[0];
 
   return (
     <View
-      style={styles.viewport}
+      style={[styles.viewport, { backgroundColor: env.backdrop }]}
       onLayout={(e) => setSize({ w: e.nativeEvent.layout.width, h: e.nativeEvent.layout.height })}
     >
       <GestureDetector gesture={gesture}>
         <View style={StyleSheet.absoluteFill}>
           <Animated.View style={[styles.map, mapStyle]}>
-            <MapArt rooms={stableSnap.rooms} plots={stableSnap.plots} />
+            <MapArt env={stableSnap.env} rooms={stableSnap.rooms} plots={stableSnap.plots} />
             {stableSnap.plots.map((p) => (
               <BuildSign key={p.id} id={p.id} game={game} />
             ))}
-            {positions.map((p) => {
+            {ordered.map((p) => {
               const s = game.students[p.id];
-              return s ? (
-                <Walker key={p.id} student={s} x={p.x} y={p.y} sleeping={p.sleeping} />
-              ) : null;
+              if (!s) return null;
+              const fresh = game.time - s.arrivedAt < 3;
+              return (
+                <Walker
+                  key={p.id}
+                  student={s}
+                  anchor={p.anchor}
+                  sleeping={p.sleeping}
+                  from={fresh ? gate : undefined}
+                />
+              );
             })}
             <SortingHat game={game} />
+            <EventMarkers game={game} />
             {game.stationOrder.map((id) => (
-              <RoomLabel key={id} st={game.stations[id]} />
+              <RoomLabel key={id} st={game.stations[id]} managed={!!game.managers[id]} />
             ))}
+            {game.stationOrder.map((id) => {
+              const st = game.stations[id];
+              return st.kind === 'course' && st.pending >= 1 && !game.managers[id] ? (
+                <Coffer key={`c-${id}`} st={st} />
+              ) : null;
+            })}
             {floaters.map((f) => {
-              const def = PLOTS[f.stationId];
-              if (!def) return null;
-              const o = plotOrigin(def.px, def.py);
-              const c = iso(o.x + PLOT.size / 2, o.y + PLOT.size / 2);
+              if (!PLOTS[f.stationId]) return null;
+              const c = roomCenter(f.stationId);
               return (
                 <View
                   key={f.key}
@@ -258,12 +417,19 @@ export function SchoolScreen() {
           <Text style={styles.zoomText}>－</Text>
         </Pressable>
       </View>
+      <Pressable
+        style={styles.collectAll}
+        onPress={() => useGame.getState().collectAll()}
+        accessibilityLabel="Tout récolter"
+      >
+        <Text style={styles.collectText}>💰 Tout récolter</Text>
+      </Pressable>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  viewport: { flex: 1, backgroundColor: '#5E9446', overflow: 'hidden' },
+  viewport: { flex: 1, overflow: 'hidden' },
   map: {
     position: 'absolute',
     left: 0,
@@ -297,6 +463,19 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     borderColor: colors.white,
   },
+  coffer: {
+    position: 'absolute',
+    width: 64,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: '#FFF3C4',
+    borderWidth: 2,
+    borderColor: colors.goldDark,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  cofferFull: { backgroundColor: '#FFD86B', borderColor: '#C0392B' },
+  cofferText: { fontWeight: '900', fontSize: 12, color: colors.ink },
   sign: {
     position: 'absolute',
     width: 130,
@@ -309,6 +488,8 @@ const styles = StyleSheet.create({
   },
   signText: { color: colors.parchment, fontWeight: '800', fontSize: 11 },
   signPrice: { color: colors.candle, fontWeight: '800', fontSize: 12 },
+  signYear: { color: colors.parchmentDark, fontSize: 9 },
+  mark: { position: 'absolute', width: 120, textAlign: 'center', fontSize: 22 },
   zoomCol: { position: 'absolute', right: 12, bottom: 16, gap: 10 },
   zoomBtn: {
     width: 48,
@@ -321,5 +502,18 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   zoomText: { color: colors.candle, fontSize: 24, fontWeight: '900' },
+  collectAll: {
+    position: 'absolute',
+    left: 12,
+    bottom: 16,
+    height: 48,
+    paddingHorizontal: 16,
+    borderRadius: 24,
+    backgroundColor: 'rgba(43,27,16,0.88)',
+    borderWidth: 2,
+    borderColor: colors.goldDark,
+    justifyContent: 'center',
+  },
+  collectText: { color: colors.candle, fontWeight: '900' },
   floatBox: { position: 'absolute', width: 120, height: 60 },
 });

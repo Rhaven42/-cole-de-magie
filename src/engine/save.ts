@@ -24,7 +24,14 @@ export const MIGRATIONS: Record<number, Migration> = {
       events: [],
       nextEventAt: (raw.time ?? 0) + 150,
       donationAcc: 0,
-      meta: { prestige: 0, env: 0, relics: {}, dailyDay: null, dailyStreak: 0, lifetimeGraduates: 0 },
+      meta: {
+        prestige: 0,
+        env: 0,
+        relics: {},
+        dailyDay: null,
+        dailyStreak: 0,
+        lifetimeGraduates: 0,
+      },
       schemaVersion: 2,
     };
   },

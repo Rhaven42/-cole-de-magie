@@ -3,10 +3,18 @@ import { random, randInt, weightedIndex } from './rng';
 import type { GameEvent, GameState, Station } from './types';
 
 export function isActive(state: GameState, id: EventId, stationId?: string): boolean {
-  return state.events.some((e) => e.id === id && e.until > state.time && (stationId === undefined || e.stationId === stationId));
+  return state.events.some(
+    (e) =>
+      e.id === id && e.until > state.time && (stationId === undefined || e.stationId === stationId),
+  );
 }
 
-export function startEvent(state: GameState, id: EventId, events: GameEvent[], stationId?: string): void {
+export function startEvent(
+  state: GameState,
+  id: EventId,
+  events: GameEvent[],
+  stationId?: string,
+): void {
   const def = EVENTS[id];
   if (def.duration > 0) state.events.push({ id, until: state.time + def.duration, stationId });
   let value: number | undefined;

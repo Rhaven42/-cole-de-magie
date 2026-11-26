@@ -167,7 +167,14 @@ export type GameEvent =
   | { type: 'sorted'; studentId: number; name: string; house: HouseId; line: number }
   | { type: 'cupWon'; house: HouseId; coins: number }
   | { type: 'yearUp'; studentId: number; name: string; year: number; coins: number }
-  | { type: 'graduated'; name: string; house: HouseId | null; career: CareerId; coins: number; relic: string | null }
+  | {
+      type: 'graduated';
+      name: string;
+      house: HouseId | null;
+      career: CareerId;
+      coins: number;
+      relic: string | null;
+    }
   | { type: 'event'; id: EventId; stationId?: string; value?: number }
   | { type: 'relic'; id: string };
 

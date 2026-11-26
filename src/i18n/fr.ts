@@ -218,7 +218,8 @@ export const fr = {
 
   'collection.title': 'Collection de reliques',
   'collection.bonus': 'Bonus actuel : +{n} % d’Éclats',
-  'collection.hint': 'Les reliques s’obtiennent au diplôme, avec le cadeau du 7e jour et grâce aux hiboux.',
+  'collection.hint':
+    'Les reliques s’obtiennent au diplôme, avec le cadeau du 7e jour et grâce aux hiboux.',
   'collection.set.founders': 'Les Fondateurs',
   'collection.set.stars': 'Les Étoiles',
   'collection.set.sea': 'Les Abysses',
@@ -248,7 +249,8 @@ export const fr = {
   'daily.relic': 'Relique',
 
   'prestige.title': 'Reconstruire la légende',
-  'prestige.intro': 'Repartez de zéro dans un nouvel environnement. Vous gardez vos Gemmes, vos reliques et gagnez un bonus permanent.',
+  'prestige.intro':
+    'Repartez de zéro dans un nouvel environnement. Vous gardez vos Gemmes, vos reliques et gagnez un bonus permanent.',
   'prestige.current': 'Environnement actuel : {env}',
   'prestige.next': 'Prochain : {env}',
   'prestige.bonus': 'Bonus permanent : +{n} % d’Éclats',

@@ -22,7 +22,13 @@ export const EVENTS: Record<EventId, EventDef> = {
   broomFall: { id: 'broomFall', icon: '🤕', duration: 0 },
 };
 
-export const TIMED_EVENTS: TimedEventId[] = ['banquet', 'shootingStars', 'ghost', 'owl', 'inspection'];
+export const TIMED_EVENTS: TimedEventId[] = [
+  'banquet',
+  'shootingStars',
+  'ghost',
+  'owl',
+  'inspection',
+];
 
 export const EVENT_RULES = {
   /** Intervalle entre deux événements périodiques (s). */

@@ -102,8 +102,14 @@ export interface Anchor {
 const HALF_GAP = PLOT.gap / 2;
 
 /** Axes des couloirs (le long de y, à x fixe) et (le long de x, à y fixe). */
-export const CORRIDOR_X = [PLOT.margin - HALF_GAP, ...Array.from({ length: PLOT.cols }, (_, p) => plotOrigin(p, 0).x + PLOT.size + HALF_GAP)];
-export const CORRIDOR_Y = [PLOT.margin - HALF_GAP, ...Array.from({ length: PLOT.rows }, (_, q) => plotOrigin(0, q).y + PLOT.size + HALF_GAP)];
+export const CORRIDOR_X = [
+  PLOT.margin - HALF_GAP,
+  ...Array.from({ length: PLOT.cols }, (_, p) => plotOrigin(p, 0).x + PLOT.size + HALF_GAP),
+];
+export const CORRIDOR_Y = [
+  PLOT.margin - HALF_GAP,
+  ...Array.from({ length: PLOT.rows }, (_, q) => plotOrigin(0, q).y + PLOT.size + HALF_GAP),
+];
 
 /** Porte d'une salle : au milieu du mur avant droit. */
 export function doorOf(id: string): { inside: Pt; outside: Pt } | null {
@@ -145,7 +151,9 @@ export function route(from: Anchor, to: Anchor): Pt[] {
   const c2: Pt = toDoor ? toDoor.outside : { x: nearest(CORRIDOR_X, to.g.x), y: to.g.y };
   if (Math.abs(c1.x - c2.x) > 0.01) {
     const yLine = CORRIDOR_Y.reduce((best, y) =>
-      Math.abs(c1.y - y) + Math.abs(c2.y - y) < Math.abs(c1.y - best) + Math.abs(c2.y - best) ? y : best,
+      Math.abs(c1.y - y) + Math.abs(c2.y - y) < Math.abs(c1.y - best) + Math.abs(c2.y - best)
+        ? y
+        : best,
     );
     pts.push({ x: c1.x, y: yLine }, { x: c2.x, y: yLine });
   }
@@ -154,4 +162,9 @@ export function route(from: Anchor, to: Anchor): Pt[] {
   pts.push(to.g);
   // Retire les points consécutifs identiques.
   return pts.filter((p, i) => i === 0 || Math.hypot(p.x - pts[i - 1].x, p.y - pts[i - 1].y) > 0.01);
+}
+
+/** Position d'une place : personnalisée (réaménagement) ou par défaut. */
+export function seatPos(kind: string, i: number, custom?: Pt): Pt {
+  return custom ?? seatSpot(kind, i);
 }

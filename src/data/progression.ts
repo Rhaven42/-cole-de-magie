@@ -46,7 +46,12 @@ export const CAREERS: Record<CareerId, CareerDef> = {
   herbalist: { id: 'herbalist', icon: '🌿', course: 'botany', donationPerMin: 2 },
   archivist: { id: 'archivist', icon: '📚', course: 'history', donationPerMin: 2.5 },
   enchanter: { id: 'enchanter', icon: '✨', course: 'charms', donationPerMin: 3 },
-  starCartographer: { id: 'starCartographer', icon: '🔭', course: 'astronomy', donationPerMin: 3.5 },
+  starCartographer: {
+    id: 'starCartographer',
+    icon: '🔭',
+    course: 'astronomy',
+    donationPerMin: 3.5,
+  },
   skyCourier: { id: 'skyCourier', icon: '🧹', course: 'flying', donationPerMin: 4 },
   oracle: { id: 'oracle', icon: '🔮', course: 'divination', donationPerMin: 4.5 },
   shapeshifter: { id: 'shapeshifter', icon: '🐇', course: 'transfiguration', donationPerMin: 5 },

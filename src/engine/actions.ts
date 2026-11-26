@@ -153,7 +153,8 @@ export function moveSeat(
   const st = state.stations[stationId];
   const seat = st?.seats[seatIndex];
   if (!st || !seat) return false;
-  if (x < ROOM_ZONE.min || x > ROOM_ZONE.max || y < ROOM_ZONE.min || y > ROOM_ZONE.max) return false;
+  if (x < ROOM_ZONE.min || x > ROOM_ZONE.max || y < ROOM_ZONE.min || y > ROOM_ZONE.max)
+    return false;
   const clash = st.seats.some((o, i) => {
     if (i === seatIndex) return false;
     const p = o.pos ?? defaults(i);

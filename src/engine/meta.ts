@@ -41,7 +41,9 @@ export function collectAll(state: GameState): number {
 export function managerCost(state: GameState, stationId: string): number | null {
   const st = state.stations[stationId];
   if (!st || st.kind !== 'course' || state.managers[stationId]) return null;
-  return Math.round(COURSES[st.courseId!].price * MANAGER_RULES.priceFactor + MANAGER_RULES.priceBase);
+  return Math.round(
+    COURSES[st.courseId!].price * MANAGER_RULES.priceFactor + MANAGER_RULES.priceBase,
+  );
 }
 
 export function hireManager(state: GameState, stationId: string): boolean {
@@ -70,7 +72,9 @@ export function relicCount(state: GameState): number {
 }
 
 export function completeSets(state: GameState): number {
-  return RELIC_SETS.filter((set) => RELICS.filter((r) => r.set === set).every((r) => (state.meta.relics[r.id] ?? 0) > 0)).length;
+  return RELIC_SETS.filter((set) =>
+    RELICS.filter((r) => r.set === set).every((r) => (state.meta.relics[r.id] ?? 0) > 0),
+  ).length;
 }
 
 export { metaMult as metaCoinMult } from './modifiers';

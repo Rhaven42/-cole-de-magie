@@ -70,7 +70,12 @@ function stateTimeMult(state: GameState | undefined, st: Station): number {
  * Temps de traitement réel :
  * base × niveauSalle × place × confort × aménagements × élève, plancher 25 %.
  */
-export function serviceTime(st: Station, seatIndex: number, s?: Student, state?: GameState): number {
+export function serviceTime(
+  st: Station,
+  seatIndex: number,
+  s?: Student,
+  state?: GameState,
+): number {
   const base = baseDuration(st);
   const seat = st.seats[seatIndex];
   const mults = [
@@ -100,7 +105,8 @@ export function courseReward(
   if (state) {
     r *= metaMult(state);
     const stars = state.events.some((e) => e.id === 'shootingStars' && e.until > state.time);
-    if (stars && (st.courseId === 'astronomy' || st.courseId === 'divination')) r *= EVENT_RULES.shootingStarsMult;
+    if (stars && (st.courseId === 'astronomy' || st.courseId === 'divination'))
+      r *= EVENT_RULES.shootingStarsMult;
   }
   if (s.house) r *= HOUSES[s.house].bonus.coinMult ?? 1;
   if (s.mood < NEEDS.lowMood) r *= NEEDS.lowMoodCoinMult;
@@ -154,6 +160,11 @@ export function estimatedWait(st: Station): number {
 export function metaMult(state: GameState): number {
   const owned = (id: string) => (state.meta.relics[id] ?? 0) > 0;
   const relics = RELICS.filter((r) => owned(r.id)).length;
-  const sets = RELIC_SETS.filter((set) => RELICS.filter((r) => r.set === set).every((r) => owned(r.id))).length;
-  return (1 + relics * RELIC_BONUS.perRelic + sets * RELIC_BONUS.perSet) * (1 + state.meta.prestige * PRESTIGE.coinBonusPerLevel);
+  const sets = RELIC_SETS.filter((set) =>
+    RELICS.filter((r) => r.set === set).every((r) => owned(r.id)),
+  ).length;
+  return (
+    (1 + relics * RELIC_BONUS.perRelic + sets * RELIC_BONUS.perSet) *
+    (1 + state.meta.prestige * PRESTIGE.coinBonusPerLevel)
+  );
 }

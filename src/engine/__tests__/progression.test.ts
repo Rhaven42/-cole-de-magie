@@ -1,5 +1,11 @@
-import { YEARS } from '../../data/progression';
-import { advanceYear, chooseCareer, coursesForYear, donationsPerMin, handleDonations } from '../progression';
+import { CAREERS, YEARS } from '../../data/progression';
+import {
+  advanceYear,
+  chooseCareer,
+  coursesForYear,
+  donationsPerMin,
+  handleDonations,
+} from '../progression';
 import { courseReward, serviceTime } from '../modifiers';
 import { addStudent, quietGame } from './helpers';
 import type { GameEvent } from '../types';
@@ -19,7 +25,11 @@ describe('années, diplômes et métiers', () => {
 
   it('diplôme en fin de 7e année : bonus, réputation, métier, ancien élève', () => {
     const g = quietGame(11);
-    const s = addStudent(g, { year: 7, yearPassed: coursesForYear(7) - 1, passedBy: { defense: 9, potions: 3 } });
+    const s = addStudent(g, {
+      year: 7,
+      yearPassed: coursesForYear(7) - 1,
+      passedBy: { defense: 9, potions: 3 },
+    });
     const events: GameEvent[] = [];
     const rep = g.reputation;
     expect(advanceYear(g, s, events)).toBe(true);
@@ -41,10 +51,12 @@ describe('années, diplômes et métiers', () => {
   it('les anciens élèves envoient des dons', () => {
     const g = quietGame();
     g.careers = { guardian: 2, alchemist: 1 };
-    expect(donationsPerMin(g)).toBe(2 * 12 + 4);
+    expect(donationsPerMin(g)).toBe(
+      2 * CAREERS.guardian.donationPerMin + CAREERS.alchemist.donationPerMin,
+    );
     const coins = g.coins;
     handleDonations(g, 60);
-    expect(g.coins).toBe(coins + 28);
+    expect(g.coins).toBe(coins + donationsPerMin(g));
   });
 
   it('cours « Avancé » en 7e année : ×2 gains, ×1,5 durée', () => {
@@ -62,7 +74,8 @@ describe('années, diplômes et métiers', () => {
     const { buyCourse } = jest.requireActual('../actions');
     buyCourse(g, 'defense');
     const { chooseCourse } = jest.requireActual('../tick');
-    for (let i = 0; i < 20; i++) expect(chooseCourse(g, addStudent(g, { year: 1 }))?.id).toBe('course-potions');
+    for (let i = 0; i < 20; i++)
+      expect(chooseCourse(g, addStudent(g, { year: 1 }))?.id).toBe('course-potions');
     const vet = addStudent(g, { year: 6 });
     const picks = new Set(Array.from({ length: 30 }, () => chooseCourse(g, vet)?.id));
     expect(picks.has('course-defense')).toBe(true);

@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.5.0 — Années, diplômes, événements et méta
+
+- **J4** : 7 années, passage d'année avec bonus, cours avancés en 7e année, 9 matières constructibles.
+- **Diplômes et métiers** originaux (Gardien·ne des Arcanes, Alchimiste, Oracle…), avec dons des anciens élèves. Nouvel écran « Anciens élèves ».
+- Les élèves **marchent dans les couloirs et passent par les portes**. Les nouveaux arrivent par la grille d'entrée.
+- **Événements** : banquet, étoiles filantes, fantôme farceur, hibou messager, inspection, explosion de chaudron, chute de balai, avec annonces et effets sur la carte.
+- **Fiche élève** en touchant un élève sur la carte (année, progression, métier visé, besoins).
+- **Réaménagement** des places dans la zone de chaque salle.
+- **Coffres à récolter** (toucher le coffre, ou « Tout récolter ») et **managers** qui récoltent automatiquement.
+- **Écran Rapport** : Éclats/min, rentabilité par salle, goulot, élèves par année, événements en cours.
+- **Collection** de 16 reliques (4 collections) avec bonus permanents.
+- **Cadeau du jour** sur 7 jours.
+- **Nouvelle légende** (prestige) : repartir de zéro sous la mer, dans les nuages, en forêt ou sur la lune, avec un bonus permanent.
+- Onglet « Plus » (Cadeau, Rapport, Collection, Anciens élèves, Nouvelle légende, Réglages).
+- Sauvegarde v2 avec migration automatique.
+- Professeur de Défense contre les Forces du Mal : Harvald.
+
 ## 0.4.0 — Vue isométrique
 
 - L'école en coupe est remplacée par une **carte isométrique** (style « idle tycoon ») : salles ouvertes avec murs, sols, fenêtres, bannières et meubles propres à chaque matière ; couloirs en parquet, jardins, fontaine, grille d'entrée.
