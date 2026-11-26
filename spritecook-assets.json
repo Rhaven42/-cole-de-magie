@@ -40,7 +40,14 @@
     {
       "asset_id": "c1a1de3d-90eb-4c03-8690-a928b2a97da1",
       "label": "props-sheet-2",
-      "slices": ["dummy", "table", "counter", "stool", "fireplace", "bench"]
+      "slices": [
+        "dummy",
+        "table",
+        "counter",
+        "stool",
+        "fireplace",
+        "bench"
+      ]
     },
     {
       "asset_id": "fdd31975-bd10-4b27-832a-898cef5332d9",
@@ -77,7 +84,10 @@
     {
       "asset_id": "e84886f5-7dbb-4db8-9a8a-50d8c6caa055",
       "label": "students-back + ghost",
-      "slices": ["<maison>-<0|1>-back", "ghost"]
+      "slices": [
+        "<maison>-<0|1>-back",
+        "ghost"
+      ]
     },
     {
       "asset_id": "7d9781b8-da43-49c7-abe9-bb9957bc0409",
@@ -104,7 +114,10 @@
     {
       "asset_id": "e8a94f7b-123a-4299-9bec-53005426725f",
       "label": "students-civilian + owl flying",
-      "slices": ["<maison>-<0|1>-unsorted", "owlFly"]
+      "slices": [
+        "<maison>-<0|1>-unsorted",
+        "owlFly"
+      ]
     },
     {
       "asset_id": "e6f9c290-1357-4060-991a-1971cacc97e7",
@@ -207,6 +220,13 @@
       "name": "Solomon Tregahl",
       "file": "portraits/solomon.png",
       "role": "Botanique",
+      "note": "source pleine résolution (raw), recadrée avec marge"
+    },
+    {
+      "asset_id": "bad73b4c-9c06-4b0a-9351-d40f70c51f2e",
+      "name": "Harwen Malkin",
+      "file": "portraits/harwen.png",
+      "role": "Balais volants",
       "note": "source pleine résolution (raw), recadrée avec marge"
     }
   ]

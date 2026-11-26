@@ -24,7 +24,7 @@ export const NAMED_PROFESSORS: Partial<Record<CourseId, ProfessorName>> = {
   divination: { firstName: 'Rhaven', lastName: 'Morvard', gender: 'f' },
   history: { firstName: 'Morgenvar', lastName: 'Kaldrec', gender: 'm' },
   duel: { firstName: 'Delan', lastName: 'Lanatre', title: 'le Chevalier du Sinople', gender: 'm' },
-  flying: { firstName: 'Harwen', lastName: 'Malkin' },
+  flying: { firstName: 'Harwen', lastName: 'Malkin', gender: 'f' },
 };
 
 export function professorLabel(p: ProfessorName): string {
