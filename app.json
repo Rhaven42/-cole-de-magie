@@ -1,0 +1,33 @@
+{
+  "expo": {
+    "name": "Arcanum Academy",
+    "slug": "arcanum-academy",
+    "version": "0.3.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.arcanum.academy"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#1E1830",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false,
+      "package": "com.arcanum.academy"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "backgroundColor": "#1E1830",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#1E1830"
+    }
+  }
+}
