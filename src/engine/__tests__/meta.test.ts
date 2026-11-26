@@ -161,7 +161,7 @@ describe('réaménagement des places', () => {
     const def = (i: number) => ({ x: 2 + i, y: 2 });
     expect(moveSeat(g, 'course-potions', 0, 6, 6, def)).toBe(true);
     expect(g.stations['course-potions'].seats[0].pos).toEqual({ x: 6, y: 6 });
-    expect(moveSeat(g, 'course-potions', 1, 9, 2, def)).toBe(false);
+    expect(moveSeat(g, 'course-potions', 1, 50, 2, def)).toBe(false);
     expect(moveSeat(g, 'course-potions', 1, 6.2, 6.1, def)).toBe(false);
     expect(moveSeat(g, 'course-potions', 99, 3, 3, def)).toBe(false);
     expect(moveSeat(g, 'nope', 0, 3, 3, def)).toBe(false);

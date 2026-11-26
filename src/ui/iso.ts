@@ -1,4 +1,4 @@
-import { ISO, PLOT, PLOTS } from '../data/layout';
+import { ISO, PLOT, PLOTS, ROOM_SCALE } from '../data/layout';
 
 /** Taille de la grille complète, en tuiles. */
 export const GRID_X = PLOT.margin * 2 + PLOT.cols * (PLOT.size + PLOT.gap);
@@ -62,6 +62,11 @@ export function hitPlot(g: Pt): string | null {
 
 /** Position (grille, relative à la salle) de chaque place selon le type de lieu. */
 export function seatSpot(kind: string, i: number): Pt {
+  const p = baseSeatSpot(kind, i);
+  return { x: p.x * ROOM_SCALE, y: p.y * ROOM_SCALE };
+}
+
+function baseSeatSpot(kind: string, i: number): Pt {
   switch (kind) {
     case 'dorm':
       return { x: 1.4 + Math.floor(i / 4) * 1.75, y: 1.3 + (i % 4) * 1.75 };
@@ -86,9 +91,10 @@ export function seatSpot(kind: string, i: number): Pt {
 
 /** Emplacement de la k-ième personne dans la file, dans le couloir devant la porte. */
 export function queueSpot(k: number): Pt {
-  const col = Math.floor(k / 10);
-  const row = k % 10;
-  return { x: PLOT.size + 0.45 + col * 0.55, y: 0.6 + row * 0.7 };
+  const perCol = Math.floor((PLOT.size - 1) / 0.7);
+  const col = Math.floor(k / perCol);
+  const row = k % perCol;
+  return { x: PLOT.size + 0.5 + col * 0.55, y: 0.6 + row * 0.7 };
 }
 
 // ─── Déplacements : couloirs et portes ───────────────────────────────────────

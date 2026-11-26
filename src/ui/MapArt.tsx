@@ -3,13 +3,15 @@ import Svg, { Circle, Ellipse, G, Line, Path, Polygon } from 'react-native-svg';
 import type { SpriteName } from '../assets';
 import { ENVIRONMENTS, type EnvDef } from '../data/environments';
 import { HOUSE_IDS, HOUSES } from '../data/houses';
-import { FLOOR_TEXTURE, GARDENS, ISO, PLOT, PLOTS, ROOM_DECOR } from '../data/layout';
+import { FLOOR_TEXTURE, GARDENS, ISO, PLOT, PLOTS, ROOM_DECOR, ROOM_SCALE } from '../data/layout';
 import type { Station } from '../engine';
 import { floorPoly, GRID_X, GRID_Y, iso, MAP_H, MAP_W, plotOrigin, poly, type Pt } from './iso';
 import { Box, Furniture, shade, Sprite, tiered, WallQuad } from './isoArt';
 import { TexFloor, TexWall, WallShadow } from './isoTex';
 
 const S = PLOT.size;
+/** Échelle des positions intérieures (aménagements conçus pour 8 cases). */
+const R = ROOM_SCALE;
 /** Murs bas (murets) : on voit les élèves marcher dans les couloirs derrière. */
 const H = 22;
 /** Épaisseur des murs (cases) et hauteur de la tranche du sol surélevé (px). */
@@ -199,17 +201,33 @@ function Garden({ px, py, env }: { px: number; py: number; env: EnvDef }) {
         tint={env.groundAlt}
         tintOpacity={env.id !== 'manor' ? 0.55 : 0}
       />
-      <TexFloor id={`gpath1-${k}`} gx={o.x + 3.4} gy={o.y} w={1.2} h={S} tex="stone" tile={2} />
-      <TexFloor id={`gpath2-${k}`} gx={o.x} gy={o.y + 3.4} w={S} h={1.2} tex="stone" tile={2} />
+      <TexFloor
+        id={`gpath1-${k}`}
+        gx={o.x + S / 2 - 0.6}
+        gy={o.y}
+        w={1.2}
+        h={S}
+        tex="stone"
+        tile={2}
+      />
+      <TexFloor
+        id={`gpath2-${k}`}
+        gx={o.x}
+        gy={o.y + S / 2 - 0.6}
+        w={S}
+        h={1.2}
+        tex="stone"
+        tile={2}
+      />
       <Ellipse cx={c.x} cy={c.y + 4} rx={38} ry={19} fill="#000" opacity={0.2} />
       <Ellipse cx={c.x} cy={c.y} rx={34} ry={17} fill="#9AA5A8" />
       <Ellipse cx={c.x} cy={c.y - 2} rx={28} ry={13} fill="#5FA9CF" />
       <Ellipse cx={c.x - 6} cy={c.y - 4} rx={10} ry={4} fill="#BFE6FF" opacity={0.6} />
       <Line x1={c.x} y1={c.y - 4} x2={c.x} y2={c.y - 18} stroke="#8A9497" strokeWidth={5} />
       <Ellipse cx={c.x} cy={c.y - 18} rx={8} ry={3.5} fill="#9AA5A8" />
-      <Decor name="owl" p={iso(o.x + 1.2, o.y + 6.8)} width={20} />
-      <Deco p={iso(o.x + 1.3, o.y + 1.3)} env={env} />
-      <Deco p={iso(o.x + 6.6, o.y + 1.4)} s={0.9} env={env} />
+      <Decor name="owl" p={iso(o.x + 1.2 * R, o.y + 6.8 * R)} width={20} />
+      <Deco p={iso(o.x + 1.3 * R, o.y + 1.3 * R)} env={env} />
+      <Deco p={iso(o.x + 6.6 * R, o.y + 1.4 * R)} s={0.9} env={env} />
     </G>
   );
 }
@@ -393,8 +411,8 @@ function Room({ r, env }: { r: RoomSnapshot; env: EnvDef }) {
           axis={axisOf(i)}
           ox={o.x}
           oy={o.y}
-          t1={at(i)}
-          t2={at(i) + 0.8}
+          t1={at(i) * R}
+          t2={at(i) * R + 0.8}
           h1={3}
           h2={H - 3}
           fill={HOUSES[h].color}
@@ -405,23 +423,29 @@ function Room({ r, env }: { r: RoomSnapshot; env: EnvDef }) {
 
   if (isCourse) {
     // Tableau sur chevalet et bureau du professeur, tournés vers les élèves.
-    decor('board', 'easel', o.x + 0.9, o.y + 2.4, 34);
-    decor('desk', tiered('teacherDeskM' as SpriteName, t), o.x + 1.25, o.y + 4.2, 50);
-    decor('shelf', tiered('bookshelf', t), o.x + 0.55, o.y + 1.0, 30);
+    decor('board', 'easel', o.x + 0.9 * R, o.y + 2.4 * R, 34);
+    decor('desk', tiered('teacherDeskM' as SpriteName, t), o.x + 1.25 * R, o.y + 4.2 * R, 50);
+    decor('shelf', tiered('bookshelf', t), o.x + 0.55 * R, o.y + 1.0 * R, 30);
   } else if (r.kind === 'hall') {
     tapestries(
       () => 'x',
       (i) => 0.9 + i * 1.8,
     );
-    decor('fire', 'fireplace', o.x + 0.6, o.y + 4.3, 46);
+    decor('fire', 'fireplace', o.x + 0.6 * R, o.y + 4.3 * R, 46);
     [0, 1, 2, 3, 4].forEach((row) =>
       [2.2, 5.7].forEach((gy) =>
-        decor(`t${row}-${gy}`, tiered('table', t), o.x + 1.26 + row * 1.35, o.y + gy + 1.2, 66),
+        decor(
+          `t${row}-${gy}`,
+          tiered('table', t),
+          o.x + (1.26 + row * 1.35) * R,
+          o.y + (gy + 1.2) * R,
+          66,
+        ),
       ),
     );
   } else if (r.kind === 'reception') {
-    decor('b1', tiered('bookshelf', t), o.x + 0.55, o.y + 2.2, 30);
-    decor('b2', tiered('bookshelf', t), o.x + 0.55, o.y + 6.2, 30);
+    decor('b1', tiered('bookshelf', t), o.x + 0.55 * R, o.y + 2.2 * R, 30);
+    decor('b2', tiered('bookshelf', t), o.x + 0.55 * R, o.y + 6.2 * R, 30);
   } else if (r.kind === 'sorting') {
     tapestries(
       (i) => (i < 2 ? 'x' : 'y'),
@@ -430,7 +454,13 @@ function Room({ r, env }: { r: RoomSnapshot; env: EnvDef }) {
   }
 
   for (const d of ROOM_DECOR[kind] ?? [])
-    decor(`d-${d.sprite}-${d.x}-${d.y}`, d.sprite as SpriteName, o.x + d.x, o.y + d.y, d.width);
+    decor(
+      `d-${d.sprite}-${d.x}-${d.y}`,
+      d.sprite as SpriteName,
+      o.x + d.x * R,
+      o.y + d.y * R,
+      d.width,
+    );
   r.seats.forEach((sp, i) => {
     const gx = o.x + sp.x;
     const gy = o.y + sp.y;
@@ -469,11 +499,22 @@ function Room({ r, env }: { r: RoomSnapshot; env: EnvDef }) {
             stroke="#B89A5A"
             strokeWidth={1.5}
           />
-          <Box gx={o.x + 3.6} gy={o.y + 3.6} w={0.8} d={0.8} h={12} color="#6B4A30" />
+          <Box
+            gx={o.x + S / 2 - 0.4}
+            gy={o.y + S / 2 - 0.4}
+            w={0.8}
+            d={0.8}
+            h={12}
+            color="#6B4A30"
+          />
         </G>
       ) : null}
       {r.kind === 'dorm' || r.kind === 'reception' ? (
-        <Polygon points={floorPoly(o.x + 2.6, o.y + 2.6, 2.8, 2.8)} fill="#7A2E34" opacity={0.55} />
+        <Polygon
+          points={floorPoly(o.x + 2.6 * R, o.y + 2.6 * R, 2.8 * R, 2.8 * R)}
+          fill="#7A2E34"
+          opacity={0.55}
+        />
       ) : null}
       <WallShadow id={`${r.id}-shx`} axis="x" ox={o.x} oy={o.y} len={S} />
       <WallShadow id={`${r.id}-shy`} axis="y" ox={o.x} oy={o.y} len={S} />

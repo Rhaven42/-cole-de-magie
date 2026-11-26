@@ -12,7 +12,7 @@ import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-na
 import { COURSES, type CourseId } from '../data/courses';
 import { ENVIRONMENTS } from '../data/environments';
 import { EVENTS } from '../data/events';
-import { ISO, PLOT, PLOTS } from '../data/layout';
+import { PLOT, PLOTS } from '../data/layout';
 import { DORM_PURCHASE } from '../data/stations';
 import {
   courseCost,
@@ -45,7 +45,7 @@ import { stationName } from '../ui/kit';
 import { colors, formatDuration, formatNumber } from '../ui/theme';
 import { Walker } from '../ui/Walker';
 
-const MIN_SCALE = 0.35;
+const MIN_SCALE = 0.25;
 const MAX_SCALE = 1.8;
 const MAX_QUEUE_SHOWN = 16;
 /** Nombre max d'élèves dessinés (la simulation, elle, gère tout le monde). */
@@ -133,20 +133,18 @@ function roomCenter(id: string): Pt {
 function cofferPos(id: string): Pt {
   const def = PLOTS[id];
   const o = plotOrigin(def.px, def.py);
-  const p = iso(o.x + PLOT.size - 1.4, o.y + PLOT.size - 1.4);
-  return { x: p.x, y: p.y - 26 };
+  const p = iso(o.x + PLOT.size - 1.2, o.y + PLOT.size * 0.42);
+  return { x: p.x, y: p.y - 22 };
 }
 
 function RoomLabel({ st, managed }: { st: Station; managed: boolean }) {
   const def = PLOTS[st.id];
   const o = plotOrigin(def.px, def.py);
-  const p = roomCenter(st.id);
+  // Panneau posé devant le coin avant de la salle (dans le couloir).
+  const front = iso(o.x + PLOT.size * 0.8, o.y + PLOT.size * 0.8);
   const crowded = st.queue.length > st.seats.length * 1.5;
   return (
-    <View
-      pointerEvents="none"
-      style={[styles.label, { left: p.x - 70, top: iso(o.x, o.y).y - ISO.wallH - 26 }]}
-    >
+    <View pointerEvents="none" style={[styles.label, { left: front.x - 70, top: front.y - 18 }]}>
       <Text style={styles.labelName} numberOfLines={1}>
         {managed ? '👔 ' : ''}
         {stationName(st)} <Text style={styles.labelLvl}>· {st.level}</Text>
@@ -198,7 +196,7 @@ function BuildSign({ id, game }: { id: string; game: GameState }) {
 function SortingHat({ game }: { game: GameState }) {
   const st = game.stations.sorting;
   const o = plotOrigin(PLOTS.sorting.px, PLOTS.sorting.py);
-  const c = iso(o.x + 4, o.y + 4);
+  const c = iso(o.x + PLOT.size / 2, o.y + PLOT.size / 2);
   const busy = st.seats.some((x) => x.occupant !== null);
   return (
     <View pointerEvents="none" style={{ position: 'absolute', left: c.x - 24, top: c.y - 62 }}>
@@ -272,9 +270,9 @@ export function SchoolScreen() {
 
   // Cadrage initial : Accueil, Salon, Grande Salle et Potions visibles.
   const start = iso(plotOrigin(3, 3).x + 1, plotOrigin(3, 3).y - 1);
-  const scale = useSharedValue(0.55);
-  const tx = useSharedValue(195 - start.x * 0.55);
-  const ty = useSharedValue(380 - start.y * 0.55);
+  const scale = useSharedValue(0.5);
+  const tx = useSharedValue(195 - start.x * 0.5);
+  const ty = useSharedValue(380 - start.y * 0.5);
 
   const W = size.w;
   const H = size.h;

@@ -3,6 +3,7 @@ import { ECONOMY } from '../data/economy';
 import { expCost } from '../data/formulas';
 import type { HouseId } from '../data/houses';
 import { DORM_PURCHASE, SERVICES } from '../data/stations';
+import { PLOT } from '../data/layout';
 import { makeCourseStation, makeSeat, makeServiceStation } from './state';
 import type { GameState, Station } from './types';
 
@@ -136,7 +137,7 @@ export function setSortingBias(state: GameState, house: HouseId | null): boolean
 // ─── Réaménagement : déplacer une place dans la zone de la salle ─────────────
 
 /** Zone utilisable d'une salle (coordonnées de grille relatives à la salle). */
-export const ROOM_ZONE = { min: 0.9, max: 7.1, minSpacing: 0.95 };
+export const ROOM_ZONE = { min: 0.9, max: PLOT.size - 0.9, minSpacing: 0.95 };
 
 /**
  * Déplace une place. Elle doit rester dans la zone de la salle et ne pas

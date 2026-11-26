@@ -80,3 +80,5 @@ Temps réel = `base × 0,96^(niv−1) × (1 − 0,05·(niveauPlace−1)) × (1 �
 - **10e matière « Duel »** (`duel`) : 3 arènes, 55 s, 52 Éclats, 5e année, 300 000 Éclats ; elle prend la parcelle (1,0), l'ancien jardin.
 
 - **Murs bas** (22 px) partout : chaque salle est bordée de couloirs, et des murs hauts cachaient les élèves qui marchaient derrière. La texture murale n'y montre que le lambris. Ce qui était accroché aux murs devient des objets posés (tableau sur chevalet) ou des tentures basses.
+
+- **Plan 0.8.0** : parcelles de 10 cases, couloirs de 2 cases. Les positions intérieures (places, décor) sont définies pour 8 cases et multipliées par `ROOM_SCALE` (`src/data/layout.ts`). Les places déjà déplacées par le joueur gardent leurs coordonnées, qui restent dans la zone autorisée.

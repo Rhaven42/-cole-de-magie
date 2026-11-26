@@ -50,7 +50,7 @@ export function SettingsScreen() {
           <Text style={styles.btnText}>{t('settings.reset')}</Text>
         </Pressable>
       )}
-      <Text style={styles.version}>{t('settings.version', { v: '0.7.0', s: SCHEMA_VERSION })}</Text>
+      <Text style={styles.version}>{t('settings.version', { v: '0.8.0', s: SCHEMA_VERSION })}</Text>
     </ScrollView>
   );
 }

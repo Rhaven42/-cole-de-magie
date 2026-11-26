@@ -4,6 +4,7 @@ import { COURSES, type CourseId } from '../data/courses';
 import { ECONOMY } from '../data/economy';
 import { HOUSE_IDS, HOUSES } from '../data/houses';
 import { MANAGERS } from '../data/managers';
+import { PLOT } from '../data/layout';
 import { NAMED_PROFESSORS, professorLabel, professorTitle } from '../data/professors';
 import { SERVICES, type UpgradeTrack } from '../data/stations';
 import {
@@ -64,7 +65,7 @@ function describe(st: Station, p: Purchase): string {
 }
 
 const GRID_PX = 264;
-const ROOM = 8;
+const ROOM = PLOT.size;
 
 /** Plan vu de dessus pour déplacer les places dans la zone de la salle. */
 function RearrangeGrid({ st }: { st: Station }) {

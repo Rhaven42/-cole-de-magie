@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.8.0 — Plan de l'école réorganisé
+
+- **Salles plus grandes** (10 × 10 cases au lieu de 8 × 8) et couloirs plus larges ; les aménagements s'espacent en proportion.
+- **Plan logique** : entrée à l'avant (Accueil, Salon des Destinées, Grande Salle au centre) ; aile des cours à gauche, rangée par année de l'avant vers le fond (Potions, Botanique, Histoire → Sortilèges, Astronomie → Balais volants près du jardin → Divination, Duel, Métamorphose → Défense au fond) ; aile des dortoirs regroupée à droite et au fond.
+- Panneaux des salles placés à l'intérieur de chaque salle, côté avant (plus d'ambiguïté).
+
 ## 0.7.0 — Refonte visuelle des salles
 
 - **Relief** : murs épais avec chapeau et corniche, sols surélevés avec tranche de pierre, ombres au pied des murs, ombres sous chaque objet, lumière des fenêtres au sol.
