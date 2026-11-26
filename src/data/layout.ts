@@ -78,7 +78,12 @@ export interface DecorItem {
   mirror?: boolean;
 }
 
-const COURSE_COMMON: DecorItem[] = [{ sprite: 'candelabra', x: 0.8, y: 7.3, width: 22 }];
+const COURSE_COMMON: DecorItem[] = [
+  { sprite: 'candelabra', x: 0.8, y: 7.3, width: 22 },
+  { sprite: 'books', x: 4.6, y: 7.55, width: 24 },
+  { sprite: 'planterTree', x: 7.45, y: 6.1, width: 24 },
+  { sprite: 'chest', x: 2.6, y: 7.55, width: 24 },
+];
 
 /** Décorations par type de salle (matière ou lieu). Positions hors des places. */
 export const ROOM_DECOR: Record<string, DecorItem[]> = {
@@ -146,11 +151,17 @@ export const ROOM_DECOR: Record<string, DecorItem[]> = {
     { sprite: 'coatStand', x: 7.4, y: 0.7, width: 24 },
     { sprite: 'planterTree', x: 0.8, y: 7.3, width: 28 },
     { sprite: 'chest', x: 7.4, y: 7.3, width: 26 },
+    { sprite: 'candelabra', x: 0.6, y: 0.7, width: 20 },
+    { sprite: 'armchair', x: 4.0, y: 7.6, width: 28 },
+    { sprite: 'books', x: 0.7, y: 4.0, width: 22 },
   ],
   hall: [
     { sprite: 'candelabra', x: 0.7, y: 0.8, width: 22 },
     { sprite: 'clock', x: 7.4, y: 0.6, width: 22 },
     { sprite: 'planterTree', x: 0.8, y: 7.4, width: 28 },
+    { sprite: 'barrel', x: 0.7, y: 2.2, width: 20 },
+    { sprite: 'crates', x: 0.7, y: 6.2, width: 26 },
+    { sprite: 'candelabra', x: 7.4, y: 7.5, width: 22 },
   ],
   reception: [
     { sprite: 'bookshelf', x: 0.6, y: 1.5, width: 30 },

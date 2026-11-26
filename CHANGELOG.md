@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.9.2 — Plus de décor
+
+- Pelouses remplies : environ 140 arbres, sapins, buissons, rochers, massifs, haies et citrouilles semés autour de l'école (placement fixe, sans chevauchement, en laissant l'allée et les couloirs libres), et des centaines de petites fleurs sauvages.
+- Couloirs : tapis rouges le long de chaque couloir ; chandeliers, plantes, bancs et horloges aux carrefours.
+- Salles de cours et d'examen : un grand tapis aux couleurs de la matière sous la zone des élèves. Plus d'objets dans chaque classe (livres, coffre, plante), dans les dortoirs (fauteuil, chandelier, livres) et dans la Grande Salle (tonneau, caisses, chandeliers).
+
 ## 0.9.1 — L'Accueil devant, les cours derrière
 
 - Rangée avant réservée au **grand Accueil** (3 parcelles, centré) entre deux jardins ; tous les cours sont derrière lui. Le Salon des Destinées est juste derrière l'Accueil, dans son axe, et les cours suivent l'ordre des années de l'avant vers le fond. La Grande Salle et les dortoirs sont à droite.

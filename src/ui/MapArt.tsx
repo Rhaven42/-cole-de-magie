@@ -7,6 +7,8 @@ import { FLOOR_TEXTURE, GARDENS, ISO, PLOT, PLOTS, ROOM_DECOR, ROOM_SCALE } from
 import type { Station } from '../engine';
 import {
   courtyard,
+  CORRIDOR_X,
+  CORRIDOR_Y,
   courtyardLamps,
   examCorridor,
   floorPoly,
@@ -20,6 +22,7 @@ import {
   roomOrigin,
   poly,
   roomSize,
+  stationOrigin,
   type Pt,
 } from './iso';
 import { Box, Furniture, shade, Sprite, tiered, WallQuad } from './isoArt';
@@ -44,6 +47,21 @@ export interface RoomSnapshot {
   /** Palier visuel de chaque place (0, 1, 2). */
   seatTiers: number[];
 }
+
+/** Tapis des salles de cours (teintes sourdes, une par matière). */
+const RUGS: Record<string, string> = {
+  potions: '#3E5A48',
+  botany: '#5A6B3A',
+  history: '#6B4A2E',
+  charms: '#3A4A6B',
+  astronomy: '#2A2F5A',
+  flying: '#5A6B4A',
+  divination: '#5A3A5E',
+  duel: '#6B2E2E',
+  transfiguration: '#3E5458',
+  defense: '#4A2A2A',
+  exam: '#4A3A2A',
+};
 
 function tier(level: number): number {
   return level >= 8 ? 2 : level >= 4 ? 1 : 0;
@@ -165,6 +183,181 @@ function ExamCorridor({ env }: { env: EnvDef }) {
       />
       <Polygon points={floorPoly(c.x - 0.5, c.y0, 1, c.y1 - c.y0)} fill="#6B1F2A" opacity={0.7} />
       {lamps}
+    </G>
+  );
+}
+
+/** Générateur pseudo-aléatoire déterministe pour le décor (même décor à chaque affichage). */
+function seeded(seed: number) {
+  let t = seed;
+  return () => {
+    t = (t + 0x6d2b79f5) | 0;
+    let r = Math.imul(t ^ (t >>> 15), t | 1);
+    r ^= r + Math.imul(r ^ (r >>> 7), r | 61);
+    return ((r ^ (r >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+/** Emprise de l'école (couloirs compris). */
+function schoolBounds() {
+  const school0 = plotOrigin(0, 0);
+  const pad = PLOT.gap / 2;
+  return {
+    x0: school0.x - pad,
+    y0: school0.y - pad,
+    x1: school0.x + PLOT.cols * (S + PLOT.gap) - PLOT.gap + pad,
+    y1: school0.y + PLOT.rows * (S + PLOT.gap) - PLOT.gap + pad,
+  };
+}
+
+interface Placed {
+  name: SpriteName;
+  x: number;
+  y: number;
+  w: number;
+}
+
+/** Végétation et rochers semés sur toutes les pelouses libres autour de l'école. */
+const SCATTER: Placed[] = (() => {
+  const rnd = seeded(20261126);
+  const b = schoolBounds();
+  const { pathX, gateY } = courtyard();
+  const f = fountainPoint();
+  const exam = stationOrigin('exam');
+  const ex = roomSize('exam');
+  const ec = examCorridor();
+  const out: Placed[] = [];
+  const kinds: [SpriteName, number, number][] = [
+    ['oak', 0.24, 58],
+    ['pine', 0.2, 44],
+    ['bush', 0.18, 28],
+    ['rocks', 0.1, 30],
+    ['flowerBed', 0.1, 36],
+    ['pumpkins', 0.06, 32],
+    ['hedge', 0.06, 38],
+    ['planterTree', 0.06, 28],
+  ];
+  const blocked = (x: number, y: number) => {
+    if (x < 1.5 || y < 1.5 || x > GRID_X - 1.5 || y > GRID_Y - 1.5) return true;
+    if (x > b.x0 - 1.8 && x < b.x1 + 1.8 && y > b.y0 - 1.8 && y < b.y1 + 1.8) return true;
+    if (
+      exam &&
+      x > exam.x - 1.8 &&
+      x < exam.x + ex.w + 1.8 &&
+      y > exam.y - 1.8 &&
+      y < exam.y + ex.h + 1.8
+    )
+      return true;
+    if (ec && Math.abs(x - ec.x) < 3 && y > ec.y0 - 1 && y < ec.y1 + 1) return true;
+    // cour d'entrée : on laisse l'allée et ses abords dégagés
+    if (y > b.y1 && Math.abs(x - pathX) < 14 && y < gateY + 3) return true;
+    if (Math.hypot(x - f.x, y - f.y) < 4) return true;
+    return out.some((o) => Math.hypot(o.x - x, o.y - y) < 2.6);
+  };
+  for (let tries = 0; tries < 2500 && out.length < 140; tries++) {
+    const x = rnd() * GRID_X;
+    const y = rnd() * GRID_Y;
+    if (blocked(x, y)) continue;
+    let r = rnd();
+    let pick = kinds[0];
+    for (const k of kinds) {
+      if (r < k[1]) {
+        pick = k;
+        break;
+      }
+      r -= k[1];
+    }
+    out.push({ name: pick[0], x, y, w: pick[2] * (0.85 + rnd() * 0.3) });
+  }
+  return out.sort((a, c) => a.x + a.y - (c.x + c.y));
+})();
+
+/** Touffes de fleurs sauvages (petits points colorés) sur l'herbe. */
+const FLOWERS: { x: number; y: number; c: string }[] = (() => {
+  const rnd = seeded(77);
+  const b = schoolBounds();
+  const colors = ['#F2E8C8', '#E9A6C2', '#B9A6E9', '#F2D06B', '#E97A6B'];
+  const out: { x: number; y: number; c: string }[] = [];
+  for (let i = 0; i < 900 && out.length < 220; i++) {
+    const x = rnd() * GRID_X;
+    const y = rnd() * GRID_Y;
+    if (x > b.x0 - 0.5 && x < b.x1 + 0.5 && y > b.y0 - 0.5 && y < b.y1 + 0.5) continue;
+    out.push({ x, y, c: colors[Math.floor(rnd() * colors.length)] });
+  }
+  return out;
+})();
+
+/** Végétation : couche « arrière » (dessinée avant l'école) ou « avant » (après). */
+function Scatter({ env, front }: { env: EnvDef; front: boolean }) {
+  const b = schoolBounds();
+  const items = SCATTER.filter((o) => (o.x > b.x1 || o.y > b.y1) === front);
+  return (
+    <G>
+      {!front && env.deco === 'tree'
+        ? FLOWERS.map((f, i) => {
+            const p = iso(f.x, f.y);
+            return (
+              <G key={`f${i}`}>
+                <Circle cx={p.x} cy={p.y} r={1.6} fill={f.c} />
+                <Circle cx={p.x + 3} cy={p.y + 1} r={1.3} fill={f.c} />
+                <Circle cx={p.x - 2} cy={p.y + 1.6} r={1.2} fill={f.c} />
+              </G>
+            );
+          })
+        : null}
+      {items.map((o, i) =>
+        env.deco === 'tree' ||
+        !['oak', 'pine', 'bush', 'pumpkins', 'planterTree'].includes(o.name) ? (
+          <Decor key={i} name={o.name} p={iso(o.x, o.y)} width={o.w} />
+        ) : (
+          <Deco key={i} p={iso(o.x, o.y)} s={1.1} env={env} />
+        ),
+      )}
+    </G>
+  );
+}
+
+/** Tapis de couloir et mobilier aux carrefours (chandeliers, plantes, bancs). */
+function CorridorDecor({ env }: { env: EnvDef }) {
+  const b = schoolBounds();
+  const runner = env.id === 'manor' ? '#6B2430' : shade(env.corridor, 0.6);
+  const xs = CORRIDOR_X;
+  const ys = CORRIDOR_Y;
+  const props: ReactElement[] = [];
+  const cycle: [SpriteName, number][] = [
+    ['candelabra', 20],
+    ['planterTree', 26],
+    ['candelabra', 20],
+    ['parkBench', 28],
+    ['clock', 20],
+    ['planterTree', 26],
+  ];
+  let n = 0;
+  for (const x of xs)
+    for (const y of ys) {
+      if (x <= b.x0 + 0.1 || y <= b.y0 + 0.1 || x >= b.x1 - 0.1 || y >= b.y1 - 0.1) continue;
+      const [name, w] = cycle[n++ % cycle.length];
+      props.push(<Decor key={`c${x}-${y}`} name={name} p={iso(x - 0.75, y - 0.75)} width={w} />);
+    }
+  return (
+    <G>
+      {xs.map((x) => (
+        <Polygon
+          key={`rx${x}`}
+          points={floorPoly(x - 0.35, b.y0, 0.7, b.y1 - b.y0)}
+          fill={runner}
+          opacity={0.5}
+        />
+      ))}
+      {ys.map((y) => (
+        <Polygon
+          key={`ry${y}`}
+          points={floorPoly(b.x0, y - 0.35, b.x1 - b.x0, 0.7)}
+          fill={runner}
+          opacity={0.5}
+        />
+      ))}
+      {props}
     </G>
   );
 }
@@ -294,6 +487,7 @@ function Ground({ env }: { env: EnvDef }) {
         tint={tinted ? env.corridor : '#2B1A0E'}
         tintOpacity={tinted ? 0.45 : 0.18}
       />
+      <CorridorDecor env={env} />
       {/* Allée pavée en « L » : du couloir de l'Accueil jusqu'au portail */}
       <TexFloor
         id="pathA"
@@ -308,6 +502,7 @@ function Ground({ env }: { env: EnvDef }) {
       />
       <ExamCorridor env={env} />
       <Perimeter env={env} />
+      <Scatter env={env} front={false} />
       {yardEls}
       <Fountain p={iso(fountainPoint().x, fountainPoint().y)} />
       <Sprite name="gate" p={iso(gateX, gateY + 0.9)} width={100} lift={8} />
@@ -725,6 +920,24 @@ function Room({ r, env }: { r: RoomSnapshot; env: EnvDef }) {
           />
         </G>
       ) : null}
+      {isCourse || r.kind === 'exam' ? (
+        <G>
+          <Polygon
+            points={floorPoly(o.x + 2.1 * R, o.y + 0.9 * R, RW - 3.4 * R, RH - 2.1 * R)}
+            fill={RUGS[r.courseId ?? 'exam'] ?? '#4A3A5A'}
+            opacity={0.55}
+            stroke="#C9A25A"
+            strokeWidth={1}
+          />
+          <Polygon
+            points={floorPoly(o.x + 2.4 * R, o.y + 1.2 * R, RW - 4.0 * R, RH - 2.7 * R)}
+            fill="none"
+            stroke="#E8D9B0"
+            strokeOpacity={0.35}
+            strokeWidth={1}
+          />
+        </G>
+      ) : null}
       {r.kind === 'reception' ? (
         <G>
           <Polygon
@@ -786,6 +999,7 @@ function MapArtBase({ rooms, plots, env: envIndex }: Props) {
     <Svg width={MAP_W} height={MAP_H}>
       <Ground env={env} />
       {items.map((x) => x.el)}
+      <Scatter env={env} front />
     </Svg>
   );
 }
