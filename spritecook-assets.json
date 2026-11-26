@@ -179,6 +179,38 @@
       "slices": [
         "porch"
       ]
+    },
+    {
+      "asset_id": "b46f0a6f-fff6-49cd-912c-7c6a66d48927",
+      "label": "mobilier v2 niveau 1 (remplace furniture-sheet-1)",
+      "slices": [
+        "cauldron",
+        "plant",
+        "desk",
+        "telescope",
+        "crystal",
+        "broom",
+        "podium",
+        "duelCircle",
+        "bed",
+        "stage",
+        "teacherDesk",
+        "bookshelf"
+      ]
+    },
+    {
+      "asset_id": "a58b3edf-21e9-4c78-9900-1fb001f7e5b5",
+      "label": "mobilier v2 niveau 2",
+      "slices": [
+        "<nom>-2"
+      ]
+    },
+    {
+      "asset_id": "93119bae-26ac-420a-8cfc-89420fa83710",
+      "label": "mobilier v2 niveau 3",
+      "slices": [
+        "<nom>-3"
+      ]
     }
   ],
   "notes": "Planches découpées localement dans src/assets/sprites/. Les variantes *-unsorted.png sont des versions désaturées (élèves pas encore répartis). Les sprites teacherDeskM* sont des miroirs (bureau tourné vers les élèves). Ancienne planche tier-3 dorée (54244606…) remplacée. Index régénéré par `npm run assets`.",
