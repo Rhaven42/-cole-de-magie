@@ -80,3 +80,34 @@ describe('évolution des objets (places)', () => {
     expect(serviceTime(st, 0)).toBeLessThan(serviceTime(st, 1));
   });
 });
+
+describe('cycle jour/nuit', () => {
+  it('phases et facteur de nuit', () => {
+    const { dayPhase, nightFactor, DAY_NIGHT } = jest.requireActual('../../data/daynight');
+    const c = DAY_NIGHT.cycleSeconds;
+    expect(dayPhase(0)).toBe('day');
+    expect(dayPhase(c * 0.6)).toBe('dusk');
+    expect(dayPhase(c * 0.7)).toBe('night');
+    expect(dayPhase(c * 0.95)).toBe('dawn');
+    expect(nightFactor(0)).toBe(0);
+    expect(nightFactor(c * 0.7)).toBe(1);
+    expect(nightFactor(c * 0.6)).toBeCloseTo(0.5);
+    expect(nightFactor(c * 0.95)).toBeCloseTo(0.5);
+    expect(dayPhase(c + 1)).toBe('day');
+  });
+
+  it('l’Astronomie rapporte plus la nuit', () => {
+    const { courseReward } = jest.requireActual('../modifiers');
+    const { buyCourse } = jest.requireActual('../actions');
+    const { DAY_NIGHT } = jest.requireActual('../../data/daynight');
+    const g = createGame();
+    g.coins = 1e6;
+    buyCourse(g, 'astronomy');
+    const st = g.stations['course-astronomy'];
+    const who = { house: null, mood: 80 };
+    g.time = 0;
+    const day = courseReward(st, who, g);
+    g.time = DAY_NIGHT.cycleSeconds * 0.75;
+    expect(courseReward(st, who, g)).toBeGreaterThan(day);
+  });
+});

@@ -1,8 +1,8 @@
 import { ISO, PLOT, PLOTS, ROOM_SCALE } from '../data/layout';
 
 /** Taille de la grille complète, en tuiles. */
-export const GRID_X = PLOT.margin * 2 + PLOT.cols * (PLOT.size + PLOT.gap);
-export const GRID_Y = PLOT.margin * 2 + PLOT.rows * (PLOT.size + PLOT.gap);
+export const GRID_X = PLOT.margin + PLOT.front + PLOT.cols * (PLOT.size + PLOT.gap);
+export const GRID_Y = PLOT.margin + PLOT.front + PLOT.rows * (PLOT.size + PLOT.gap);
 
 export const OFFSET_X = GRID_Y * (ISO.tileW / 2);
 export const OFFSET_Y = ISO.wallH + 30;
@@ -42,6 +42,12 @@ export function stationOrigin(id: string): Pt | null {
   return p ? plotOrigin(p.px, p.py) : null;
 }
 
+/** Taille d'une salle en cases (les grandes salles occupent plusieurs parcelles). */
+export function roomSize(id: string): { w: number; h: number } {
+  const span = PLOTS[id]?.spanX ?? 1;
+  return { w: span * PLOT.size + (span - 1) * PLOT.gap, h: PLOT.size };
+}
+
 export function poly(pts: Pt[]): string {
   return pts.map((p) => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
 }
@@ -55,13 +61,16 @@ export function floorPoly(gx: number, gy: number, w: number, h: number): string 
 export function hitPlot(g: Pt): string | null {
   for (const [id, p] of Object.entries(PLOTS)) {
     const o = plotOrigin(p.px, p.py);
-    if (g.x >= o.x && g.x <= o.x + PLOT.size && g.y >= o.y && g.y <= o.y + PLOT.size) return id;
+    const { w, h } = roomSize(id);
+    if (g.x >= o.x && g.x <= o.x + w && g.y >= o.y && g.y <= o.y + h) return id;
   }
   return null;
 }
 
 /** Position (grille, relative à la salle) de chaque place selon le type de lieu. */
 export function seatSpot(kind: string, i: number): Pt {
+  // Grand Accueil (2 parcelles) : guichets alignés au centre, face à l'entrée.
+  if (kind === 'reception') return { x: 7.6 + i * 1.4, y: 5.6 };
   const p = baseSeatSpot(kind, i);
   return { x: p.x * ROOM_SCALE, y: p.y * ROOM_SCALE };
 }
@@ -118,17 +127,45 @@ export const CORRIDOR_Y = [
 ];
 
 /** Porte d'une salle : au milieu du mur avant droit. */
-export function doorOf(id: string): { inside: Pt; outside: Pt } | null {
+export function doorOf(id: string): { inside: Pt; outside: Pt; axis: 'x' | 'y' } | null {
   const o = stationOrigin(id);
   if (!o) return null;
-  const y = o.y + PLOT.size / 2;
-  return { inside: { x: o.x + PLOT.size - 0.7, y }, outside: { x: o.x + PLOT.size + HALF_GAP, y } };
+  const { w, h } = roomSize(id);
+  if (PLOTS[id].door === 'y') {
+    const x = o.x + w / 2;
+    return { inside: { x, y: o.y + h - 0.7 }, outside: { x, y: o.y + h + HALF_GAP }, axis: 'y' };
+  }
+  const y = o.y + h / 2;
+  return { inside: { x: o.x + w - 0.7, y }, outside: { x: o.x + w + HALF_GAP, y }, axis: 'x' };
+}
+
+/** Axes de couloir « x » libres (pas sous une grande salle) pour rejoindre le réseau. */
+function freeCorridorX(): number[] {
+  return CORRIDOR_X.filter((x) =>
+    Object.entries(PLOTS).every(([id, p]) => {
+      if ((p.spanX ?? 1) < 2) return true;
+      const o = plotOrigin(p.px, p.py);
+      return !(x > o.x && x < o.x + roomSize(id).w);
+    }),
+  );
 }
 
 /** Grille d'entrée de l'école. */
-export function gatePoint(): Pt {
+/**
+ * Cour d'entrée : le portail est à la pointe avant de la carte ; une allée en « L »
+ * remonte vers l'école (axe x = pathX) jusqu'au couloir de l'Accueil.
+ */
+export function courtyard() {
+  const d = doorOf('reception')!;
   const rec = plotOrigin(PLOTS.reception.px, PLOTS.reception.py);
-  return { x: rec.x + PLOT.size + PLOT.gap / 2, y: GRID_Y - 1.2 };
+  const schoolFrontY = rec.y + PLOT.size + PLOT.gap / 2;
+  return { pathX: d.outside.x, schoolFrontY, gateX: d.outside.x, gateY: GRID_Y - 3 };
+}
+
+/** Grille d'entrée de l'école (les nouveaux élèves arrivent par là). */
+export function gatePoint(): Pt {
+  const c = courtyard();
+  return { x: c.gateX, y: c.gateY };
 }
 
 function nearest(values: number[], v: number): number {
@@ -140,21 +177,45 @@ function nearest(values: number[], v: number): number {
  * et en suivant les couloirs (déplacements en « L » sur le réseau de couloirs).
  */
 export function route(from: Anchor, to: Anchor): Pt[] {
-  const pts: Pt[] = [];
+  const near = (a: number, b: number) => Math.abs(a - b) < 0.05;
+  const clean = (pts: Pt[]) =>
+    pts.filter((p, i) => i === 0 || Math.hypot(p.x - pts[i - 1].x, p.y - pts[i - 1].y) > 0.01);
   const fromDoor = from.room ? doorOf(from.room) : null;
   const toDoor = to.room ? doorOf(to.room) : null;
   // Même salle : déplacement direct à l'intérieur.
   if (from.room && from.room === to.room) return [to.g];
+  // Deux points de couloir alignés (allée, file d'attente) : ligne droite.
+  if (!from.room && !to.room && (near(from.g.x, to.g.x) || near(from.g.y, to.g.y))) return [to.g];
+  // Sur l'allée qui mène à une porte « y » (l'entrée) : tout droit jusqu'à la porte.
+  if (!from.room && toDoor?.axis === 'y' && near(from.g.x, toDoor.outside.x))
+    return clean([toDoor.outside, toDoor.inside, to.g]);
+  if (!to.room && fromDoor?.axis === 'y' && near(to.g.x, fromDoor.outside.x))
+    return clean([fromDoor.inside, fromDoor.outside, to.g]);
 
+  const pts: Pt[] = [];
   let c1: Pt;
   if (fromDoor) {
     pts.push(fromDoor.inside, fromDoor.outside);
     c1 = fromDoor.outside;
+    if (fromDoor.axis === 'y') {
+      c1 = { x: nearest(freeCorridorX(), c1.x), y: c1.y };
+      pts.push(c1);
+    }
   } else {
     c1 = { x: nearest(CORRIDOR_X, from.g.x), y: from.g.y };
     pts.push(c1);
   }
-  const c2: Pt = toDoor ? toDoor.outside : { x: nearest(CORRIDOR_X, to.g.x), y: to.g.y };
+  let c2: Pt;
+  const tail: Pt[] = [];
+  if (toDoor && toDoor.axis === 'y') {
+    c2 = { x: nearest(freeCorridorX(), toDoor.outside.x), y: toDoor.outside.y };
+    tail.push(toDoor.outside, toDoor.inside);
+  } else if (toDoor) {
+    c2 = toDoor.outside;
+    tail.push(toDoor.inside);
+  } else {
+    c2 = { x: nearest(CORRIDOR_X, to.g.x), y: to.g.y };
+  }
   if (Math.abs(c1.x - c2.x) > 0.01) {
     const yLine = CORRIDOR_Y.reduce((best, y) =>
       Math.abs(c1.y - y) + Math.abs(c2.y - y) < Math.abs(c1.y - best) + Math.abs(c2.y - best)
@@ -163,14 +224,35 @@ export function route(from: Anchor, to: Anchor): Pt[] {
     );
     pts.push({ x: c1.x, y: yLine }, { x: c2.x, y: yLine });
   }
-  pts.push(c2);
-  if (toDoor) pts.push(toDoor.inside);
-  pts.push(to.g);
-  // Retire les points consécutifs identiques.
-  return pts.filter((p, i) => i === 0 || Math.hypot(p.x - pts[i - 1].x, p.y - pts[i - 1].y) > 0.01);
+  pts.push(c2, ...tail, to.g);
+  return clean(pts);
 }
 
 /** Position d'une place : personnalisée (réaménagement) ou par défaut. */
 export function seatPos(kind: string, i: number, custom?: Pt): Pt {
   return custom ?? seatSpot(kind, i);
+}
+
+/** Lampadaires de l'allée d'entrée (grille absolue). */
+export function courtyardLamps(): Pt[] {
+  const { pathX, schoolFrontY, gateY } = courtyard();
+  const out: Pt[] = [];
+  for (let y = schoolFrontY + 2; y < gateY - 1.5; y += 3.4)
+    out.push({ x: pathX - 1.7, y }, { x: pathX + 1.7, y });
+  return out;
+}
+
+/** Fontaine de la cour d'entrée (grille absolue). */
+export function fountainPoint(): Pt {
+  const { pathX, schoolFrontY } = courtyard();
+  return { x: pathX + 7.5, y: schoolFrontY + 6.5 };
+}
+
+/** File d'attente d'un lieu : le long de l'allée pour l'entrée, sinon dans le couloir. */
+export function queueSpotFor(id: string, k: number): Pt {
+  if (PLOTS[id]?.door === 'y') {
+    const { w, h } = roomSize(id);
+    return { x: w / 2, y: h + 1.4 + k * 0.75 };
+  }
+  return queueSpot(k);
 }

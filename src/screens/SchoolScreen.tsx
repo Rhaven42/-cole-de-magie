@@ -28,13 +28,15 @@ import { useGame, useTick } from '../state/store';
 import { FloatText } from '../ui/Floater';
 import { Hat, ThinkingCrests } from '../ui/Hat';
 import {
+  courtyard,
   gatePoint,
   hitPlot,
   iso,
   MAP_H,
   MAP_W,
   plotOrigin,
-  queueSpot,
+  queueSpotFor,
+  roomSize,
   seatPos,
   unIso,
   type Anchor,
@@ -44,6 +46,8 @@ import { MapArt, type RoomSnapshot } from '../ui/MapArt';
 import { stationName } from '../ui/kit';
 import { colors, formatDuration, formatNumber } from '../ui/theme';
 import { Walker } from '../ui/Walker';
+import { Ambient } from '../ui/Ambient';
+import { nightFactor } from '../data/daynight';
 
 const MIN_SCALE = 0.25;
 const MAX_SCALE = 1.8;
@@ -84,7 +88,7 @@ function placeStudents(game: GameState): Placed[] {
       });
     });
     st.queue.slice(0, MAX_QUEUE_SHOWN).forEach((id, k) => {
-      const q = queueSpot(k);
+      const q = queueSpotFor(st.id, k);
       out.push({
         id,
         anchor: { g: { x: o.x + q.x, y: o.y + q.y }, room: null },
@@ -126,7 +130,8 @@ function snapshot(game: GameState) {
 function roomCenter(id: string): Pt {
   const def = PLOTS[id];
   const o = plotOrigin(def.px, def.py);
-  return iso(o.x + PLOT.size / 2, o.y + PLOT.size / 2);
+  const { w, h } = roomSize(id);
+  return iso(o.x + w / 2, o.y + h / 2);
 }
 
 /** Position du coffre (écran carte) : coin avant de la salle. */
@@ -141,7 +146,8 @@ function RoomLabel({ st, managed }: { st: Station; managed: boolean }) {
   const def = PLOTS[st.id];
   const o = plotOrigin(def.px, def.py);
   // Panneau posé devant le coin avant de la salle (dans le couloir).
-  const front = iso(o.x + PLOT.size * 0.8, o.y + PLOT.size * 0.8);
+  const { w: rw, h: rh } = roomSize(st.id);
+  const front = iso(o.x + rw - PLOT.size * 0.2, o.y + rh - PLOT.size * 0.2);
   const crowded = st.queue.length > st.seats.length * 1.5;
   return (
     <View pointerEvents="none" style={[styles.label, { left: front.x - 70, top: front.y - 18 }]}>
@@ -261,6 +267,25 @@ function EventMarkers({ game }: { game: GameState }) {
   );
 }
 
+/** Filtre de lumière : nuit bleutée, crépuscule et aube orangés. */
+function DayNight({ time }: { time: number }) {
+  const n = nightFactor(time);
+  const twilight = 1 - Math.abs(2 * n - 1);
+  if (n <= 0.001) return null;
+  return (
+    <>
+      <View
+        pointerEvents="none"
+        style={[StyleSheet.absoluteFill, { backgroundColor: '#0A1440', opacity: 0.36 * n }]}
+      />
+      <View
+        pointerEvents="none"
+        style={[StyleSheet.absoluteFill, { backgroundColor: '#FF7A3C', opacity: 0.12 * twilight }]}
+      />
+    </>
+  );
+}
+
 /** École en vue isométrique : glisser pour se déplacer, pincer pour zoomer, toucher une salle ou un élève. */
 export function SchoolScreen() {
   useTick();
@@ -269,7 +294,9 @@ export function SchoolScreen() {
   const [size, setSize] = useState({ w: 390, h: 700 });
 
   // Cadrage initial : Accueil, Salon, Grande Salle et Potions visibles.
-  const start = iso(plotOrigin(3, 3).x + 1, plotOrigin(3, 3).y - 1);
+  // Cadrage initial : la cour d'entrée, l'Accueil et le Salon des Destinées.
+  const cy = courtyard();
+  const start = iso((cy.pathX + cy.gateX) / 2 - 3, (cy.schoolFrontY + cy.gateY) / 2 - 6);
   const scale = useSharedValue(0.5);
   const tx = useSharedValue(195 - start.x * 0.5);
   const ty = useSharedValue(380 - start.y * 0.5);
@@ -413,6 +440,7 @@ export function SchoolScreen() {
                 />
               );
             })}
+            <Ambient game={game} />
             <SortingHat game={game} />
             <EventMarkers game={game} />
             {game.stationOrder.map((id) => (
@@ -440,6 +468,7 @@ export function SchoolScreen() {
           </Animated.View>
         </View>
       </GestureDetector>
+      <DayNight time={game.time} />
       <View style={styles.zoomCol}>
         <Pressable style={styles.zoomBtn} onPress={() => zoom(1.25)} accessibilityLabel="Zoomer">
           <Text style={styles.zoomText}>＋</Text>

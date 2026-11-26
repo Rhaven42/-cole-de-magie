@@ -284,6 +284,7 @@ export function Furniture({
   const sp = SEAT_SPRITES[kind];
   if (!sp) return null;
   // Le comptoir de l'Accueil est devant l'élève (côté mur arrière).
-  const p = kind === 'reception' ? iso(gx - 0.9, gy) : kind === 'dorm' ? iso(gx, gy) : at;
+  // Le comptoir de l'Accueil est derrière l'élève, côté fond de la salle.
+  const p = kind === 'reception' ? iso(gx, gy - 1.1) : kind === 'dorm' ? iso(gx, gy) : at;
   return <Sprite name={tiered(sp.name, tier)} p={p} width={sp.width} lift={sp.lift} />;
 }

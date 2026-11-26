@@ -5,7 +5,21 @@ import { ENVIRONMENTS, type EnvDef } from '../data/environments';
 import { HOUSE_IDS, HOUSES } from '../data/houses';
 import { FLOOR_TEXTURE, GARDENS, ISO, PLOT, PLOTS, ROOM_DECOR, ROOM_SCALE } from '../data/layout';
 import type { Station } from '../engine';
-import { floorPoly, GRID_X, GRID_Y, iso, MAP_H, MAP_W, plotOrigin, poly, type Pt } from './iso';
+import {
+  courtyard,
+  courtyardLamps,
+  floorPoly,
+  fountainPoint,
+  GRID_X,
+  GRID_Y,
+  iso,
+  MAP_H,
+  MAP_W,
+  plotOrigin,
+  poly,
+  roomSize,
+  type Pt,
+} from './iso';
 import { Box, Furniture, shade, Sprite, tiered, WallQuad } from './isoArt';
 import { TexFloor, TexWall, WallShadow } from './isoTex';
 
@@ -101,8 +115,51 @@ function Deco({ p, s = 1, env }: { p: Pt; s?: number; env: EnvDef }) {
         </G>
       );
     default:
-      return <Decor name="planterTree" p={p} width={34 * s} />;
+      return <Decor name="oak" p={p} width={58 * s} />;
   }
+}
+
+/** Objet posé dehors : position de grille absolue. */
+interface Outdoor {
+  name: SpriteName;
+  x: number;
+  y: number;
+  w: number;
+}
+
+/** Arbres autour de l'école (le décor change selon l'environnement). */
+function Perimeter({ env }: { env: EnvDef }) {
+  const pts: [number, number][] = [];
+  for (let x = 2; x < GRID_X - PLOT.front; x += 5.5) pts.push([x, 2 + ((x * 7) % 3)]);
+  for (let y = 7; y < GRID_Y - PLOT.front; y += 5.5) pts.push([2 + ((y * 5) % 3), y]);
+  const els = pts.map(([x, y], i) =>
+    env.deco === 'tree' ? (
+      <Decor
+        key={i}
+        name={i % 3 === 0 ? 'pine' : 'oak'}
+        p={iso(x, y)}
+        width={i % 3 === 0 ? 46 : 64}
+      />
+    ) : (
+      <Deco key={i} p={iso(x, y)} s={1.2} env={env} />
+    ),
+  );
+  return <G>{els}</G>;
+}
+
+/** Fontaine de la cour d'entrée. */
+function Fountain({ p }: { p: Pt }) {
+  return (
+    <G>
+      <Ellipse cx={p.x} cy={p.y + 4} rx={46} ry={23} fill="#000" opacity={0.2} />
+      <Ellipse cx={p.x} cy={p.y} rx={42} ry={21} fill="#8F9A9D" />
+      <Ellipse cx={p.x} cy={p.y - 2} rx={35} ry={16} fill="#5FA9CF" />
+      <Ellipse cx={p.x - 8} cy={p.y - 5} rx={12} ry={4} fill="#BFE6FF" opacity={0.6} />
+      <Line x1={p.x} y1={p.y - 4} x2={p.x} y2={p.y - 24} stroke="#8A9497" strokeWidth={6} />
+      <Ellipse cx={p.x} cy={p.y - 24} rx={10} ry={4.5} fill="#9AA5A8" />
+      <Ellipse cx={p.x} cy={p.y - 27} rx={5} ry={2.5} fill="#BFE6FF" />
+    </G>
+  );
 }
 
 function Ground({ env }: { env: EnvDef }) {
@@ -111,13 +168,57 @@ function Ground({ env }: { env: EnvDef }) {
   const h = PLOT.rows * (S + PLOT.gap) - PLOT.gap;
   const pad = PLOT.gap / 2;
   const tinted = env.id !== 'manor';
-  const rec = plotOrigin(PLOTS.reception.px, PLOTS.reception.py);
-  const pathX = rec.x + S + pad;
-  const gateY = GRID_Y - 2.4;
+  const { pathX, gateX, gateY } = courtyard();
   const x0 = school0.x - pad;
   const y0 = school0.y - pad;
   const x1 = school0.x + w + pad;
   const y1 = school0.y + h + pad;
+  const isManor = env.deco === 'tree';
+
+  // Cour d'entrée : allée bordée de lampadaires et de haies, jardin d'accueil.
+  const yard: Outdoor[] = [];
+  for (const l of courtyardLamps()) yard.push({ name: 'lamp', x: l.x, y: l.y, w: 22 });
+  yard.push(
+    // côté droit de l'allée (entre l'école et le portail)
+    { name: 'statue', x: pathX - 5.5, y: y1 + 3.2, w: 40 },
+    { name: 'flowerBed', x: pathX + 11.5, y: y1 + 3.5, w: 46 },
+    { name: 'parkBench', x: pathX + 3.6, y: y1 + 10, w: 34 },
+    { name: 'birdbath', x: x1 + 8.5, y: y1 + 2.5, w: 22 },
+    { name: 'well', x: x1 + 9.5, y: y0 + h * 0.75, w: 44 },
+    { name: 'picnic', x: x1 + 6.5, y: y0 + h * 0.55, w: 46 },
+    { name: 'oak', x: x1 + 10, y: y0 + h * 0.4, w: 70 },
+    { name: 'oak', x: x1 + 9, y: y0 + h * 0.15, w: 64 },
+    { name: 'pumpkins', x: x1 + 5, y: y0 + h * 0.3, w: 40 },
+    { name: 'wheelbarrow', x: x1 + 6.5, y: y0 + h * 0.36, w: 34 },
+    { name: 'bush', x: x1 + 4, y: y0 + h * 0.85, w: 30 },
+
+    { name: 'flowerBed', x: pathX - 3.6, y: gateY - 3.5, w: 36 },
+    { name: 'flowerBed', x: pathX + 3.6, y: gateY - 3.5, w: 36 },
+    { name: 'owlPost', x: pathX + 3, y: gateY - 0.8, w: 22 },
+    { name: 'signpost', x: pathX - 3, y: gateY - 1.2, w: 28 },
+    { name: 'hedge', x: pathX - 5.5, y: gateY - 0.5, w: 40 },
+    { name: 'hedge', x: pathX + 5.5, y: gateY - 0.5, w: 40 },
+
+    // côté gauche de l'allée
+    { name: 'hedge', x: pathX - 3.4, y: y1 + 7, w: 40 },
+    { name: 'hedge', x: pathX - 3.4, y: y1 + 10, w: 40 },
+    { name: 'bush', x: pathX - 6, y: y1 + 4.5, w: 32 },
+    { name: 'pine', x: pathX - 9, y: y1 + 7, w: 48 },
+    { name: 'rocks', x: pathX - 13, y: y1 + 5, w: 36 },
+    { name: 'oak', x: pathX - 18, y: y1 + 7.5, w: 70 },
+    { name: 'pine', x: pathX - 24, y: y1 + 6, w: 46 },
+    { name: 'pumpkins', x: pathX - 28, y: y1 + 3.5, w: 38 },
+    { name: 'oak', x: pathX - 34, y: y1 + 7, w: 66 },
+    { name: 'bush', x: pathX - 40, y: y1 + 4, w: 30 },
+    { name: 'pine', x: pathX - 45, y: y1 + 7.5, w: 46 },
+    { name: 'parkBench', x: pathX - 21, y: y1 + 3, w: 34 },
+    { name: 'flowerBed', x: pathX - 31, y: y1 + 3.2, w: 42 },
+  );
+  const yardEls = yard
+    .filter((o) => isManor || !['oak', 'pine', 'bush', 'pumpkins'].includes(o.name))
+    .sort((a, b) => a.x + a.y - (b.x + b.y))
+    .map((o, i) => <Decor key={`y${i}`} name={o.name} p={iso(o.x, o.y)} width={o.w} />);
+
   return (
     <G>
       <TexFloor
@@ -151,35 +252,22 @@ function Ground({ env }: { env: EnvDef }) {
         tint={tinted ? env.corridor : '#2B1A0E'}
         tintOpacity={tinted ? 0.45 : 0.18}
       />
-      {/* Allée d'entrée et portail (à gauche) */}
+      {/* Allée pavée en « L » : du couloir de l'Accueil jusqu'au portail */}
       <TexFloor
-        id="path"
+        id="pathA"
         gx={pathX - 1.1}
         gy={y1}
         w={2.2}
-        h={GRID_Y - y1}
+        h={gateY + 1.1 - y1}
         tex="stone"
         tile={2}
         tint={env.path}
         tintOpacity={tinted ? 0.4 : 0}
       />
-      <Decor name="barrel" p={iso(pathX + 1.7, y1 + 1.6)} width={22} />
-      <Decor name="planterTree" p={iso(pathX - 1.8, y1 + 1.4)} width={30} />
-      <Decor name="cat" p={iso(pathX + 1.6, gateY - 1.4)} width={16} />
-      <Sprite name="gate" p={iso(pathX, gateY + 0.6)} width={92} lift={8} />
-      {[
-        [2, 3],
-        [3, 12],
-        [2, 26],
-        [12, 2],
-        [26, 2.5],
-        [GRID_X - 3, 8],
-        [GRID_X - 3, GRID_Y - 4],
-        [10, GRID_Y - 2.5],
-        [GRID_X - 6, GRID_Y - 2],
-      ].map(([x, y], i) => (
-        <Deco key={i} p={iso(x, y)} s={1.1} env={env} />
-      ))}
+      <Perimeter env={env} />
+      {yardEls}
+      <Fountain p={iso(fountainPoint().x, fountainPoint().y)} />
+      <Sprite name="gate" p={iso(gateX, gateY + 0.9)} width={100} lift={8} />
     </G>
   );
 }
@@ -265,7 +353,21 @@ function ConstructionPlot({ px, py, available }: { px: number; py: number; avail
 }
 
 /** Murs épais : faces texturées, chapeau de mur, extrémités, corniche. */
-function Walls({ id, ox, oy, env }: { id: string; ox: number; oy: number; env: EnvDef }) {
+function Walls({
+  id,
+  ox,
+  oy,
+  w,
+  h,
+  env,
+}: {
+  id: string;
+  ox: number;
+  oy: number;
+  w: number;
+  h: number;
+  env: EnvDef;
+}) {
   const tinted = env.id !== 'manor';
   const cap = shade(env.wood, 0.75);
   return (
@@ -275,7 +377,7 @@ function Walls({ id, ox, oy, env }: { id: string; ox: number; oy: number; env: E
         axis="x"
         ox={ox}
         oy={oy}
-        len={S}
+        len={w}
         height={H}
         texHeight={ISO.wallH}
         shadeOpacity={0.14}
@@ -287,7 +389,7 @@ function Walls({ id, ox, oy, env }: { id: string; ox: number; oy: number; env: E
         axis="y"
         ox={ox}
         oy={oy}
-        len={S}
+        len={h}
         height={H}
         texHeight={ISO.wallH}
         shadeOpacity={0}
@@ -297,8 +399,8 @@ function Walls({ id, ox, oy, env }: { id: string; ox: number; oy: number; env: E
       <Polygon
         points={poly([
           lift(iso(ox - WALL_T, oy - WALL_T), H),
-          lift(iso(ox + S, oy - WALL_T), H),
-          lift(iso(ox + S, oy), H),
+          lift(iso(ox + w, oy - WALL_T), H),
+          lift(iso(ox + w, oy), H),
           lift(iso(ox, oy), H),
         ])}
         fill={cap}
@@ -307,31 +409,31 @@ function Walls({ id, ox, oy, env }: { id: string; ox: number; oy: number; env: E
         points={poly([
           lift(iso(ox - WALL_T, oy - WALL_T), H),
           lift(iso(ox, oy), H),
-          lift(iso(ox, oy + S), H),
-          lift(iso(ox - WALL_T, oy + S), H),
+          lift(iso(ox, oy + h), H),
+          lift(iso(ox - WALL_T, oy + h), H),
         ])}
         fill={shade(cap, 1.1)}
       />
       <Polygon
         points={poly([
-          iso(ox + S, oy - WALL_T),
-          iso(ox + S, oy),
-          lift(iso(ox + S, oy), H),
-          lift(iso(ox + S, oy - WALL_T), H),
+          iso(ox + w, oy - WALL_T),
+          iso(ox + w, oy),
+          lift(iso(ox + w, oy), H),
+          lift(iso(ox + w, oy - WALL_T), H),
         ])}
         fill={shade(cap, 0.8)}
       />
       <Polygon
         points={poly([
-          iso(ox - WALL_T, oy + S),
-          iso(ox, oy + S),
-          lift(iso(ox, oy + S), H),
-          lift(iso(ox - WALL_T, oy + S), H),
+          iso(ox - WALL_T, oy + h),
+          iso(ox, oy + h),
+          lift(iso(ox, oy + h), H),
+          lift(iso(ox - WALL_T, oy + h), H),
         ])}
         fill={shade(cap, 0.95)}
       />
-      <WallQuad axis="x" ox={ox} oy={oy} t1={0} t2={S} h1={H - 4} h2={H} fill={shade(cap, 0.9)} />
-      <WallQuad axis="y" ox={ox} oy={oy} t1={0} t2={S} h1={H - 4} h2={H} fill={cap} />
+      <WallQuad axis="x" ox={ox} oy={oy} t1={0} t2={w} h1={H - 4} h2={H} fill={shade(cap, 0.9)} />
+      <WallQuad axis="y" ox={ox} oy={oy} t1={0} t2={h} h1={H - 4} h2={H} fill={cap} />
     </G>
   );
 }
@@ -342,9 +444,13 @@ function RoomFloor({
   kind,
   ox,
   oy,
+  w,
+  h,
   tintColor,
   env,
 }: {
+  w: number;
+  h: number;
   id: string;
   kind: string;
   ox: number;
@@ -353,9 +459,9 @@ function RoomFloor({
   env: EnvDef;
 }) {
   const ft = FLOOR_TEXTURE[kind] ?? FLOOR_TEXTURE.course;
-  const a = iso(ox + S, oy);
-  const b = iso(ox + S, oy + S);
-  const c = iso(ox, oy + S);
+  const a = iso(ox + w, oy);
+  const b = iso(ox + w, oy + h);
+  const c = iso(ox, oy + h);
   const stone = '#7C7267';
   return (
     <G>
@@ -365,8 +471,8 @@ function RoomFloor({
         id={`${id}-floor`}
         gx={ox}
         gy={oy}
-        w={S}
-        h={S}
+        w={w}
+        h={h}
         tex={ft.tex}
         tile={ft.tile}
         tint={tintColor}
@@ -377,14 +483,76 @@ function RoomFloor({
 }
 
 /** Murets avant bas (vue « maison de poupée »), avec l'ouverture de la porte. */
-function FrontLips({ ox, oy }: { ox: number; oy: number }) {
-  const door = S / 2;
+function FrontLips({
+  ox,
+  oy,
+  w,
+  h,
+  door,
+}: {
+  ox: number;
+  oy: number;
+  w: number;
+  h: number;
+  door: 'x' | 'y';
+}) {
   const c = '#8A7F72';
+  const gap = 0.75;
+  if (door === 'y') {
+    return (
+      <G>
+        <Box gx={ox + w - 0.18} gy={oy} w={0.18} d={h} h={11} color={c} />
+        <Box gx={ox} gy={oy + h - 0.18} w={w / 2 - gap} d={0.18} h={11} color={c} />
+        <Box gx={ox + w / 2 + gap} gy={oy + h - 0.18} w={w / 2 - gap} d={0.18} h={11} color={c} />
+      </G>
+    );
+  }
   return (
     <G>
-      <Box gx={ox + S - 0.18} gy={oy} w={0.18} d={door - 0.75} h={11} color={c} />
-      <Box gx={ox + S - 0.18} gy={oy + door + 0.75} w={0.18} d={door - 0.75} h={11} color={c} />
-      <Box gx={ox} gy={oy + S - 0.18} w={S} d={0.18} h={11} color={c} />
+      <Box gx={ox + w - 0.18} gy={oy} w={0.18} d={h / 2 - gap} h={11} color={c} />
+      <Box gx={ox + w - 0.18} gy={oy + h / 2 + gap} w={0.18} d={h / 2 - gap} h={11} color={c} />
+      <Box gx={ox} gy={oy + h - 0.18} w={w} d={0.18} h={11} color={c} />
+    </G>
+  );
+}
+
+/** Porche d'entrée à colonnes et fronton, sur la face avant gauche (porte « y »). */
+function Porch({ ox, oy, w, h }: { ox: number; oy: number; w: number; h: number }) {
+  const cx = ox + w / 2;
+  const y = oy + h;
+  const stone = '#B8AE9C';
+  const top = 46;
+  const a = iso(cx - 1.6, y + 0.9);
+  const b = iso(cx + 1.6, y + 0.9);
+  return (
+    <G>
+      {/* marches */}
+      <Box gx={cx - 1.9} gy={y + 0.1} w={3.8} d={1.6} h={3} color="#9C9384" />
+      <Box gx={cx - 1.7} gy={y + 0.1} w={3.4} d={1.1} h={6} color="#A89F8F" />
+      {/* colonnes */}
+      {[-1.5, -0.6, 0.6, 1.5].map((dx) => (
+        <Box key={dx} gx={cx + dx - 0.15} gy={y + 0.75} w={0.3} d={0.3} h={top} color={stone} />
+      ))}
+      {/* entablement et fronton */}
+      <Box gx={cx - 1.8} gy={y + 0.6} w={3.6} d={0.55} h={6} color="#A39883" />
+      <Polygon
+        points={poly([
+          lift(iso(cx - 1.8, y + 1.15), top + 6),
+          lift(iso(cx + 1.8, y + 1.15), top + 6),
+          { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 - top - 26 },
+        ])}
+        fill="#C9BFAD"
+        stroke="#7C7262"
+        strokeWidth={1}
+      />
+      <Polygon
+        points={poly([
+          lift(iso(cx - 1.8, y + 0.6), top + 6),
+          lift(iso(cx - 1.8, y + 1.15), top + 6),
+          { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 - top - 26 },
+        ])}
+        fill="#A89E8B"
+      />
     </G>
   );
 }
@@ -392,6 +560,8 @@ function FrontLips({ ox, oy }: { ox: number; oy: number }) {
 function Room({ r, env }: { r: RoomSnapshot; env: EnvDef }) {
   const def = PLOTS[r.id];
   const o = plotOrigin(def.px, def.py);
+  const { w: RW, h: RH } = roomSize(r.id);
+  const doorSide = def.door ?? 'x';
   const t = tier(r.level);
   const kind = r.kind === 'course' ? r.courseId! : r.kind;
   const isCourse = r.kind === 'course';
@@ -444,8 +614,6 @@ function Room({ r, env }: { r: RoomSnapshot; env: EnvDef }) {
       ),
     );
   } else if (r.kind === 'reception') {
-    decor('b1', tiered('bookshelf', t), o.x + 0.55 * R, o.y + 2.2 * R, 30);
-    decor('b2', tiered('bookshelf', t), o.x + 0.55 * R, o.y + 6.2 * R, 30);
   } else if (r.kind === 'sorting') {
     tapestries(
       (i) => (i < 2 ? 'x' : 'y'),
@@ -475,12 +643,14 @@ function Room({ r, env }: { r: RoomSnapshot; env: EnvDef }) {
   });
   objects.sort((a, b) => a.order - b.order);
 
-  const center = iso(o.x + S / 2, o.y + S / 2);
+  const center = iso(o.x + RW / 2, o.y + RH / 2);
   return (
     <G>
-      <Walls id={r.id} ox={o.x} oy={o.y} env={env} />
+      <Walls id={r.id} ox={o.x} oy={o.y} w={RW} h={RH} env={env} />
       <RoomFloor
         id={r.id}
+        w={RW}
+        h={RH}
         kind={isCourse ? 'course' : r.kind}
         ox={o.x}
         oy={o.y}
@@ -509,18 +679,33 @@ function Room({ r, env }: { r: RoomSnapshot; env: EnvDef }) {
           />
         </G>
       ) : null}
-      {r.kind === 'dorm' || r.kind === 'reception' ? (
+      {r.kind === 'reception' ? (
+        <G>
+          <Polygon
+            points={floorPoly(o.x + 5.5, o.y + 3.2, RW - 11, 4.2)}
+            fill="#7A2E34"
+            opacity={0.6}
+          />
+          <Polygon
+            points={floorPoly(o.x + RW / 2 - 1.2, o.y + 6.5, 2.4, RH - 6.5)}
+            fill="#7A2E34"
+            opacity={0.6}
+          />
+        </G>
+      ) : null}
+      {r.kind === 'dorm' ? (
         <Polygon
           points={floorPoly(o.x + 2.6 * R, o.y + 2.6 * R, 2.8 * R, 2.8 * R)}
           fill="#7A2E34"
           opacity={0.55}
         />
       ) : null}
-      <WallShadow id={`${r.id}-shx`} axis="x" ox={o.x} oy={o.y} len={S} />
-      <WallShadow id={`${r.id}-shy`} axis="y" ox={o.x} oy={o.y} len={S} />
+      <WallShadow id={`${r.id}-shx`} axis="x" ox={o.x} oy={o.y} len={RW} />
+      <WallShadow id={`${r.id}-shy`} axis="y" ox={o.x} oy={o.y} len={RH} />
       {wall}
       {objects.map((x) => x.el)}
-      <FrontLips ox={o.x} oy={o.y} />
+      <FrontLips ox={o.x} oy={o.y} w={RW} h={RH} door={doorSide} />
+      {doorSide === 'y' ? <Porch ox={o.x} oy={o.y} w={RW} h={RH} /> : null}
     </G>
   );
 }

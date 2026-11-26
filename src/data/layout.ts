@@ -2,7 +2,8 @@
  * Plan isométrique de l'école (vue de dessus 3/4).
  * Organisation : entrée à l'avant (Accueil, Salon des Destinées, Grande Salle au centre),
  * aile des cours à gauche rangée par année (de l'avant vers le fond),
- * aile des dortoirs à droite et au fond, jardin près des Balais volants.
+ * aile des dortoirs à droite et au fond. Grand Accueil sur 2 parcelles avec porche,
+ * relié au portail par une allée droite dans la cour d'entrée (fontaine, jardin).
  * Grille de « parcelles » : chaque lieu occupe une parcelle carrée.
  * px/py = coordonnées de parcelle ; (4,3) est le coin avant (entrée).
  */
@@ -14,7 +15,8 @@ export const ISO = {
   wallH: 52,
 };
 
-export const PLOT = { size: 10, gap: 2, cols: 5, rows: 4, margin: 5 };
+/** front : profondeur de la cour d'entrée devant l'école (portail, allée, jardin). */
+export const PLOT = { size: 10, gap: 2, cols: 5, rows: 4, margin: 5, front: 13 };
 
 /** Échelle des aménagements intérieurs (conçus pour une salle de 8 cases). */
 export const ROOM_SCALE = PLOT.size / 8;
@@ -22,6 +24,10 @@ export const ROOM_SCALE = PLOT.size / 8;
 export interface PlotDef {
   px: number;
   py: number;
+  /** Nombre de parcelles occupées le long de x (grande salle sur 2 parcelles). */
+  spanX?: number;
+  /** Côté de la porte : 'x' = face avant droite (défaut), 'y' = face avant gauche (entrée). */
+  door?: 'x' | 'y';
   /** Couleur du sol (tapis / dalles). */
   floor: string;
   floorAlt: string;
@@ -29,12 +35,12 @@ export interface PlotDef {
 
 /** Emplacement de chaque lieu (id de Station) ou décor. */
 export const PLOTS: Record<string, PlotDef> = {
-  reception: { px: 4, py: 3, floor: '#C9A27A', floorAlt: '#BD946B' },
-  sorting: { px: 3, py: 3, floor: '#5B4A86', floorAlt: '#52417A' },
+  reception: { px: 3, py: 3, spanX: 2, door: 'y', floor: '#C9A27A', floorAlt: '#BD946B' },
+  sorting: { px: 2, py: 3, floor: '#5B4A86', floorAlt: '#52417A' },
   hall: { px: 4, py: 2, floor: '#A2553C', floorAlt: '#954C35' },
-  'course-potions': { px: 2, py: 3, floor: '#4E7F6A', floorAlt: '#46735F' },
-  'course-botany': { px: 1, py: 3, floor: '#6E9A4B', floorAlt: '#638C43' },
-  'course-history': { px: 0, py: 3, floor: '#9C6B44', floorAlt: '#8F613D' },
+  'course-potions': { px: 1, py: 3, floor: '#4E7F6A', floorAlt: '#46735F' },
+  'course-botany': { px: 0, py: 3, floor: '#6E9A4B', floorAlt: '#638C43' },
+  'course-history': { px: 0, py: 2, floor: '#9C6B44', floorAlt: '#8F613D' },
   'course-charms': { px: 3, py: 2, floor: '#4D78A8', floorAlt: '#456D99' },
   'course-astronomy': { px: 2, py: 2, floor: '#33406E', floorAlt: '#2C3862' },
   'course-flying': { px: 1, py: 2, floor: '#7FB069', floorAlt: '#75A35F' },
@@ -51,7 +57,7 @@ export const PLOTS: Record<string, PlotDef> = {
 };
 
 /** Parcelles de jardin (décor). */
-export const GARDENS: { px: number; py: number }[] = [{ px: 0, py: 2 }];
+export const GARDENS: { px: number; py: number }[] = [];
 
 /** Décor d'une salle : sprite posé à une position de grille relative à la salle. */
 export interface DecorItem {
@@ -137,11 +143,23 @@ export const ROOM_DECOR: Record<string, DecorItem[]> = {
     { sprite: 'planterTree', x: 0.8, y: 7.4, width: 28 },
   ],
   reception: [
-    { sprite: 'noticeBoard', x: 6.6, y: 0.7, width: 30 },
-    { sprite: 'clock', x: 4.6, y: 0.5, width: 22 },
-    { sprite: 'coatStand', x: 5.6, y: 0.6, width: 24 },
-    { sprite: 'armchair', x: 6.4, y: 6.8, width: 32 },
-    { sprite: 'planterTree', x: 7.3, y: 7.4, width: 28 },
+    { sprite: 'bookshelf', x: 0.6, y: 1.5, width: 30 },
+    { sprite: 'bookshelf', x: 0.6, y: 3.6, width: 30 },
+    { sprite: 'clock', x: 0.6, y: 6.2, width: 22 },
+    { sprite: 'noticeBoard', x: 3.5, y: 0.7, width: 30 },
+    { sprite: 'bookshelf', x: 6.0, y: 0.5, width: 30 },
+    { sprite: 'statue', x: 11, y: 1.2, width: 34 },
+    { sprite: 'bookshelf', x: 16.0, y: 0.5, width: 30 },
+    { sprite: 'jarShelf', x: 18.5, y: 0.5, width: 30 },
+    { sprite: 'coatStand', x: 21.0, y: 1.0, width: 24 },
+    { sprite: 'armchair', x: 3.0, y: 8.0, width: 32 },
+    { sprite: 'armchair', x: 5.0, y: 8.6, width: 32 },
+    { sprite: 'planterTree', x: 8.2, y: 9.0, width: 30 },
+    { sprite: 'planterTree', x: 13.8, y: 9.0, width: 30 },
+    { sprite: 'parkBench', x: 17.5, y: 8.4, width: 32 },
+    { sprite: 'candelabra', x: 21.0, y: 8.8, width: 22 },
+    { sprite: 'globe', x: 21.0, y: 5.0, width: 26 },
+    { sprite: 'candelabra', x: 1.2, y: 9.0, width: 22 },
   ],
   sorting: [
     { sprite: 'candelabra', x: 1.0, y: 1.0, width: 22 },
