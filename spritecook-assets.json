@@ -154,7 +154,7 @@
   ],
   "portraits": [
     {
-      "asset_id": "b34f37ae-5cd4-4484-b24b-6a514202658e",
+      "asset_id": "f77cc2ff-7f8e-47e1-a274-081a991d68d0",
       "name": "Taladon Morvard",
       "file": "portraits/taladon.png",
       "role": "Sortilèges"
@@ -166,13 +166,13 @@
       "role": "Métamorphose"
     },
     {
-      "asset_id": "45d50a67-fea9-4926-ba06-273904858353",
+      "asset_id": "0afde667-79b4-4e8e-bb2d-846e05700e02",
       "name": "Harvald",
       "file": "portraits/harvald.png",
       "role": "Défense contre les Forces du Mal"
     },
     {
-      "asset_id": "410592f9-8540-45f9-a8ed-6a74646e3eb8",
+      "asset_id": "742e1f6d-6321-4938-a131-f99839984f6b",
       "name": "Rhaven Morvard",
       "file": "portraits/rhaven.png",
       "role": "professeure (matière à choisir)"
