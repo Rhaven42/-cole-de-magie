@@ -49,7 +49,6 @@ import { colors, formatDuration, formatNumber } from '../ui/theme';
 import { Walker } from '../ui/Walker';
 import { Ambient } from '../ui/Ambient';
 import { Professor } from '../ui/Professor';
-import { nightFactor } from '../data/daynight';
 
 const MIN_SCALE = 0.25;
 const MAX_SCALE = 1.8;
@@ -275,25 +274,6 @@ function EventMarkers({ game }: { game: GameState }) {
   );
 }
 
-/** Filtre de lumière : nuit bleutée, crépuscule et aube orangés. */
-function DayNight({ time }: { time: number }) {
-  const n = nightFactor(time);
-  const twilight = 1 - Math.abs(2 * n - 1);
-  if (n <= 0.001) return null;
-  return (
-    <>
-      <View
-        pointerEvents="none"
-        style={[StyleSheet.absoluteFill, { backgroundColor: '#0A1440', opacity: 0.36 * n }]}
-      />
-      <View
-        pointerEvents="none"
-        style={[StyleSheet.absoluteFill, { backgroundColor: '#FF7A3C', opacity: 0.12 * twilight }]}
-      />
-    </>
-  );
-}
-
 /** École en vue isométrique : glisser pour se déplacer, pincer pour zoomer, toucher une salle ou un élève. */
 export function SchoolScreen() {
   useTick();
@@ -493,7 +473,6 @@ export function SchoolScreen() {
           </Animated.View>
         </View>
       </GestureDetector>
-      <DayNight time={game.time} />
       <View style={styles.zoomCol}>
         <Pressable style={styles.zoomBtn} onPress={() => zoom(1.25)} accessibilityLabel="Zoomer">
           <Text style={styles.zoomText}>＋</Text>

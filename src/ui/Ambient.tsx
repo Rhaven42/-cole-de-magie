@@ -6,13 +6,11 @@
 import { useEffect, useState } from 'react';
 import { Animated, Easing, Image, StyleSheet, View } from 'react-native';
 import { SPRITES } from '../assets';
-import { nightFactor } from '../data/daynight';
 import { ROOM_SCALE } from '../data/layout';
 import type { GameState } from '../engine';
 import {
   CORRIDOR_X,
   CORRIDOR_Y,
-  courtyardLamps,
   fountainPoint,
   iso,
   MAP_H,
@@ -193,7 +191,6 @@ function Sparkle({ p, delay }: { p: Pt; delay: number }) {
 }
 
 export function Ambient({ game }: { game: GameState }) {
-  const night = nightFactor(game.time);
   const potions = game.stations['course-potions'];
   const po = stationOrigin('course-potions');
   const hall = stationOrigin('hall');
@@ -227,21 +224,6 @@ export function Ambient({ game }: { game: GameState }) {
           ))
         : null}
       <Cat />
-      {night > 0.05
-        ? courtyardLamps().map((l, i) => {
-            const p = iso(l.x, l.y);
-            return (
-              <View
-                key={`l${i}`}
-                pointerEvents="none"
-                style={{ position: 'absolute', left: p.x - 16, top: p.y - 56, opacity: night }}
-              >
-                <View style={styles.lampGlowOuter} />
-                <View style={styles.lampGlowInner} />
-              </View>
-            );
-          })
-        : null}
       <Owl y={MAP_H * 0.25} duration={16000} delay={4000} />
       <Owl y={MAP_H * 0.55} duration={20000} delay={14000} />
       <Cloud y={MAP_H * 0.1} duration={90000} delay={0} scale={1.4} />

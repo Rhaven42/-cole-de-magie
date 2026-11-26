@@ -7,7 +7,6 @@ import { HOUSES } from '../data/houses';
 import { SERVICES, type UpgradeEffect } from '../data/stations';
 import { TRAITS } from '../data/traits';
 import { EVENT_RULES } from '../data/events';
-import { DAY_NIGHT, dayPhase } from '../data/daynight';
 import { RELIC_BONUS, RELIC_SETS, RELICS } from '../data/collection';
 import { PRESTIGE } from '../data/environments';
 import type { GameState, Station, Student } from './types';
@@ -129,8 +128,6 @@ export function courseReward(
     const stars = state.events.some((e) => e.id === 'shootingStars' && e.until > state.time);
     if (stars && (st.courseId === 'astronomy' || st.courseId === 'divination'))
       r *= EVENT_RULES.shootingStarsMult;
-    if (st.courseId === 'astronomy' && dayPhase(state.time) === 'night')
-      r *= DAY_NIGHT.astronomyNightMult;
   }
   if (s.house) r *= HOUSES[s.house].bonus.coinMult ?? 1;
   if (s.mood < NEEDS.lowMood) r *= NEEDS.lowMoodCoinMult;

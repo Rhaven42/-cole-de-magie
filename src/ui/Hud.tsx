@@ -1,6 +1,5 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { populationCap, reputationStars } from '../engine';
-import { dayPhase } from '../data/daynight';
 import { t } from '../i18n';
 import { useGame, useTick } from '../state/store';
 import { colors, formatNumber, space } from './theme';
@@ -15,9 +14,6 @@ export function Hud() {
     <View style={styles.bar}>
       <Text style={styles.item} accessibilityLabel={t('currency.coins')}>
         💰 {formatNumber(game.coins)}
-      </Text>
-      <Text style={styles.item} accessibilityLabel="Moment de la journée">
-        {{ day: '☀️', dusk: '🌇', night: '🌙', dawn: '🌅' }[dayPhase(game.time)]}
       </Text>
       <Text style={styles.item} accessibilityLabel={t('currency.gems')}>
         💎 {game.gems}
