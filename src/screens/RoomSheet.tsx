@@ -135,6 +135,7 @@ export function RoomSheet() {
   const store = useGame.getState();
   const [seatSel, setSeatSel] = useState<number | null>(null);
   const [rearrange, setRearrange] = useState(false);
+  const [bioOpen, setBioOpen] = useState(false);
   const st = id ? game.stations[id] : undefined;
   if (id && !st) return <BuildSheet id={id} />;
   if (!st) return null;
@@ -180,8 +181,23 @@ export function RoomSheet() {
                 <Text style={styles.profName}>
                   {professorLabel(NAMED_PROFESSORS[st.courseId!]!)}
                 </Text>
+                {NAMED_PROFESSORS[st.courseId!]!.trait ? (
+                  <Text style={styles.profTrait}>
+                    {'\n'}« {NAMED_PROFESSORS[st.courseId!]!.trait} »
+                  </Text>
+                ) : null}
               </Text>
             </View>
+          ) : null}
+          {isCourse && NAMED_PROFESSORS[st.courseId!]?.bio ? (
+            <Pressable onPress={() => setBioOpen((v) => !v)} accessibilityRole="button">
+              <Text style={styles.bioToggle}>
+                {bioOpen ? '▾ Masquer son portrait' : '▸ Lire son portrait'}
+              </Text>
+              {bioOpen ? (
+                <Text style={styles.bio}>{NAMED_PROFESSORS[st.courseId!]!.bio}</Text>
+              ) : null}
+            </Pressable>
           ) : null}
           {isClosed(game, st) ? <Text style={styles.closed}>💥 {t('room.closed')}</Text> : null}
           <View style={styles.stats}>
@@ -495,6 +511,9 @@ const styles = StyleSheet.create({
   portrait: { width: 64, height: 128 },
   prof: { fontWeight: '600', color: colors.inkSoft },
   profName: { fontWeight: '800', fontSize: 17, color: colors.ink },
+  profTrait: { fontStyle: 'italic', fontWeight: '500', fontSize: 13, color: colors.inkSoft },
+  bioToggle: { color: colors.inkSoft, fontWeight: '700', marginBottom: space.xs },
+  bio: { color: colors.ink, lineHeight: 20, marginBottom: space.sm },
   closed: { color: colors.bad, fontWeight: '800', textAlign: 'center', marginBottom: space.sm },
   stats: {
     flexDirection: 'row',
