@@ -151,5 +151,37 @@
       "asset_id": "50d933cb-39d9-4cee-b70a-9e6918e8c5a3",
       "file": "textures/grass.jpg"
     }
+  ],
+  "portraits": [
+    {
+      "asset_id": "b34f37ae-5cd4-4484-b24b-6a514202658e",
+      "name": "Taladon Morvard",
+      "file": "portraits/taladon.png",
+      "role": "Sortilèges"
+    },
+    {
+      "asset_id": "a60523d1-c563-40ad-a436-ba2ac72795c9",
+      "name": "Tenarius D'Arvay",
+      "file": "portraits/tenarius.png",
+      "role": "Métamorphose"
+    },
+    {
+      "asset_id": "45d50a67-fea9-4926-ba06-273904858353",
+      "name": "Harvald",
+      "file": "portraits/harvald.png",
+      "role": "Défense contre les Forces du Mal"
+    },
+    {
+      "asset_id": "410592f9-8540-45f9-a8ed-6a74646e3eb8",
+      "name": "Rhaven Morvard",
+      "file": "portraits/rhaven.png",
+      "role": "professeure (matière à choisir)"
+    },
+    {
+      "asset_id": "ad3bfa53-7d3a-4b4d-9678-bd279519b41e",
+      "name": "Morganvar",
+      "file": "portraits/morganvar.png",
+      "role": "à définir"
+    }
   ]
 }
