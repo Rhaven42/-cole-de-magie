@@ -1,0 +1,125 @@
+import { COURSES } from '../data/courses';
+import { ECONOMY, NEEDS, POPULATION } from '../data/economy';
+import { applyTime, comfortReduction } from '../data/formulas';
+import { HOUSES } from '../data/houses';
+import { SERVICES, type UpgradeEffect } from '../data/stations';
+import { TRAITS } from '../data/traits';
+import type { GameState, Station, Student } from './types';
+
+/** Durée de base du service d'un lieu. */
+export function baseDuration(st: Station): number {
+  return st.kind === 'course' ? COURSES[st.courseId!].duration : SERVICES[st.kind].duration;
+}
+
+/** Somme des effets d'un type donné sur les pistes d'aménagement du lieu. */
+export function trackSum(st: Station, type: UpgradeEffect['type']): number {
+  if (st.kind === 'course') return 0;
+  let sum = 0;
+  for (const tr of SERVICES[st.kind].tracks) {
+    const lvl = st.tracks[tr.id] ?? 0;
+    if (tr.effect.type === type) sum += tr.effect.perLevel * lvl;
+  }
+  return sum;
+}
+
+export function comfortOf(st: Station): number {
+  return trackSum(st, 'comfort');
+}
+
+export function levelTimeMult(level: number): number {
+  return Math.pow(1 - ECONOMY.level.timePerLevel, level - 1);
+}
+
+export function levelCoinMult(level: number): number {
+  return 1 + ECONOMY.level.coinPerLevel * (level - 1);
+}
+
+export function seatTimeMult(seatLevel: number): number {
+  return 1 - ECONOMY.seatUpgrade.timePerLevel * (seatLevel - 1);
+}
+
+/** Multiplicateurs liés à l'élève (Maison, trait, faim). */
+export function studentTimeMult(st: Station, s: Student | undefined): number {
+  if (!s) return 1;
+  let m = 1;
+  if (st.kind === 'course') {
+    const houseMods = s.house ? HOUSES[s.house].bonus.courseTimeMult : undefined;
+    m *= houseMods?.[st.courseId!] ?? 1;
+    m *= TRAITS[s.trait].courseTimeMult ?? 1;
+    if (s.hunger >= NEEDS.starvingHunger) m *= NEEDS.starvingTimeMult;
+  }
+  return m;
+}
+
+/**
+ * Temps de traitement réel :
+ * base × niveauSalle × place × confort × aménagements × élève, plancher 25 %.
+ */
+export function serviceTime(st: Station, seatIndex: number, s?: Student): number {
+  const base = baseDuration(st);
+  const seat = st.seats[seatIndex];
+  const mults = [
+    levelTimeMult(st.level),
+    seatTimeMult(seat ? seat.level : 1),
+    1 - comfortReduction(comfortOf(st)),
+    Math.max(1 - trackSum(st, 'time'), 0),
+    studentTimeMult(st, s),
+  ];
+  return applyTime(base, mults);
+}
+
+export function receptionPatience(state: GameState): number {
+  return POPULATION.receptionPatience + trackSum(state.stations.reception, 'patience');
+}
+
+/** Gain d'Éclats pour un cours validé. */
+export function courseReward(st: Station, s: Pick<Student, 'house' | 'mood'>): number {
+  const def = COURSES[st.courseId!];
+  let r = def.reward * levelCoinMult(st.level);
+  if (s.house) r *= HOUSES[s.house].bonus.coinMult ?? 1;
+  if (s.mood < NEEDS.lowMood) r *= NEEDS.lowMoodCoinMult;
+  return Math.max(1, Math.round(r));
+}
+
+export function failChance(st: Station, seatIndex: number): number {
+  const def = COURSES[st.courseId!];
+  const seat = st.seats[seatIndex];
+  return Math.max(0, def.failRate - ECONOMY.seatUpgrade.failPerLevel * ((seat?.level ?? 1) - 1));
+}
+
+export function populationCap(state: GameState): number {
+  let beds = 0;
+  let courseSeats = 0;
+  for (const st of Object.values(state.stations)) {
+    if (st.kind === 'dorm') beds += st.seats.length;
+    if (st.kind === 'course') courseSeats += st.seats.length;
+  }
+  return Math.floor(
+    POPULATION.baseCap + beds * POPULATION.perBed + courseSeats * POPULATION.perCourseSeat,
+  );
+}
+
+export function arrivalInterval(state: GameState): number {
+  return Math.max(
+    POPULATION.minArrivalInterval,
+    POPULATION.arrivalInterval / (1 + state.reputation * POPULATION.arrivalPerRep),
+  );
+}
+
+export function reputationStars(rep: number): number {
+  let stars = 0;
+  POPULATION.starThresholds.forEach((th, i) => {
+    if (rep >= th) stars = i;
+  });
+  return stars;
+}
+
+/** Attente estimée pour un nouvel arrivant dans la file (s). */
+export function estimatedWait(st: Station): number {
+  const busy = st.seats.filter((x) => x.occupant !== null).length;
+  const free = st.seats.length - busy;
+  const ahead = st.queue.length - free + 1;
+  if (ahead <= 0) return 0;
+  const svc = st.stats.avgService || serviceTime(st, 0);
+  return (ahead / Math.max(st.seats.length, 1)) * svc;
+}
