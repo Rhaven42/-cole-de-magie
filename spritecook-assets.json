@@ -275,6 +275,92 @@
         "gearBench",
         "lanternPost"
       ]
+    },
+    {
+      "asset_id": "8fe354b2-11f0-4589-8120-10b931e82e49",
+      "label": "meubles communs v2",
+      "slices": [
+        "dummy",
+        "table",
+        "counter",
+        "stool",
+        "fireplace",
+        "bench",
+        "easel",
+        "chest",
+        "globe",
+        "candelabra",
+        "jarShelf",
+        "clock"
+      ]
+    },
+    {
+      "asset_id": "43d2d105-fffc-4df3-bdbb-b2c02ce83652",
+      "label": "meubles communs v2 niveaux 2-3",
+      "slices": [
+        "dummy-2",
+        "table-2",
+        "counter-2",
+        "stool-2",
+        "dummy-3",
+        "table-3",
+        "counter-3",
+        "stool-3"
+      ]
+    },
+    {
+      "asset_id": "9e966e25-5298-41cc-8fe2-e3b0ca1d4a90",
+      "label": "décorations v2",
+      "slices": [
+        "barrel",
+        "crates",
+        "planterTree",
+        "armchair",
+        "noticeBoard",
+        "books",
+        "coatStand",
+        "cat",
+        "owl",
+        "lamp",
+        "statue",
+        "well"
+      ]
+    },
+    {
+      "asset_id": "03f91974-8580-42ac-97a8-be031d7ad84c",
+      "label": "extérieur v2",
+      "slices": [
+        "signpost",
+        "wheelbarrow",
+        "oak",
+        "pine",
+        "bush",
+        "rocks",
+        "parkBench(+M)",
+        "birdbath",
+        "pumpkins",
+        "picnic",
+        "owlPost",
+        "willow"
+      ]
+    },
+    {
+      "asset_id": "f35fdb3d-56e1-42c4-9bdf-c3094c8fb689",
+      "label": "paysage v2",
+      "slices": [
+        "pond",
+        "gazebo",
+        "greenhouse",
+        "owlery",
+        "vegGarden",
+        "grove",
+        "fence(+M)",
+        "roseArch",
+        "campfire",
+        "targets",
+        "haystack",
+        "footbridge"
+      ]
     }
   ],
   "notes": "Planches découpées localement dans src/assets/sprites/. Les variantes *-unsorted.png sont des versions désaturées (élèves pas encore répartis). Les sprites teacherDeskM* sont des miroirs (bureau tourné vers les élèves). Ancienne planche tier-3 dorée (54244606…) remplacée. Index régénéré par `npm run assets`.",
