@@ -4,7 +4,7 @@ import { COURSES, type CourseId } from '../data/courses';
 import { ECONOMY } from '../data/economy';
 import { HOUSE_IDS, HOUSES } from '../data/houses';
 import { MANAGERS } from '../data/managers';
-import { NAMED_PROFESSORS, professorLabel } from '../data/professors';
+import { NAMED_PROFESSORS, professorLabel, professorTitle } from '../data/professors';
 import { SERVICES, type UpgradeTrack } from '../data/stations';
 import {
   addSeatCost,
@@ -161,7 +161,8 @@ export function RoomSheet() {
         <ScrollView contentContainerStyle={{ paddingBottom: space.xl }}>
           {isCourse && NAMED_PROFESSORS[st.courseId!] ? (
             <Text style={styles.prof}>
-              🧙 Professeur : {professorLabel(NAMED_PROFESSORS[st.courseId!]!)}
+              🧙 {professorTitle(NAMED_PROFESSORS[st.courseId!]!)} :{' '}
+              {professorLabel(NAMED_PROFESSORS[st.courseId!]!)}
             </Text>
           ) : null}
           {isClosed(game, st) ? <Text style={styles.closed}>💥 {t('room.closed')}</Text> : null}
