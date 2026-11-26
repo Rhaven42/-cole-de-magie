@@ -46,7 +46,7 @@ Le plaisir vient de : **résoudre les goulots d'étranglement** (file trop longu
 
 ## 3. LES 4 MAISONS (identité visuelle imposée)
 
-Chaque élève appartient à une Maison, attribuée à l'inscription (aléatoire pondéré, ou via un petit « Choixpeau-like » original : un **Miroir des Âmes** animé). Chaque Maison a un **blason** (écusson vectoriel original), une couleur, un trait de personnalité et un **petit bonus passif** :
+Chaque élève appartient à une Maison, attribuée à l'inscription (aléatoire pondéré, ou via un rituel original : le **Miroir des Âmes** animé). Chaque Maison a un **blason** (écusson vectoriel original), une couleur, un trait de personnalité et un **petit bonus passif** :
 
 | Maison | Couleur du blason | Emblème | Trait | Bonus passif (à équilibrer) |
 |---|---|---|---|---|
@@ -112,6 +112,28 @@ Chaque salle est **achetable** (prix croissant), **améliorable** (niveaux 1→1
 
 Chaque salle a un visuel qui **évolue** visiblement avec ses niveaux (3 paliers d'aspect : modeste / confortable / prestigieuse).
 
+**Améliorations place par place** ⭐ : en plus du niveau global de la salle, **chaque place** (chaudron, pupitre, balai, télescope, lit…) s'améliore individuellement (niveaux 1→5) :
+- **Acheter une place supplémentaire** = plus d'élèves en même temps = **file d'attente de la salle plus courte**.
+- **Améliorer une place** = l'élève assis à cette place apprend plus vite (ex. −5 % de temps par niveau) et rate moins.
+- Le temps réel d'un élève = `tempsBaseCours × modifNiveauSalle × modifPlace × modifDéco × modifProf × modifMaison × modifTrait` (plancher : 25 % du temps de base).
+- L'UI montre chaque place sur le plan de la salle avec son niveau (étoiles) ; un appui long sur une place → « Améliorer cette place ».
+
+---
+
+## 5 bis. RÈGLE UNIVERSELLE : TOUT SE RÉDUIT (« et ça pour tout »)
+
+Chaque endroit où un élève attend ou patiente suit **le même modèle** : *capacité (places) × vitesse (qualité des places) × confort (décoration) × personnel (professeur/surveillant)*. Implémente-le comme **un seul système générique** dans le moteur (`Station` = file + places + temps de traitement + modificateurs), réutilisé partout :
+
+| Lieu | Ce qui fait attendre | « Places » | Ce qui réduit le temps | Personnel |
+|---|---|---|---|---|
+| Accueil | Inscription | Guichets | Comptoir, salle d'attente, parchemins auto | Secrétaire |
+| Dortoirs | Sommeil (cooldown) | Lits | Qualité des lits, déco (Confort), dortoir de sa Maison | Surveillant·e de dortoir |
+| 9 salles de cours | Temps d'apprentissage | Chaudrons, pupitres, balais… | Niveau salle, niveau de chaque place, déco | Professeur |
+| Réfectoire (optionnel J7) | Repas (fait remonter l'humeur) | Tables | Cuisine, déco | Cuisinier·ère |
+| Infirmerie (optionnel J7) | Soins après chute de balai / potion ratée | Lits d'infirmerie | Matériel de soin | Guérisseur·se |
+
+Le joueur doit toujours voir, pour chaque lieu : **longueur de la file, temps moyen d'attente, temps de traitement actuel** et **ce qu'il peut acheter pour l'améliorer** (bouton « Optimiser » qui suggère le meilleur achat).
+
 ---
 
 ## 6. ACCUEIL (inscription) ⭐ INDISPENSABLE
@@ -162,6 +184,31 @@ Chaque fournisseur a une **réputation / niveau de fidélité** : plus on lui ac
 
 ---
 
+## 8 bis. PROFESSEURS ET PERSONNEL (recrutement avec compromis) ⭐
+
+Chaque salle de cours a besoin d'**un professeur** pour fonctionner (et l'Accueil d'un·e secrétaire, chaque dortoir d'un·e surveillant·e). Le joueur **recrute** parmi plusieurs candidats aux **prix différents** (prime d'embauche + **salaire** prélevé régulièrement), chacun avec **qualités et défauts** — aucun n'est parfait.
+
+Chaque professeur a : `nom` original, portrait, `matière`, `rang` (Apprenti → Maître → Légende), `prix d'embauche`, `salaire/heure`, `vitesse d'enseignement`, `taux de réussite`, `bonus XP`, `capacité` (+places possibles), **1 qualité** et **1 défaut**, `fatigue/moral`, `affinité de Maison`.
+
+Exemples (à décliner pour les 9 matières, 3 à 4 candidats par matière, renouvelés périodiquement) :
+
+| Professeur (Potions) | Prix | Qualité | Défaut |
+|---|---|---|---|
+| **Félicien Tourneboule**, apprenti | € | Pas cher, salaire bas | Cours 20 % plus long, potions ratées fréquentes |
+| **Odilia Mortepaille**, confirmée | €€ | Fiable, aucun défaut majeur | Rien d'exceptionnel |
+| **Barnabé Fumerolle**, génie | €€€ | −30 % de temps de cours | Explosions aléatoires (salle fermée 30 s), humeur des élèves − |
+| **Dame Séraphine Vert-de-Gris**, légende | €€€€ | Gros bonus pièces + XP, réussite 100 % | Salaire énorme, exige une salle niv. 5 et une déco « prestigieuse », part si elle n'est pas payée |
+
+Autres types de traits : *Strict* (élèves apprennent vite mais humeur −), *Bienveillant* (humeur +, plus lent), *Distrait* (oublie parfois de commencer le cours), *Star* (attire des élèves = Réputation +), *Fatigable* (prend des congés), *Favorise une Maison* (bonus pour une Maison, malus pour les autres).
+
+Mécaniques :
+- Les professeurs **montent de niveau** avec les cours donnés (formation payante pour accélérer).
+- On peut **licencier** (indemnité) ou **remplacer** un professeur.
+- Un professeur non payé ou épuisé fait grève → la salle s'arrête (notification).
+- Écran **Recrutement** avec fiches candidats côte à côte (comparateur ▲▼ comme pour les fournisseurs).
+
+---
+
 ## 9. ÉCONOMIE & PROGRESSION
 
 - **Monnaie principale** : les **Éclats d'or** (gagnés à chaque cours validé).
@@ -199,7 +246,7 @@ Crée un script `npm run simulate` qui simule N heures de jeu avec un « joueur 
 3. **J2 — Boucle complète** : Dortoir + lits + fatigue/sommeil, 3 premières matières (Potions, Botanique, Histoire de la magie), achat/amélioration, sauvegarde.
 4. **J3 — Les 4 Maisons** : blasons, attribution, bonus passifs, Coupe des Maisons.
 5. **J4 — Les 9 cours** + système d'années / ancienneté / diplôme.
-6. **J5 — Fournisseurs & catalogue** : lits, décos, matériel, comparateur, durabilité/réparation, délais de livraison.
+6. **J5 — Fournisseurs, professeurs & catalogue** : lits, décos, matériel, améliorations place par place, recrutement des professeurs/personnel, comparateur, durabilité/réparation, délais de livraison.
 7. **J6 — Direction artistique complète** : rendu de l'école, sprites élèves animés, effets (potion qui explose, balai qui vole), UI soignée.
 8. **J7 — Méta** : Réputation, agrandissements, hors-ligne, missions, succès, prestige.
 9. **J8 — Son & musique** : musique d'ambiance par pièce, SFX (clic, pièces, validation de cours, ronflements 😴).
@@ -220,7 +267,7 @@ Crée un script `npm run simulate` qui simule N heures de jeu avec un « joueur 
 ## 14. UX / ÉCRANS
 
 1. **Écran principal** : l'école en coupe, bandeau haut (Éclats, Gemmes, Réputation ⭐, élèves présents), bandeau bas (Boutique, Élèves, Missions, Maisons, Réglages).
-2. **Écran Boutique** : onglets *Salles · Dortoirs · Lits · Décoration · Matériel*, avec filtre par fournisseur et comparateur.
+2. **Écran Boutique** : onglets *Salles · Dortoirs · Lits · Décoration · Matériel · Professeurs*, avec filtre par fournisseur et comparateur.
 3. **Fiche salle** : stats (places, durée, gains), niveaux, bouton améliorer, produits installés, usure.
 4. **Fiche élève** : blason, année, ancienneté, fatigue, humeur, traits, historique.
 5. **Accueil** : file visible, guichets, améliorations, jauge de patience.
@@ -240,7 +287,7 @@ Prévoir l'architecture (feature flags) pour : pubs récompensées (boost ×2 de
 ## 16. QUALITÉ & DÉFINITION DE « TERMINÉ »
 
 - ✅ Le jeu démarre sur mon téléphone via Expo Go sans erreur.
-- ✅ Les 9 cours, 4 Maisons, Accueil, dortoirs, lits, déco, fournisseurs sont jouables.
+- ✅ Les 9 cours, 4 Maisons, Accueil, dortoirs, lits, déco, fournisseurs, professeurs et améliorations place par place sont jouables.
 - ✅ Tests unitaires du moteur ≥ 80 % de couverture ; lint et type-check sans erreur.
 - ✅ 60 fps sur un téléphone milieu de gamme avec 40 élèves à l'écran.
 - ✅ Sauvegarde / chargement / hors-ligne fiables.
