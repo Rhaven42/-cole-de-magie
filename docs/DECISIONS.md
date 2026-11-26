@@ -94,4 +94,4 @@ Temps réel = `base × 0,96^(niv−1) × (1 − 0,05·(niveauPlace−1)) × (1 �
 
 - **Plan 0.9.1** : 5 rangées de parcelles. La rangée avant ne contient que l'Accueil (`spanX: 3`), entre deux jardins. La Salle des Examens fait 2 parcelles ; `freeCorridorX()` ignore les grandes salles hors de l'école (py < 0).
 
-- **Professeur·es (mise à jour)** : Divination → Rhaven Morvard ; Histoire de la magie → Morgenvar ; Astronomie → Alva (auparavant Balais volants, qui n'a plus de professeur·e). Portraits pixel art dans `src/assets/portraits/`.
+- **Professeur·es (mise à jour)** : Divination → Rhaven Morvard ; Histoire de la magie → Morgenvar ; Astronomie → Alva Ilan Arsolle (auparavant Balais volants, qui n'a plus de professeur·e). Portraits pixel art dans `src/assets/portraits/`.
