@@ -86,6 +86,7 @@ export function TexWall({
   oy,
   len,
   height,
+  texHeight,
   shadeOpacity,
   tint,
   tintOpacity = 0,
@@ -96,6 +97,8 @@ export function TexWall({
   oy: number;
   len: number;
   height: number;
+  /** Hauteur réelle de la texture (le mur bas n'en montre que le bas : le lambris). */
+  texHeight?: number;
   shadeOpacity: number;
   tint?: string;
   tintOpacity?: number;
@@ -109,7 +112,8 @@ export function TexWall({
       : `matrix(${-TW} ${TH} 0 1 ${OFFSET_X + ox * TW} ${OFFSET_Y + ox * TH})`;
   const start = axis === 'x' ? ox : oy;
   // Largeur d'une tuile de mur (en cases) pour garder la texture à peu près carrée.
-  const L = height / Math.hypot(TW, TH);
+  const th = texHeight ?? height;
+  const L = th / Math.hypot(TW, TH);
   const imgs: ReactElement[] = [];
   for (let u = start; u < start + len; u += L)
     imgs.push(
@@ -117,9 +121,9 @@ export function TexWall({
         key={u}
         href={TEXTURES.wall.src}
         x={u}
-        y={-height}
+        y={-th}
         width={L + 0.02}
-        height={height}
+        height={th}
         preserveAspectRatio="none"
       />,
     );

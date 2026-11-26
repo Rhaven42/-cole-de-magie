@@ -7,10 +7,11 @@ import { FLOOR_TEXTURE, GARDENS, ISO, PLOT, PLOTS, ROOM_DECOR } from '../data/la
 import type { Station } from '../engine';
 import { floorPoly, GRID_X, GRID_Y, iso, MAP_H, MAP_W, plotOrigin, poly, type Pt } from './iso';
 import { Box, Furniture, shade, Sprite, tiered, WallQuad } from './isoArt';
-import { TexFloor, TexWall, WallShadow, WindowLight } from './isoTex';
+import { TexFloor, TexWall, WallShadow } from './isoTex';
 
 const S = PLOT.size;
-const H = ISO.wallH;
+/** Murs bas (murets) : on voit les élèves marcher dans les couloirs derrière. */
+const H = 22;
 /** Épaisseur des murs (cases) et hauteur de la tranche du sol surélevé (px). */
 const WALL_T = 0.28;
 const PLINTH = 7;
@@ -245,148 +246,6 @@ function ConstructionPlot({ px, py, available }: { px: number; py: number; avail
   );
 }
 
-/** Fenêtre à meneaux avec rebord et rideaux. */
-function Window({ axis, ox, oy, t }: { axis: 'x' | 'y'; ox: number; oy: number; t: number }) {
-  return (
-    <G>
-      <WallQuad
-        axis={axis}
-        ox={ox}
-        oy={oy}
-        t1={t - 0.08}
-        t2={t + 1.18}
-        h1={20}
-        h2={46}
-        fill="#4A3522"
-      />
-      <WallQuad axis={axis} ox={ox} oy={oy} t1={t} t2={t + 1.1} h1={22} h2={44} fill="#8FB8D8" />
-      <WallQuad axis={axis} ox={ox} oy={oy} t1={t} t2={t + 1.1} h1={33} h2={44} fill="#B9D6EA" />
-      <WallQuad
-        axis={axis}
-        ox={ox}
-        oy={oy}
-        t1={t + 0.52}
-        t2={t + 0.58}
-        h1={22}
-        h2={44}
-        fill="#4A3522"
-      />
-      <WallQuad
-        axis={axis}
-        ox={ox}
-        oy={oy}
-        t1={t}
-        t2={t + 1.1}
-        h1={32.5}
-        h2={33.5}
-        fill="#4A3522"
-      />
-      <WallQuad
-        axis={axis}
-        ox={ox}
-        oy={oy}
-        t1={t - 0.32}
-        t2={t - 0.02}
-        h1={18}
-        h2={47}
-        fill="#6B2E2E"
-      />
-      <WallQuad
-        axis={axis}
-        ox={ox}
-        oy={oy}
-        t1={t + 1.12}
-        t2={t + 1.42}
-        h1={18}
-        h2={47}
-        fill="#6B2E2E"
-      />
-      <WallQuad
-        axis={axis}
-        ox={ox}
-        oy={oy}
-        t1={t - 0.15}
-        t2={t + 1.25}
-        h1={18}
-        h2={20.5}
-        fill="#B5A58C"
-      />
-    </G>
-  );
-}
-
-/** Tableau noir encadré (mur de gauche) avec quelques traits de craie. */
-function Blackboard({ ox, oy }: { ox: number; oy: number }) {
-  return (
-    <G>
-      <WallQuad axis="y" ox={ox} oy={oy} t1={2.1} t2={5.9} h1={20} h2={46} fill="#5A3A22" />
-      <WallQuad axis="y" ox={ox} oy={oy} t1={2.25} t2={5.75} h1={22} h2={44} fill="#2F4A3A" />
-      <WallQuad axis="y" ox={ox} oy={oy} t1={2.7} t2={4.2} h1={38} h2={38.8} fill="#E8E4D8" />
-      <WallQuad axis="y" ox={ox} oy={oy} t1={2.7} t2={3.8} h1={33} h2={33.8} fill="#E8E4D8" />
-      <WallQuad axis="y" ox={ox} oy={oy} t1={4.4} t2={5.3} h1={29} h2={29.8} fill="#E8E4D8" />
-      <WallQuad axis="y" ox={ox} oy={oy} t1={2.2} t2={5.8} h1={19} h2={21} fill="#7A5A3A" />
-    </G>
-  );
-}
-
-/** Applique murale (bougie). */
-function Sconce({ axis, ox, oy, t }: { axis: 'x' | 'y'; ox: number; oy: number; t: number }) {
-  const b = axis === 'x' ? iso(ox + t, oy) : iso(ox, oy + t);
-  const p = { x: b.x, y: b.y - 36 };
-  return (
-    <G>
-      <Circle cx={p.x} cy={p.y - 4} r={9} fill="#FFD27A" opacity={0.18} />
-      <Path
-        d={`M${p.x - 3} ${p.y + 4} L${p.x + 3} ${p.y + 4} L${p.x} ${p.y + 8} Z`}
-        fill="#3A3A40"
-      />
-      <Line x1={p.x} y1={p.y + 4} x2={p.x} y2={p.y - 2} stroke="#EFE6D2" strokeWidth={2.5} />
-      <Circle cx={p.x} cy={p.y - 4} r={1.8} fill="#FFB347" />
-    </G>
-  );
-}
-
-/** Tableau (peinture de paysage) encadré. */
-function Painting({
-  axis,
-  ox,
-  oy,
-  t,
-  color,
-}: {
-  axis: 'x' | 'y';
-  ox: number;
-  oy: number;
-  t: number;
-  color: string;
-}) {
-  return (
-    <G>
-      <WallQuad axis={axis} ox={ox} oy={oy} t1={t} t2={t + 0.9} h1={26} h2={44} fill="#6B4A28" />
-      <WallQuad
-        axis={axis}
-        ox={ox}
-        oy={oy}
-        t1={t + 0.08}
-        t2={t + 0.82}
-        h1={28}
-        h2={42}
-        fill={color}
-      />
-      <WallQuad
-        axis={axis}
-        ox={ox}
-        oy={oy}
-        t1={t + 0.08}
-        t2={t + 0.82}
-        h1={28}
-        h2={33}
-        fill="#3E5A3A"
-      />
-    </G>
-  );
-}
-
 /** Murs épais : faces texturées, chapeau de mur, extrémités, corniche. */
 function Walls({ id, ox, oy, env }: { id: string; ox: number; oy: number; env: EnvDef }) {
   const tinted = env.id !== 'manor';
@@ -400,6 +259,7 @@ function Walls({ id, ox, oy, env }: { id: string; ox: number; oy: number; env: E
         oy={oy}
         len={S}
         height={H}
+        texHeight={ISO.wallH}
         shadeOpacity={0.14}
         tint={env.plaster}
         tintOpacity={tinted ? 0.35 : 0}
@@ -411,6 +271,7 @@ function Walls({ id, ox, oy, env }: { id: string; ox: number; oy: number; env: E
         oy={oy}
         len={S}
         height={H}
+        texHeight={ISO.wallH}
         shadeOpacity={0}
         tint={env.plaster}
         tintOpacity={tinted ? 0.35 : 0}
@@ -523,67 +384,34 @@ function Room({ r, env }: { r: RoomSnapshot; env: EnvDef }) {
   const decor = (key: string, name: SpriteName, gx: number, gy: number, width: number) =>
     add(gx, gy, <Decor key={key} name={name} p={iso(gx, gy)} width={width} />);
 
-  if (isCourse) {
-    wall.push(<Blackboard key="bb" ox={o.x} oy={o.y} />);
-    if (r.courseId === 'astronomy') {
-      wall.push(
-        <WallQuad
-          key="sky"
-          axis="x"
-          ox={o.x}
-          oy={o.y}
-          t1={1.6}
-          t2={6.4}
-          h1={16}
-          h2={47}
-          fill="#1B2350"
-          stroke="#5A3A22"
-        />,
-      );
-    } else {
-      wall.push(
-        <Window key="w1" axis="x" ox={o.x} oy={o.y} t={1.9} />,
-        <Window key="w2" axis="x" ox={o.x} oy={o.y} t={5.0} />,
-      );
-    }
-    wall.push(
-      <Sconce key="s1" axis="y" ox={o.x} oy={o.y} t={1.3} />,
-      <Sconce key="s2" axis="y" ox={o.x} oy={o.y} t={6.7} />,
-    );
-    if (t >= 1) wall.push(<Painting key="p1" axis="x" ox={o.x} oy={o.y} t={3.6} color="#8FB0C8" />);
-    // Bureau du professeur devant le tableau, tourné vers les élèves.
-    decor('desk', tiered('teacherDeskM' as SpriteName, t), o.x + 1.25, o.y + 4.0, 50);
-    decor('shelf', tiered('bookshelf', t), o.x + 0.55, o.y + 1.2, 30);
-  } else if (r.kind === 'dorm') {
-    wall.push(
-      <Window key="w1" axis="x" ox={o.x} oy={o.y} t={2.1} />,
-      <Window key="w2" axis="x" ox={o.x} oy={o.y} t={5.1} />,
-      <Window key="w3" axis="y" ox={o.x} oy={o.y} t={3.4} />,
-    );
-    wall.push(
-      <Sconce key="s1" axis="y" ox={o.x} oy={o.y} t={1.4} />,
-      <Sconce key="s2" axis="y" ox={o.x} oy={o.y} t={6.6} />,
-    );
-  } else if (r.kind === 'hall') {
+  /** Tentures aux couleurs des Maisons sur le muret. */
+  const tapestries = (axisOf: (i: number) => 'x' | 'y', at: (i: number) => number) =>
     HOUSE_IDS.forEach((h, i) =>
       wall.push(
         <WallQuad
           key={h}
-          axis="x"
+          axis={axisOf(i)}
           ox={o.x}
           oy={o.y}
-          t1={0.9 + i * 1.8}
-          t2={1.7 + i * 1.8}
-          h1={12}
-          h2={47}
+          t1={at(i)}
+          t2={at(i) + 0.8}
+          h1={3}
+          h2={H - 3}
           fill={HOUSES[h].color}
           stroke="#3B2414"
         />,
       ),
     );
-    wall.push(
-      <Window key="w" axis="y" ox={o.x} oy={o.y} t={1.4} />,
-      <Window key="w2" axis="y" ox={o.x} oy={o.y} t={6.0} />,
+
+  if (isCourse) {
+    // Tableau sur chevalet et bureau du professeur, tournés vers les élèves.
+    decor('board', 'easel', o.x + 0.9, o.y + 2.4, 34);
+    decor('desk', tiered('teacherDeskM' as SpriteName, t), o.x + 1.25, o.y + 4.2, 50);
+    decor('shelf', tiered('bookshelf', t), o.x + 0.55, o.y + 1.0, 30);
+  } else if (r.kind === 'hall') {
+    tapestries(
+      () => 'x',
+      (i) => 0.9 + i * 1.8,
     );
     decor('fire', 'fireplace', o.x + 0.6, o.y + 4.3, 46);
     [0, 1, 2, 3, 4].forEach((row) =>
@@ -592,28 +420,12 @@ function Room({ r, env }: { r: RoomSnapshot; env: EnvDef }) {
       ),
     );
   } else if (r.kind === 'reception') {
-    wall.push(
-      <Window key="w" axis="x" ox={o.x} oy={o.y} t={2.4} />,
-      <Painting key="p" axis="x" ox={o.x} oy={o.y} t={5.6} color="#C9A27A" />,
-    );
     decor('b1', tiered('bookshelf', t), o.x + 0.55, o.y + 2.2, 30);
     decor('b2', tiered('bookshelf', t), o.x + 0.55, o.y + 6.2, 30);
   } else if (r.kind === 'sorting') {
-    HOUSE_IDS.forEach((h, i) =>
-      wall.push(
-        <WallQuad
-          key={h}
-          axis={i < 2 ? 'x' : 'y'}
-          ox={o.x}
-          oy={o.y}
-          t1={1.5 + (i % 2) * 3.5}
-          t2={2.5 + (i % 2) * 3.5}
-          h1={12}
-          h2={47}
-          fill={HOUSES[h].color}
-          stroke="#3B2414"
-        />,
-      ),
+    tapestries(
+      (i) => (i < 2 ? 'x' : 'y'),
+      (i) => 1.5 + (i % 2) * 3.5,
     );
   }
 
@@ -665,9 +477,6 @@ function Room({ r, env }: { r: RoomSnapshot; env: EnvDef }) {
       ) : null}
       <WallShadow id={`${r.id}-shx`} axis="x" ox={o.x} oy={o.y} len={S} />
       <WallShadow id={`${r.id}-shy`} axis="y" ox={o.x} oy={o.y} len={S} />
-      {r.kind !== 'sorting' && r.courseId !== 'astronomy' ? (
-        <WindowLight axis="x" ox={o.x} oy={o.y} t={r.kind === 'reception' ? 2.4 : 1.9} />
-      ) : null}
       {wall}
       {objects.map((x) => x.el)}
       <FrontLips ox={o.x} oy={o.y} />

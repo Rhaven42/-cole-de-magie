@@ -78,3 +78,5 @@ Temps réel = `base × 0,96^(niv−1) × (1 − 0,05·(niveauPlace−1)) × (1 �
 - **Graphismes** : sprites SpriteCook découpés localement depuis des planches (4 planches de meubles, 1 planche de personnages), soit environ 80 crédits sur 1 000. Le reste est réservé aux portraits des professeur·es, d'après les descriptions physiques qui seront fournies. Les sprites sont réduits à 160 px maximum.
 - **Évolution des objets** : paliers visuels aux niveaux de place 3 et 5 (`ECONOMY.seatTiers`), +5 % d'Éclats par niveau de place sur les cours (`seatUpgrade.coinPerLevel`).
 - **10e matière « Duel »** (`duel`) : 3 arènes, 55 s, 52 Éclats, 5e année, 300 000 Éclats ; elle prend la parcelle (1,0), l'ancien jardin.
+
+- **Murs bas** (22 px) partout : chaque salle est bordée de couloirs, et des murs hauts cachaient les élèves qui marchaient derrière. La texture murale n'y montre que le lambris. Ce qui était accroché aux murs devient des objets posés (tableau sur chevalet) ou des tentures basses.

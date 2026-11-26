@@ -9,6 +9,7 @@
 - **Portail** en fer forgé **à gauche**, au bout d'une allée pavée.
 - **Objets légendaires plus sobres** : bois sombres, fer forgé, tissus profonds, sans effet doré.
 - Fantôme dessiné pour l'événement « fantôme farceur ».
+- **Murs bas (murets)** le long des couloirs, pour voir les élèves marcher : on y voit le lambris en bois. Tableaux noirs sur chevalet près du bureau du professeur ; tentures des Maisons sur les murets.
 
 ## 0.6.0 — Vrais graphismes et 10e matière
 
