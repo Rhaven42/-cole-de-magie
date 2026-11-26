@@ -9,6 +9,8 @@ import type { CourseId } from './courses';
 export interface ProfessorName {
   firstName: string | null;
   lastName: string | null;
+  /** Titre ou surnom (ex. « le Chevalier du Sinople »). */
+  title?: string;
   gender?: 'f' | 'm';
 }
 
@@ -21,13 +23,13 @@ export const NAMED_PROFESSORS: Partial<Record<CourseId, ProfessorName>> = {
   astronomy: { firstName: 'Alva', lastName: null, gender: 'f' },
   divination: { firstName: 'Rhaven', lastName: 'Morvard', gender: 'f' },
   history: { firstName: 'Morganvar', lastName: null, gender: 'm' },
-  duel: { firstName: 'Delan', lastName: 'Lanatre', gender: 'm' },
+  duel: { firstName: 'Delan', lastName: 'Lanatre', title: 'le Chevalier du Sinople', gender: 'm' },
   // Balais volants : professeur·e à venir.
 };
 
 export function professorLabel(p: ProfessorName): string {
-  const name = [p.firstName, p.lastName].filter(Boolean).join(' ');
-  return name || 'Nom à venir';
+  const name = [p.firstName, p.lastName].filter(Boolean).join(' ') || 'Nom à venir';
+  return p.title ? `${name}, ${p.title}` : name;
 }
 
 export function professorTitle(p: ProfessorName): string {
