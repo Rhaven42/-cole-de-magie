@@ -24,7 +24,7 @@ Règles de travail :
 **Arcanum Academy** : le joueur est le/la directeur·rice d'une école de magie qui démarre dans un vieux manoir délabré. Des élèves arrivent en file d'attente, s'inscrivent à l'**Accueil**, sont répartis dans une **Maison**, suivent des **cours** dans des salles, **dorment** dans des dortoirs pour récupérer, et chaque cours validé rapporte des **pièces d'or** (« Éclats ») que le joueur réinvestit pour agrandir l'école, acheter des salles, améliorer les équipements, la décoration, etc.
 
 **Boucle principale (core loop)** :
-`Élève arrive → file d'attente → inscription à l'Accueil → choisit un cours accessible selon son année → attend une place → suit le cours (temps d'apprentissage) → cours validé = pièces + XP → fatigue → va dormir (temps de repos/cooldown) → repart en cours … → monte d'année → débloque de nouveaux cours`
+`Élève arrive → file d'attente → inscription à l'Accueil → file du Salon des Destinées → le Chapeau Songeur choisit sa Maison → choisit un cours accessible selon son année → attend une place → suit le cours (temps d'apprentissage) → cours validé = pièces + XP → faim → file de la Grande Salle → mange (cooldown repas) → fatigue → va dormir (temps de repos/cooldown) → repart en cours … → monte d'année → débloque de nouveaux cours`
 
 Le plaisir vient de : **résoudre les goulots d'étranglement** (file trop longue, pas assez de lits, salle saturée), optimiser, voir l'école grandir, et collectionner/décorer.
 
@@ -46,7 +46,7 @@ Le plaisir vient de : **résoudre les goulots d'étranglement** (file trop longu
 
 ## 3. LES 4 MAISONS (identité visuelle imposée)
 
-Chaque élève appartient à une Maison, attribuée à l'inscription (aléatoire pondéré, ou via un rituel original : le **Miroir des Âmes** animé). Chaque Maison a un **blason** (écusson vectoriel original), une couleur, un trait de personnalité et un **petit bonus passif** :
+Chaque élève appartient à une Maison, attribuée par **Méliandre, le Chapeau Songeur**, dans le **Salon des Destinées** (voir §6 bis). Chaque Maison a un **blason** (écusson vectoriel original), une couleur, un trait de personnalité et un **petit bonus passif** :
 
 | Maison | Couleur du blason | Emblème | Trait | Bonus passif (à équilibrer) |
 |---|---|---|---|---|
@@ -63,9 +63,9 @@ Exigences :
 
 ## 4. ÉLÈVES
 
-Chaque élève est un objet avec : `id`, nom généré (prénoms + noms de famille originaux), apparence (génération procédurale : peau, cheveux, uniforme aux couleurs de la Maison), `maison`, `année` (1 à 7), `ancienneté` (nb de cours validés / temps passé à l'école), `XP`, `fatigue` (0–100), `humeur` (0–100), `traits` (1 trait mineur : *Studieux* +XP, *Dormeur* fatigue +, *Fêtard* humeur −, *Distrait* temps +…), état courant (en file, en inscription, en route, en cours, au lit, en pause).
+Chaque élève est un objet avec : `id`, nom généré (prénoms + noms de famille originaux), apparence (génération procédurale : peau, cheveux, uniforme aux couleurs de la Maison), `maison`, `année` (1 à 7), `ancienneté` (nb de cours validés / temps passé à l'école), `XP`, `fatigue` (0–100), `faim` (0–100), `humeur` (0–100), `traits` (1 trait mineur : *Studieux* +XP, *Dormeur* fatigue +, *Fêtard* humeur −, *Distrait* temps +…), état courant (en file, en inscription, en route, en cours, au lit, en pause).
 
-**États & cycle** : `ARRIVE → FILE_ACCUEIL → INSCRIPTION → LIBRE → VA_EN_COURS → EN_COURS → COURS_VALIDÉ → (fatigue ≥ seuil) → FILE_DORTOIR → DORT (cooldown) → LIBRE`.
+**États & cycle** : `ARRIVE → FILE_ACCUEIL → INSCRIPTION → FILE_RÉPARTITION → RÉPARTITION (Chapeau Songeur) → LIBRE → VA_EN_COURS → EN_COURS → COURS_VALIDÉ → (faim ≥ seuil) → FILE_GRANDE_SALLE → MANGE (cooldown) → LIBRE ; (fatigue ≥ seuil) → FILE_DORTOIR → DORT (cooldown) → LIBRE`.
 
 **Niveau d'ancienneté / accès aux cours** :
 - Année 1 : Potions (base), Botanique, Histoire de la magie.
@@ -129,7 +129,8 @@ Chaque endroit où un élève attend ou patiente suit **le même modèle** : *ca
 | Accueil | Inscription | Guichets | Comptoir, salle d'attente, parchemins auto | Secrétaire |
 | Dortoirs | Sommeil (cooldown) | Lits | Qualité des lits, déco (Confort), dortoir de sa Maison | Surveillant·e de dortoir |
 | 9 salles de cours | Temps d'apprentissage | Chaudrons, pupitres, balais… | Niveau salle, niveau de chaque place, déco | Professeur |
-| Réfectoire (optionnel J7) | Repas (fait remonter l'humeur) | Tables | Cuisine, déco | Cuisinier·ère |
+| Salon des Destinées | Répartition dans une Maison | Tabourets de cérémonie | Niveau du Chapeau Songeur, déco | Maître·sse de cérémonie |
+| Grande Salle | Repas (faim, humeur) | Places à table | Tables, cuisine, plats, déco | Cuisinier·ères (elfes de cuisine originaux) |
 | Infirmerie (optionnel J7) | Soins après chute de balai / potion ratée | Lits d'infirmerie | Matériel de soin | Guérisseur·se |
 
 Le joueur doit toujours voir, pour chaque lieu : **longueur de la file, temps moyen d'attente, temps de traitement actuel** et **ce qu'il peut acheter pour l'améliorer** (bouton « Optimiser » qui suggère le meilleur achat).
@@ -142,9 +143,39 @@ Le joueur doit toujours voir, pour chaque lieu : **longueur de la file, temps mo
 - Les élèves arrivent par la grille d'entrée à une cadence qui dépend de la **Réputation** de l'école.
 - Ils forment une **file d'attente visible** devant le comptoir.
 - Le comptoir a un nombre de **guichets** (1 au départ). Un élève met un certain temps à s'inscrire (durée d'inscription, ex. 8 s).
-- **Améliorations de l'Accueil** : +1 guichet, comptoir plus rapide (−% de temps d'inscription), **parchemins d'inscription automatiques**, salle d'attente confortable (les élèves en file ont une **patience** plus grande : sinon ils repartent → perte de réputation), bureau de tri (Miroir des Âmes animé, plus rapide).
+- **Améliorations de l'Accueil** : +1 guichet, comptoir plus rapide (−% de temps d'inscription), **parchemins d'inscription automatiques**, salle d'attente confortable (les élèves en file ont une **patience** plus grande : sinon ils repartent → perte de réputation), tableau d'orientation (envoie les nouveaux plus vite vers le Salon des Destinées).
 - Un élève qui perd patience dans la file s'en va (visuel : bulle rouge, pas de pièces). Un élève satisfait augmente légèrement la Réputation.
 - Afficher une **jauge de file** (longueur, temps moyen d'attente) lisible d'un coup d'œil.
+
+---
+
+## 6 bis. SALON DES DESTINÉES — le Chapeau qui choisit la Maison ⭐ INDISPENSABLE
+
+Après l'Accueil, chaque nouvel élève rejoint **la file d'attente du Salon des Destinées**, une pièce ronde éclairée aux bougies avec un tabouret au centre. Sur le tabouret repose **Méliandre, le Chapeau Songeur** : un vieux chapeau pointu rapiécé, avec des yeux brodés et une bouche cousue qui s'anime quand il parle.
+
+- L'élève s'assoit, le Chapeau « réfléchit » (animation + bulle de pensée avec les 4 blasons qui tournent) puis **annonce la Maison** (bannière + couleur du blason, petite fanfare, confettis aux couleurs de la Maison).
+- Le choix dépend des **traits de l'élève** (pondéré) + d'un léger **rééquilibrage** pour que les Maisons restent à peu près égales.
+- Temps de répartition de base : 10 s. **File d'attente visible** avec patience (un élève qui attend trop perd de l'humeur, mais ne part pas).
+- **Améliorations** :
+  - **Tabourets supplémentaires** (le Chapeau peut se dédoubler : « Échos du Chapeau » = plusieurs répartitions en même temps).
+  - **Niveau du Chapeau** (1→10) : répartition plus rapide, et à partir du niv. 5, le joueur peut **orienter** la répartition vers une Maison choisie (utile pour la Coupe des Maisons).
+  - **Décoration** (tapisseries des 4 Maisons, chandeliers, vitraux) : réduit l'attente et donne un bonus d'humeur de départ.
+  - **Bancs d'attente** confortables : patience + humeur.
+- Répliques du Chapeau **originales et drôles** (une vingtaine, variées, aléatoires), en français.
+
+---
+
+## 6 ter. GRANDE SALLE — repas et file d'attente ⭐ INDISPENSABLE
+
+Les élèves ont une jauge de **faim** qui monte avec les cours. Au-dessus d'un seuil, ils vont manger dans la **Grande Salle** (sinon : apprentissage plus lent et humeur qui baisse). Manger est un **cooldown** comme le sommeil.
+
+- **File d'attente** devant les portes de la Grande Salle (visible, avec jauge de longueur et temps moyen).
+- **Places à table** : on achète des **tables supplémentaires** et des **bancs** (+ places = file plus courte), et on peut **agrandir la salle** (ailes supplémentaires).
+- **Temps de repas** réduit par : la **qualité des tables/bancs**, la **cuisine** (fourneaux, chaudrons de cuisine améliorables = service plus rapide), le **menu** (plats qui débloquent des bonus : soupe de citrouille = −fatigue, tarte étoilée = +XP au prochain cours, etc. ; chaque plat a un coût en pièces), et la **décoration** (plafond enchanté de ciel étoilé, bougies flottantes, bannières des Maisons, cheminées).
+- **Personnel** : cuisinier·ères recrutés avec prix, qualités et défauts (comme les professeurs, §8 bis).
+- **Tables de Maison** : manger à la table de sa Maison donne un bonus d'humeur ; acheter les 4 tables de Maison décorées débloque un succès.
+- **Événement « Banquet »** (périodique) : toute l'école mange en même temps → gros bonus d'humeur et de pièces si la salle est assez grande.
+- Formule : `tempsRepas = baseRepas × modifTables × modifCuisine × modifPlat × (1 − min(confort × 0,02, 0,5))`, plancher 25 %.
 
 ---
 
@@ -244,12 +275,12 @@ Crée un script `npm run simulate` qui simule N heures de jeu avec un « joueur 
 1. **J0 — Fondations** : projet Expo + TS, lint, tests, CI, structure de dossiers, `docs/DECISIONS.md`, thème de design (couleurs, typos).
 2. **J1 — Moteur minimal** : élèves, file d'Accueil, 1 salle (Potions), pièces, tests Jest. Visible en vue debug.
 3. **J2 — Boucle complète** : Dortoir + lits + fatigue/sommeil, 3 premières matières (Potions, Botanique, Histoire de la magie), achat/amélioration, sauvegarde.
-4. **J3 — Les 4 Maisons** : blasons, attribution, bonus passifs, Coupe des Maisons.
+4. **J3 — Les 4 Maisons** : blasons, Salon des Destinées + Chapeau Songeur, Grande Salle + faim + file d'attente, bonus passifs, Coupe des Maisons.
 5. **J4 — Les 9 cours** + système d'années / ancienneté / diplôme.
 6. **J5 — Fournisseurs, professeurs & catalogue** : lits, décos, matériel, améliorations place par place, recrutement des professeurs/personnel, comparateur, durabilité/réparation, délais de livraison.
 7. **J6 — Direction artistique complète** : rendu de l'école, sprites élèves animés, effets (potion qui explose, balai qui vole), UI soignée.
 8. **J7 — Méta** : Réputation, agrandissements, hors-ligne, missions, succès, prestige.
-9. **J8 — Son & musique** : musique d'ambiance par pièce, SFX (clic, pièces, validation de cours, ronflements 😴).
+9. **J8 — Son & musique** : musique d'ambiance par pièce, SFX (clic, pièces, validation de cours, ronflements 😴, voix marmonnée du Chapeau Songeur, brouhaha de la Grande Salle).
 10. **J9 — Polish & tutoriel** : tutoriel guidé en 6 étapes, accessibilité (daltonisme : les Maisons doivent aussi se distinguer par leur **forme d'emblème**, pas seulement la couleur), réglages, performances, build Android/iOS (EAS).
 
 ---
@@ -272,6 +303,7 @@ Crée un script `npm run simulate` qui simule N heures de jeu avec un « joueur 
 4. **Fiche élève** : blason, année, ancienneté, fatigue, humeur, traits, historique.
 5. **Accueil** : file visible, guichets, améliorations, jauge de patience.
 6. **Coupe des Maisons** : classement animé avec les 4 blasons.
+6 bis. **Salon des Destinées** (file + cérémonie du Chapeau) et **Grande Salle** (file, tables, menu, cuisine).
 7. **Écran « Pendant votre absence »**, **Succès**, **Missions**, **Réglages** (son, langue, vibrations, sauvegarde cloud plus tard).
 
 Feedback constant : textes flottants « +12 💰 », vibration légère, particules lors d'un cours validé, son satisfaisant. **Tout achat doit donner une sensation de récompense.**
@@ -287,7 +319,7 @@ Prévoir l'architecture (feature flags) pour : pubs récompensées (boost ×2 de
 ## 16. QUALITÉ & DÉFINITION DE « TERMINÉ »
 
 - ✅ Le jeu démarre sur mon téléphone via Expo Go sans erreur.
-- ✅ Les 9 cours, 4 Maisons, Accueil, dortoirs, lits, déco, fournisseurs, professeurs et améliorations place par place sont jouables.
+- ✅ Les 9 cours, 4 Maisons, Accueil, Salon des Destinées, Grande Salle, dortoirs, lits, déco, fournisseurs, professeurs et améliorations place par place sont jouables.
 - ✅ Tests unitaires du moteur ≥ 80 % de couverture ; lint et type-check sans erreur.
 - ✅ 60 fps sur un téléphone milieu de gamme avec 40 élèves à l'écran.
 - ✅ Sauvegarde / chargement / hors-ligne fiables.
