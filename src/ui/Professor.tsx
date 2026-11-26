@@ -5,8 +5,8 @@ import { COURSES, type CourseId } from '../data/courses';
 import { PLOTS, ROOM_SCALE } from '../data/layout';
 import { iso, roomOrigin } from './iso';
 
-/** Hauteur du personnage à l'écran (px de carte) ; les élèves font 34 px. */
-const HEIGHT = 50;
+/** Hauteur du personnage à l’écran (px de carte) ; les élèves font 42 px. */
+const HEIGHT = 54;
 const R = ROOM_SCALE;
 
 /**

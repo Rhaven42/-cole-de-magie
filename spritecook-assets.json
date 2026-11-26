@@ -23,21 +23,6 @@
       ]
     },
     {
-      "asset_id": "340cc16e-d8eb-49e0-9e47-5772a947889d",
-      "label": "students-and-hat",
-      "slices": [
-        "pyrraxe-0",
-        "pyrraxe-1",
-        "sylvaine-0",
-        "sylvaine-1",
-        "aurelis-0",
-        "aurelis-1",
-        "azurea-0",
-        "azurea-1",
-        "hat"
-      ]
-    },
-    {
       "asset_id": "c1a1de3d-90eb-4c03-8690-a928b2a97da1",
       "label": "props-sheet-2",
       "slices": [
@@ -82,14 +67,6 @@
       ]
     },
     {
-      "asset_id": "e84886f5-7dbb-4db8-9a8a-50d8c6caa055",
-      "label": "students-back + ghost",
-      "slices": [
-        "<maison>-<0|1>-back",
-        "ghost"
-      ]
-    },
-    {
       "asset_id": "7d9781b8-da43-49c7-abe9-bb9957bc0409",
       "label": "outdoor",
       "slices": [
@@ -112,14 +89,6 @@
       ]
     },
     {
-      "asset_id": "e8a94f7b-123a-4299-9bec-53005426725f",
-      "label": "students-civilian + owl flying",
-      "slices": [
-        "<maison>-<0|1>-unsorted",
-        "owlFly"
-      ]
-    },
-    {
       "asset_id": "e6f9c290-1357-4060-991a-1971cacc97e7",
       "label": "landscape",
       "slices": [
@@ -139,6 +108,55 @@
         "footbridge",
         "wildGrass",
         "swingOak"
+      ]
+    },
+    {
+      "asset_id": "340cc16e-d8eb-49e0-9e47-5772a947889d",
+      "label": "hat (ancienne planche élèves)",
+      "slices": [
+        "hat"
+      ]
+    },
+    {
+      "asset_id": "e84886f5-7dbb-4db8-9a8a-50d8c6caa055",
+      "label": "ghost (ancienne planche)",
+      "slices": [
+        "ghost"
+      ]
+    },
+    {
+      "asset_id": "e8a94f7b-123a-4299-9bec-53005426725f",
+      "label": "owlFly (ancienne planche)",
+      "slices": [
+        "owlFly"
+      ]
+    },
+    {
+      "asset_id": "7350dcd2-8da0-499a-9c86-79167212d15b",
+      "label": "élèves v2 — uniformes de face (style profs)",
+      "slices": [
+        "<maison>-<0|1>"
+      ]
+    },
+    {
+      "asset_id": "ccc12c9d-d097-48ff-a0a5-0a673cd6b4d0",
+      "label": "élèves v2 — uniformes de dos",
+      "slices": [
+        "<maison>-<0|1>-back"
+      ]
+    },
+    {
+      "asset_id": "36f052b5-b276-427a-9b39-75a1ab9a824e",
+      "label": "élèves v2 — civils de face",
+      "slices": [
+        "<maison>-<0|1>-unsorted"
+      ]
+    },
+    {
+      "asset_id": "64658878-2662-4854-a243-68a57a0e9f9d",
+      "label": "élèves v2 — civils de dos",
+      "slices": [
+        "<maison>-<0|1>-back-unsorted"
       ]
     }
   ],

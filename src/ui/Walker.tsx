@@ -4,7 +4,7 @@ import type { Student } from '../engine';
 import { Chibi } from './Chibi';
 import { iso, route, type Anchor } from './iso';
 
-const SIZE = 34;
+const SIZE = 42;
 /** Vitesse de marche (px de carte par seconde). */
 const SPEED = 110;
 
