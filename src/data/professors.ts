@@ -18,7 +18,7 @@ export const NAMED_PROFESSORS: Partial<Record<CourseId, ProfessorName>> = {
   defense: { firstName: 'Harvald', lastName: 'Brennoch', gender: 'm' },
   charms: { firstName: 'Taladon', lastName: 'Morvard', gender: 'm' },
   transfiguration: { firstName: 'Tenarius', lastName: 'D’Arvay', gender: 'm' },
-  potions: { firstName: 'Corvin', lastName: 'Dolmar', gender: 'm' },
+  potions: { firstName: 'Dolohov', lastName: 'Sarneth', gender: 'm' },
   botany: { firstName: 'Solomon', lastName: 'Tregahl', gender: 'm' },
   astronomy: { firstName: 'Alva Ilan', lastName: 'Arsolle', gender: 'f' },
   divination: { firstName: 'Rhaven', lastName: 'Morvard', gender: 'f' },
