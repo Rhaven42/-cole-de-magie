@@ -1,3 +1,4 @@
+import type { CourseId } from '../data/courses';
 import { ECONOMY } from '../data/economy';
 import { HOUSE_CUP } from '../data/houses';
 import { EVENT_RULES } from '../data/events';
