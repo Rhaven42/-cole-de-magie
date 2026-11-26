@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.4.0 — Vue isométrique
+
+- L'école en coupe est remplacée par une **carte isométrique** (style « idle tycoon ») : salles ouvertes avec murs, sols, fenêtres, bannières et meubles propres à chaque matière ; couloirs en parquet, jardins, fontaine, grille d'entrée.
+- Les élèves **marchent** jusqu'à leur place ou leur file, dorment dans les lits, et portent un chapeau pointu aux couleurs de leur Maison.
+- Glisser pour se déplacer, pincer ou boutons +/− pour zoomer, toucher une salle pour ouvrir sa fiche.
+- Parcelles vides avec panneau de chantier et prix : on les touche pour construire.
+- Méliandre trône au centre du Salon des Destinées.
+
 ## 0.3.0 — J0 à J3
 
 ### J0 — Fondations

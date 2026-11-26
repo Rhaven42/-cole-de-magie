@@ -34,6 +34,10 @@ Chibi (tête ≈ 60 % de la hauteur), robe aux couleurs de la Maison (gris tant 
 
 Chapeau pointu brun, rapiécé avec des coutures en pointillés, yeux brodés en arcs, bouche cousue en zigzag (ovale quand il parle).
 
+## Vue isométrique
+
+Vue de 3/4 (tuiles losanges de 40 × 20 px), murs arrière couleur plâtre avec lambris en bois, murets avant bas (vue « maison de poupée »), couloirs en parquet chaud, jardins et fontaine autour. Chaque salle a son sol (damier) et ses meubles : chaudrons, pots de fleurs, pupitres, estrades, télescopes, lits aux couleurs des Maisons, longues tables de la Grande Salle. Élèves : chibis avec chapeau pointu à la couleur de leur Maison.
+
 ## Salles
 
 Chaque matière a une couleur de mur (`wall` dans `src/data/courses.ts`). Trois paliers d'aspect : modeste (niv. 1 à 3), confortable (niv. 4 à 7, moulure dorée), prestigieuse (niv. 8 à 10, double moulure or).
