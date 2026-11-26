@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.7.0 — Refonte visuelle des salles
+
+- **Relief** : murs épais avec chapeau et corniche, sols surélevés avec tranche de pierre, ombres au pied des murs, ombres sous chaque objet, lumière des fenêtres au sol.
+- **Textures** (SpriteCook) : parquet de chêne, dalles de pierre, tapis, murs en plâtre et pierre avec lambris, pelouse.
+- **Salles de classe orientées** : tableau noir et bureau du professeur sur le mur de gauche, bureau tourné vers les élèves ; les élèves en cours sont vus de dos, face au tableau.
+- **Beaucoup de décor** : fenêtres à rideaux, appliques, tableaux, bibliothèques, étagères à bocaux, tonneaux, caisses, globe, chandeliers, fauteuils, horloge, tableau d'affichage, chevalet, chat, hibou.
+- **Portail** en fer forgé **à gauche**, au bout d'une allée pavée.
+- **Objets légendaires plus sobres** : bois sombres, fer forgé, tissus profonds, sans effet doré.
+- Fantôme dessiné pour l'événement « fantôme farceur ».
+
 ## 0.6.0 — Vrais graphismes et 10e matière
 
 - **Sprites SpriteCook** (style « cosy » cartoon) : meubles de chaque matière, lits, comptoir de l'Accueil, tables de la Grande Salle, cheminée, bibliothèques, bureaux des professeurs, 8 élèves (2 par Maison, robe grise avant la répartition) et Méliandre.

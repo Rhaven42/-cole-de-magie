@@ -33,7 +33,7 @@ export const ENVIRONMENTS: EnvDef[] = [
     wood: '#6B4423',
     path: '#D9C7A3',
     deco: 'tree',
-    backdrop: '#5E9446',
+    backdrop: '#2E4425',
   },
   {
     id: 'abyss',

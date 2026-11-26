@@ -1,5 +1,8 @@
 {
-  "project": { "name": "Arcanum Academy", "id": "a9fcbf71-882f-4083-a21f-3913d3c80f16" },
+  "project": {
+    "name": "Arcanum Academy",
+    "id": "a9fcbf71-882f-4083-a21f-3913d3c80f16"
+  },
   "sheets": [
     {
       "asset_id": "c6386d51-ba2d-496e-82da-5c927d1eb44d",
@@ -38,7 +41,66 @@
       "asset_id": "c1a1de3d-90eb-4c03-8690-a928b2a97da1",
       "label": "props-sheet-2",
       "slices": ["dummy", "table", "counter", "stool", "fireplace", "bench"]
+    },
+    {
+      "asset_id": "fdd31975-bd10-4b27-832a-898cef5332d9",
+      "label": "tier-2 (améliorés)",
+      "slices": "<nom>-2.png"
+    },
+    {
+      "asset_id": "ec2b511c-b097-445e-8c6f-024b20dbc6a1",
+      "label": "tier-3 sobre (légendaires réalistes)",
+      "slices": "<nom>-3.png"
+    },
+    {
+      "asset_id": "abd6d9e7-1881-4505-a5f9-afbf1e452820",
+      "label": "decorations",
+      "slices": [
+        "gate",
+        "barrel",
+        "crates",
+        "jarShelf",
+        "globe",
+        "candelabra",
+        "planterTree",
+        "armchair",
+        "noticeBoard",
+        "chest",
+        "books",
+        "coatStand",
+        "cat",
+        "clock",
+        "owl",
+        "easel"
+      ]
+    },
+    {
+      "asset_id": "e84886f5-7dbb-4db8-9a8a-50d8c6caa055",
+      "label": "students-back + ghost",
+      "slices": ["<maison>-<0|1>-back", "ghost"]
     }
   ],
-  "notes": "Planches découpées localement dans src/assets/sprites/. Les variantes *-unsorted.png sont des versions désaturées (élèves pas encore répartis)."
+  "notes": "Planches découpées localement dans src/assets/sprites/. Les variantes *-unsorted.png sont des versions désaturées (élèves pas encore répartis). Les sprites teacherDeskM* sont des miroirs (bureau tourné vers les élèves). Ancienne planche tier-3 dorée (54244606…) remplacée. Index régénéré par `npm run assets`.",
+  "textures": [
+    {
+      "asset_id": "af68f02a-fffb-404f-bd5c-e31272488413",
+      "file": "textures/wood.jpg"
+    },
+    {
+      "asset_id": "d3caa546-ac49-43be-90d0-b1073b74e934",
+      "file": "textures/stone.jpg"
+    },
+    {
+      "asset_id": "fc3bc832-37b1-4fe9-86d4-25447177593d",
+      "file": "textures/wall.jpg"
+    },
+    {
+      "asset_id": "60e52472-a39f-42f4-a4e2-46036819a211",
+      "file": "textures/carpet.jpg"
+    },
+    {
+      "asset_id": "50d933cb-39d9-4cee-b70a-9e6918e8c5a3",
+      "file": "textures/grass.jpg"
+    }
+  ]
 }

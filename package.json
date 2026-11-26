@@ -41,7 +41,8 @@
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "format": "prettier --write .",
-    "simulate": "tsx scripts/simulate.ts"
+    "simulate": "tsx scripts/simulate.ts",
+    "assets": "python3 scripts/build-asset-index.py"
   },
   "private": true
 }

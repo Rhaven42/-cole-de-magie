@@ -8,7 +8,7 @@ export const ISO = {
   tileW: 40,
   tileH: 20,
   /** Hauteur des murs (px). */
-  wallH: 38,
+  wallH: 52,
 };
 
 export const PLOT = { size: 8, gap: 1.6, cols: 5, rows: 4, margin: 5 };
@@ -46,3 +46,111 @@ export const PLOTS: Record<string, PlotDef> = {
 
 /** Parcelles de jardin (décor). */
 export const GARDENS: { px: number; py: number }[] = [{ px: 0, py: 0 }];
+
+/** Décor d'une salle : sprite posé à une position de grille relative à la salle. */
+export interface DecorItem {
+  sprite: string;
+  x: number;
+  y: number;
+  width: number;
+  mirror?: boolean;
+}
+
+const COURSE_COMMON: DecorItem[] = [{ sprite: 'candelabra', x: 0.8, y: 7.3, width: 22 }];
+
+/** Décorations par type de salle (matière ou lieu). Positions hors des places. */
+export const ROOM_DECOR: Record<string, DecorItem[]> = {
+  potions: [
+    ...COURSE_COMMON,
+    { sprite: 'jarShelf', x: 3.2, y: 0.55, width: 34 },
+    { sprite: 'barrel', x: 6.6, y: 0.8, width: 24 },
+    { sprite: 'crates', x: 7.35, y: 1.9, width: 30 },
+  ],
+  botany: [
+    ...COURSE_COMMON,
+    { sprite: 'planterTree', x: 3.0, y: 0.8, width: 34 },
+    { sprite: 'planterTree', x: 6.5, y: 0.8, width: 30 },
+    { sprite: 'barrel', x: 7.35, y: 2.0, width: 22 },
+  ],
+  history: [
+    ...COURSE_COMMON,
+    { sprite: 'clock', x: 3.0, y: 0.5, width: 22 },
+    { sprite: 'globe', x: 6.6, y: 0.9, width: 28 },
+    { sprite: 'books', x: 7.3, y: 7.1, width: 28 },
+  ],
+  charms: [
+    ...COURSE_COMMON,
+    { sprite: 'books', x: 3.2, y: 0.8, width: 28 },
+    { sprite: 'easel', x: 6.6, y: 0.8, width: 28 },
+    { sprite: 'armchair', x: 7.2, y: 7.0, width: 32 },
+  ],
+  astronomy: [
+    ...COURSE_COMMON,
+    { sprite: 'globe', x: 3.0, y: 0.8, width: 28 },
+    { sprite: 'chest', x: 6.6, y: 0.8, width: 30 },
+    { sprite: 'owl', x: 7.35, y: 7.2, width: 20 },
+  ],
+  flying: [
+    ...COURSE_COMMON,
+    { sprite: 'coatStand', x: 3.0, y: 0.7, width: 24 },
+    { sprite: 'chest', x: 6.6, y: 0.8, width: 30 },
+    { sprite: 'barrel', x: 7.35, y: 7.1, width: 22 },
+  ],
+  divination: [
+    ...COURSE_COMMON,
+    { sprite: 'easel', x: 3.0, y: 0.8, width: 28 },
+    { sprite: 'armchair', x: 6.6, y: 0.9, width: 32 },
+    { sprite: 'owl', x: 7.35, y: 7.2, width: 20 },
+  ],
+  transfiguration: [
+    ...COURSE_COMMON,
+    { sprite: 'cat', x: 3.2, y: 0.9, width: 20 },
+    { sprite: 'chest', x: 6.6, y: 0.8, width: 30 },
+    { sprite: 'jarShelf', x: 7.4, y: 6.9, width: 30 },
+  ],
+  defense: [
+    ...COURSE_COMMON,
+    { sprite: 'chest', x: 3.1, y: 0.8, width: 30 },
+    { sprite: 'noticeBoard', x: 6.6, y: 0.8, width: 30 },
+    { sprite: 'candelabra', x: 7.35, y: 7.2, width: 22 },
+  ],
+  duel: [
+    ...COURSE_COMMON,
+    { sprite: 'candelabra', x: 3.0, y: 0.7, width: 22 },
+    { sprite: 'noticeBoard', x: 6.6, y: 0.8, width: 30 },
+    { sprite: 'chest', x: 7.35, y: 7.1, width: 28 },
+  ],
+  dorm: [
+    { sprite: 'coatStand', x: 7.4, y: 0.7, width: 24 },
+    { sprite: 'planterTree', x: 0.8, y: 7.3, width: 28 },
+    { sprite: 'chest', x: 7.4, y: 7.3, width: 26 },
+  ],
+  hall: [
+    { sprite: 'candelabra', x: 0.7, y: 0.8, width: 22 },
+    { sprite: 'clock', x: 7.4, y: 0.6, width: 22 },
+    { sprite: 'planterTree', x: 0.8, y: 7.4, width: 28 },
+  ],
+  reception: [
+    { sprite: 'noticeBoard', x: 6.6, y: 0.7, width: 30 },
+    { sprite: 'clock', x: 4.6, y: 0.5, width: 22 },
+    { sprite: 'coatStand', x: 5.6, y: 0.6, width: 24 },
+    { sprite: 'armchair', x: 6.4, y: 6.8, width: 32 },
+    { sprite: 'planterTree', x: 7.3, y: 7.4, width: 28 },
+  ],
+  sorting: [
+    { sprite: 'candelabra', x: 1.0, y: 1.0, width: 22 },
+    { sprite: 'candelabra', x: 1.0, y: 7.0, width: 22 },
+    { sprite: 'candelabra', x: 7.0, y: 1.0, width: 22 },
+    { sprite: 'books', x: 6.9, y: 6.9, width: 26 },
+    { sprite: 'cat', x: 2.4, y: 6.4, width: 18 },
+  ],
+};
+
+/** Texture de sol par type de lieu (taille d'une tuile de texture, en cases). */
+export const FLOOR_TEXTURE: Record<string, { tex: 'wood' | 'stone' | 'carpet'; tile: number }> = {
+  course: { tex: 'wood', tile: 3 },
+  dorm: { tex: 'wood', tile: 3 },
+  hall: { tex: 'stone', tile: 4 },
+  reception: { tex: 'stone', tile: 4 },
+  sorting: { tex: 'carpet', tile: 3 },
+};

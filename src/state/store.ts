@@ -123,6 +123,14 @@ export const useGame = create<Store>((set, get) => {
     let toasts = get().toasts.filter((t) => now - t.born < TOAST_MS);
     for (const e of events) {
       if (e.type === 'coins') {
+        // « Coffre plein » : au plus une fois toutes les 5 s par salle.
+        if (
+          e.amount <= 0 &&
+          floaters.some(
+            (f) => f.stationId === e.stationId && f.text.startsWith('📦') && now - f.born < 5000,
+          )
+        )
+          continue;
         floaters.push({
           key: keySeq++,
           stationId: e.stationId,

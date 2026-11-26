@@ -21,11 +21,13 @@ export function Walker({
   anchor,
   sleeping,
   from,
+  back = false,
 }: {
   student: Student;
   anchor: Anchor;
   sleeping: boolean;
   from?: Anchor;
+  back?: boolean;
 }) {
   const [init] = useState<Anchor>(() => from ?? anchor);
   const [start] = useState(() => iso(init.g.x, init.g.y));
@@ -86,7 +88,7 @@ export function Walker({
     >
       <Animated.View style={{ transform: [{ translateY: bob }] }}>
         <View style={styles.shadow} />
-        <Chibi student={student} size={SIZE} sleeping={sleeping} />
+        <Chibi student={student} size={SIZE} sleeping={sleeping} back={back} />
         {sleeping ? <Text style={styles.zzz}>z</Text> : null}
       </Animated.View>
     </Animated.View>

@@ -4,8 +4,8 @@ import { ISO, PLOT, PLOTS } from '../data/layout';
 export const GRID_X = PLOT.margin * 2 + PLOT.cols * (PLOT.size + PLOT.gap);
 export const GRID_Y = PLOT.margin * 2 + PLOT.rows * (PLOT.size + PLOT.gap);
 
-const OFFSET_X = GRID_Y * (ISO.tileW / 2);
-const OFFSET_Y = ISO.wallH + 30;
+export const OFFSET_X = GRID_Y * (ISO.tileW / 2);
+export const OFFSET_Y = ISO.wallH + 30;
 
 export const MAP_W = (GRID_X + GRID_Y) * (ISO.tileW / 2);
 export const MAP_H = (GRID_X + GRID_Y) * (ISO.tileH / 2) + OFFSET_Y + 20;
@@ -122,7 +122,7 @@ export function doorOf(id: string): { inside: Pt; outside: Pt } | null {
 /** Grille d'entrée de l'école. */
 export function gatePoint(): Pt {
   const rec = plotOrigin(PLOTS.reception.px, PLOTS.reception.py);
-  return { x: GRID_X - 1.2, y: rec.y + PLOT.size / 2 };
+  return { x: rec.x + PLOT.size + PLOT.gap / 2, y: GRID_Y - 1.2 };
 }
 
 function nearest(values: number[], v: number): number {

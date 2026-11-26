@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import { SPRITES } from '../assets';
 import {
   GestureDetector,
   usePanGesture,
@@ -54,6 +55,8 @@ interface Placed {
   id: number;
   anchor: Anchor;
   sleeping: boolean;
+  /** Vu de dos (élève tourné vers le tableau en classe). */
+  back: boolean;
   /** Priorité d'affichage (places d'abord, puis tête de file). */
   prio: number;
 }
@@ -68,12 +71,15 @@ function placeStudents(game: GameState): Placed[] {
     st.seats.forEach((seat, i) => {
       if (seat.occupant === null) return;
       const sp = seatPos(st.kind, i, seat.pos);
-      const dx = st.kind === 'dorm' ? -0.2 : st.kind === 'hall' ? 0 : 0.35;
-      const dy = st.kind === 'hall' ? 0 : 0.1;
+      // En classe, l'élève se tient derrière son poste, tourné vers le tableau (vu de dos).
+      const course = st.kind === 'course';
+      const dx = st.kind === 'dorm' ? -0.2 : st.kind === 'hall' ? 0 : course ? 0.6 : 0.35;
+      const dy = st.kind === 'hall' ? 0 : course ? 0.15 : 0.1;
       out.push({
         id: seat.occupant,
         anchor: { g: { x: o.x + sp.x + dx, y: o.y + sp.y + dy }, room: st.id },
         sleeping: st.kind === 'dorm',
+        back: course,
         prio: 0,
       });
     });
@@ -83,6 +89,7 @@ function placeStudents(game: GameState): Placed[] {
         id,
         anchor: { g: { x: o.x + q.x, y: o.y + q.y }, room: null },
         sleeping: false,
+        back: false,
         prio: 1 + k,
       });
     });
@@ -225,6 +232,23 @@ function EventMarkers({ game }: { game: GameState }) {
     <>
       {marks.map((m) => {
         const c = roomCenter(m.id);
+        if (m.key.startsWith('g-')) {
+          return (
+            <Image
+              key={m.key}
+              source={SPRITES.ghost.src}
+              pointerEvents="none"
+              style={{
+                position: 'absolute',
+                left: c.x - 28,
+                top: c.y - 96,
+                width: 56,
+                height: (56 * SPRITES.ghost.h) / SPRITES.ghost.w,
+                opacity: 0.85,
+              }}
+            />
+          );
+        }
         return (
           <Text
             key={m.key}
@@ -256,8 +280,8 @@ export function SchoolScreen() {
   const H = size.h;
   const clampT = (s: number) => {
     'worklet';
-    tx.value = Math.min(W * 0.6, Math.max(W * 0.4 - MAP_W * s, tx.value));
-    ty.value = Math.min(H * 0.6, Math.max(H * 0.4 - MAP_H * s, ty.value));
+    tx.value = Math.min(W * 0.25, Math.max(W * 0.75 - MAP_W * s, tx.value));
+    ty.value = Math.min(H * 0.25, Math.max(H * 0.75 - MAP_H * s, ty.value));
   };
 
   const placed = placeStudents(game);
@@ -386,6 +410,7 @@ export function SchoolScreen() {
                   student={s}
                   anchor={p.anchor}
                   sleeping={p.sleeping}
+                  back={p.back}
                   from={fresh ? gate : undefined}
                 />
               );
