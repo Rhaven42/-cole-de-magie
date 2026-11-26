@@ -1,4 +1,4 @@
-import { COURSES } from '../../data/courses';
+import { COURSE_IDS, COURSES } from '../../data/courses';
 import { createGame } from '../state';
 import {
   addSeat,
@@ -121,18 +121,8 @@ describe('économie et achats', () => {
   it('le bot cible d’abord les salles, puis le goulot', () => {
     const g = createGame();
     expect(globalTarget(g)).toMatchObject({ kind: 'course', courseId: 'botany' });
-    g.coins = 1e6;
-    for (const c of [
-      'botany',
-      'history',
-      'charms',
-      'astronomy',
-      'flying',
-      'divination',
-      'transfiguration',
-      'defense',
-    ] as const)
-      buyCourse(g, c);
+    g.coins = 1e8;
+    for (const c of COURSE_IDS) buyCourse(g, c);
     g.coins = 1e6;
     g.stations['dorm-0'].queue = Array.from({ length: 40 }, (_, i) => i + 1);
     expect(bottleneck(g).id).toBe('dorm-0');

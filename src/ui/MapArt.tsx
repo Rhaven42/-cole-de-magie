@@ -11,6 +11,8 @@ import {
   Furniture,
   FrontLips,
   shade,
+  Sprite,
+  tiered,
   Tree,
   Window,
   WallQuad,
@@ -18,7 +20,6 @@ import {
 import { floorPoly, GRID_X, GRID_Y, iso, MAP_H, MAP_W, plotOrigin, type Pt } from './iso';
 
 const S = PLOT.size;
-const BLANKETS = ['#C0392B', '#1E8449', '#F4C430', '#2471A3'];
 
 export interface RoomSnapshot {
   id: string;
@@ -27,6 +28,8 @@ export interface RoomSnapshot {
   level: number;
   /** Position (grille relative) de chaque place. */
   seats: Pt[];
+  /** Palier visuel de chaque place (0, 1, 2). */
+  seatTiers: number[];
 }
 
 function tier(level: number): number {
@@ -261,7 +264,15 @@ function CourseDecor({
       stroke="#6B4423"
     />,
   );
-  items.push(<Box key="desk" gx={ox + 0.9} gy={oy + 3.1} w={0.8} d={1.8} h={12} color="#7A4E2D" />);
+  items.push(
+    <Sprite
+      key="desk"
+      name={tiered('teacherDesk', t)}
+      p={iso(ox + 1.3, oy + 4)}
+      width={50}
+      lift={10}
+    />,
+  );
   if (courseId === 'astronomy') {
     items.push(
       <WallQuad
@@ -283,7 +294,13 @@ function CourseDecor({
   }
   if (t >= 1) {
     items.push(
-      <Box key="shelf" gx={ox + 0.1} gy={oy + 6.4} w={0.6} d={1.4} h={30} color="#5A3A22" />,
+      <Sprite
+        key="shelf"
+        name={tiered('bookshelf', t)}
+        p={iso(ox + 0.5, oy + 7)}
+        width={30}
+        lift={4}
+      />,
     );
     items.push(<Candle key="c1" p={iso(ox + 1.2, oy + 1)} />);
   }
@@ -362,34 +379,24 @@ function Room({ r, env }: { r: RoomSnapshot; env: EnvDef }) {
               stroke="#F2B83B"
             />
           ))}
-          <WallQuad
-            axis="y"
-            ox={o.x}
-            oy={o.y}
-            t1={3}
-            t2={5}
-            h1={0}
-            h2={22}
-            fill="#3B2414"
-            stroke="#8A5A34"
-          />
-          <WallQuad axis="y" ox={o.x} oy={o.y} t1={3.3} t2={4.7} h1={2} h2={12} fill="#FF8C3A" />
-          {[0, 1, 2, 3, 4].map((row) => (
-            <Box
-              key={row}
-              gx={o.x + 1.05 + row * 1.35}
-              gy={o.y + 0.5}
-              w={0.42}
-              d={7}
-              h={9}
-              color="#8A5A34"
-            />
-          ))}
+          <Sprite name="fireplace" p={iso(o.x + 0.6, o.y + 4.3)} width={44} lift={6} />
+          {[0, 1, 2, 3, 4].flatMap((row) =>
+            [2.2, 5.7].map((gy) => (
+              <Sprite
+                key={`${row}-${gy}`}
+                name={tiered('table', t)}
+                p={iso(o.x + 1.26 + row * 1.35, o.y + gy + 1.2)}
+                width={66}
+                lift={8}
+              />
+            )),
+          )}
         </G>
       ) : null}
       {r.kind === 'reception' ? (
         <G>
-          <Box gx={o.x + 0.1} gy={o.y + 1} w={0.7} d={6} h={30} color="#5A3A22" />
+          <Sprite name={tiered('bookshelf', t)} p={iso(o.x + 0.5, o.y + 2.2)} width={30} lift={4} />
+          <Sprite name={tiered('bookshelf', t)} p={iso(o.x + 0.5, o.y + 6.2)} width={30} lift={4} />
           <Window axis="x" ox={o.x} oy={o.y} t={3} />
           <Polygon points={floorPoly(o.x + 4.4, o.y + 2.5, 3, 3)} fill="#8C2F39" opacity={0.75} />
         </G>
@@ -432,7 +439,7 @@ function Room({ r, env }: { r: RoomSnapshot; env: EnvDef }) {
           at={iso(f.gx, f.gy)}
           gx={f.gx}
           gy={f.gy}
-          blanket={BLANKETS[f.i % 4]}
+          tier={r.seatTiers[f.i] ?? 0}
         />
       ))}
       <FrontLips ox={o.x} oy={o.y} size={S} wood={shade(wood, 1.1)} />

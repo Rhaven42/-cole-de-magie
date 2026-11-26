@@ -232,7 +232,7 @@ function complete(
           startEvent(state, 'broomFall', events, st.id);
         }
       } else {
-        const amount = courseReward(st, s, state);
+        const amount = courseReward(st, s, state, seatIndex);
         const stored = deposit(st, amount);
         st.stats.earned += stored;
         state.totals.coursesPassed++;

@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.6.0 — Vrais graphismes et 10e matière
+
+- **Sprites SpriteCook** (style « cosy » cartoon) : meubles de chaque matière, lits, comptoir de l'Accueil, tables de la Grande Salle, cheminée, bibliothèques, bureaux des professeurs, 8 élèves (2 par Maison, robe grise avant la répartition) et Méliandre.
+- **Évolution des objets** : chaque place change d'aspect au niveau 3 (amélioré : laiton, argent, étincelles) puis au niveau 5 (légendaire : or, marbre, aura dorée), avec l'animation « ✨ Évolution ! ». Chaque niveau donne −5 % de temps et, sur les places de cours, +5 % d'Éclats. Bureaux, bibliothèques et tables évoluent avec le niveau de la salle.
+- **10e matière : Duel** (5e année, arène de duel), professeur Delan Lanatre ; nouveau métier « Duelliste de renom » ; bonus Pyrraxe en Duel.
+- Professeur·es nommé·es affiché·es dans les fiches de salle.
+
 ## 0.5.0 — Années, diplômes, événements et méta
 
 - **J4** : 7 années, passage d'année avec bonus, cours avancés en 7e année, 9 matières constructibles.

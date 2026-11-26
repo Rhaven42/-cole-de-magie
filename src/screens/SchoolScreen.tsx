@@ -18,6 +18,7 @@ import {
   dormCount,
   estimatedWait,
   isClosed,
+  seatTier,
   storageCap,
   type GameState,
   type Station,
@@ -96,7 +97,14 @@ function seatsOf(st: Station): Pt[] {
 function snapshot(game: GameState) {
   const rooms: RoomSnapshot[] = game.stationOrder.map((id) => {
     const s = game.stations[id];
-    return { id, kind: s.kind, courseId: s.courseId, level: s.level, seats: seatsOf(s) };
+    return {
+      id,
+      kind: s.kind,
+      courseId: s.courseId,
+      level: s.level,
+      seats: seatsOf(s),
+      seatTiers: s.seats.map((x) => seatTier(x.level)),
+    };
   });
   const plots: { id: string; available: boolean }[] = [];
   for (const cid of Object.keys(COURSES)) {

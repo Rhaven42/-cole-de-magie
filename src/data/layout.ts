@@ -35,6 +35,7 @@ export const PLOTS: Record<string, PlotDef> = {
   'course-divination': { px: 4, py: 0, floor: '#7E4A86', floorAlt: '#72427A' },
   'course-transfiguration': { px: 0, py: 3, floor: '#5E7C82', floorAlt: '#557177' },
   'course-defense': { px: 1, py: 2, floor: '#6B3A3A', floorAlt: '#603434' },
+  'course-duel': { px: 1, py: 0, floor: '#7A4B3A', floorAlt: '#6C4233' },
   'dorm-0': { px: 2, py: 1, floor: '#4A5A8C', floorAlt: '#42517F' },
   'dorm-1': { px: 3, py: 0, floor: '#4A5A8C', floorAlt: '#42517F' },
   'dorm-2': { px: 0, py: 2, floor: '#4A5A8C', floorAlt: '#42517F' },
@@ -44,7 +45,4 @@ export const PLOTS: Record<string, PlotDef> = {
 };
 
 /** Parcelles de jardin (décor). */
-export const GARDENS: { px: number; py: number }[] = [
-  { px: 1, py: 0 },
-  { px: 0, py: 0 },
-];
+export const GARDENS: { px: number; py: number }[] = [{ px: 0, py: 0 }];

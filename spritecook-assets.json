@@ -1,0 +1,44 @@
+{
+  "project": { "name": "Arcanum Academy", "id": "a9fcbf71-882f-4083-a21f-3913d3c80f16" },
+  "sheets": [
+    {
+      "asset_id": "c6386d51-ba2d-496e-82da-5c927d1eb44d",
+      "label": "furniture-sheet-1 (style reference)",
+      "slices": [
+        "cauldron",
+        "plant",
+        "desk",
+        "telescope",
+        "crystal",
+        "broom",
+        "podium",
+        "duelCircle",
+        "bed",
+        "stage",
+        "teacherDesk",
+        "bookshelf"
+      ]
+    },
+    {
+      "asset_id": "340cc16e-d8eb-49e0-9e47-5772a947889d",
+      "label": "students-and-hat",
+      "slices": [
+        "pyrraxe-0",
+        "pyrraxe-1",
+        "sylvaine-0",
+        "sylvaine-1",
+        "aurelis-0",
+        "aurelis-1",
+        "azurea-0",
+        "azurea-1",
+        "hat"
+      ]
+    },
+    {
+      "asset_id": "c1a1de3d-90eb-4c03-8690-a928b2a97da1",
+      "label": "props-sheet-2",
+      "slices": ["dummy", "table", "counter", "stool", "fireplace", "bench"]
+    }
+  ],
+  "notes": "Planches découpées localement dans src/assets/sprites/. Les variantes *-unsorted.png sont des versions désaturées (élèves pas encore répartis)."
+}

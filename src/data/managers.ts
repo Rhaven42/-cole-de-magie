@@ -20,6 +20,7 @@ export const MANAGERS: Record<CourseId, string> = {
   flying: 'Rosalba Ventvif',
   divination: 'Madame Brumiel',
   transfiguration: 'Ambroise Changeforme',
+  duel: 'Ondine Flamberge',
   defense: 'Capitaine Ysolde Fermeroc',
 };
 

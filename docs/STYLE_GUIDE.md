@@ -45,3 +45,11 @@ Chaque matière a une couleur de mur (`wall` dans `src/data/courses.ts`). Trois 
 ## Interface
 
 Boutons d'au moins 48 dp, prix dans une pastille verte (grise si trop cher). Titres en serif (Georgia / serif), texte en police système.
+
+## Sprites (SpriteCook)
+
+- Planches générées en « clean flat cartoon, soft cel shading, warm cozy colors, thin dark brown outlines ». La planche de meubles n°1 (`c6386d51…`) sert de **référence de style** pour toutes les suivantes (voir `spritecook-assets.json`).
+- Vue isométrique 3/4, objets ancrés en bas au centre sur leur case (`Sprite` dans `src/ui/isoArt.tsx`).
+- **3 paliers d'évolution** par objet : de base (niv. 1–2), amélioré (niv. 3–4 : laiton, argent, étincelles bleues), légendaire (niv. 5 : or, marbre blanc, aura dorée, tissus violet royal). Fichiers `nom.png`, `nom-2.png`, `nom-3.png`.
+- Élèves : 2 variantes par Maison (`maison-0/1.png`) et une version désaturée `-unsorted` avant la répartition.
+- Sols et murs restent dessinés en SVG (géométrie exacte, couleurs par environnement).

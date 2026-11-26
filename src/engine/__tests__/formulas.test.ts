@@ -62,3 +62,21 @@ describe('formules', () => {
     expect(estimatedWait(g.stations.reception)).toBeGreaterThan(0);
   });
 });
+
+describe('évolution des objets (places)', () => {
+  it('change de palier visuel aux niveaux 3 et 5', () => {
+    const { seatTier } = jest.requireActual('../modifiers');
+    expect([1, 2, 3, 4, 5].map(seatTier)).toEqual([0, 0, 1, 1, 2]);
+  });
+
+  it('une place améliorée rapporte plus d’Éclats et va plus vite', () => {
+    const { courseReward } = jest.requireActual('../modifiers');
+    const g = createGame();
+    const st = g.stations['course-potions'];
+    const who = { house: null, mood: 80 };
+    const base = courseReward(st, who, undefined, 0);
+    st.seats[0].level = 5;
+    expect(courseReward(st, who, undefined, 0)).toBeGreaterThan(base);
+    expect(serviceTime(st, 0)).toBeLessThan(serviceTime(st, 1));
+  });
+});

@@ -28,7 +28,8 @@ export type CareerId =
   | 'starCartographer'
   | 'skyCourier'
   | 'oracle'
-  | 'shapeshifter';
+  | 'shapeshifter'
+  | 'duelist';
 
 export interface CareerDef {
   id: CareerId;
@@ -55,6 +56,7 @@ export const CAREERS: Record<CareerId, CareerDef> = {
   skyCourier: { id: 'skyCourier', icon: '🧹', course: 'flying', donationPerMin: 4 },
   oracle: { id: 'oracle', icon: '🔮', course: 'divination', donationPerMin: 4.5 },
   shapeshifter: { id: 'shapeshifter', icon: '🐇', course: 'transfiguration', donationPerMin: 5 },
+  duelist: { id: 'duelist', icon: '⚔️', course: 'duel', donationPerMin: 4.8 },
 };
 
 export const CAREER_IDS = Object.keys(CAREERS) as CareerId[];

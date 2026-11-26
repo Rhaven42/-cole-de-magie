@@ -10,6 +10,7 @@ import {
   levelUp,
   addSeat,
   upgradeSeat,
+  seatTier,
   upgradeTrack,
   setSortingBias,
   tick,
@@ -348,7 +349,26 @@ export const useGame = create<Store>((set, get) => {
     buy: (p) => purchased(applyPurchase(get().game, p)),
     levelUp: (id) => purchased(levelUp(get().game, id)),
     addSeat: (id) => purchased(addSeat(get().game, id)),
-    upgradeSeat: (id, seat) => purchased(upgradeSeat(get().game, id, seat)),
+    upgradeSeat: (id, seat) => {
+      const st = get().game.stations[id];
+      const before = st ? seatTier(st.seats[seat]?.level ?? 1) : 0;
+      const ok = purchased(upgradeSeat(get().game, id, seat));
+      if (ok && st && seatTier(st.seats[seat].level) > before) {
+        set((s) => ({
+          floaters: [
+            ...s.floaters,
+            {
+              key: keySeq++,
+              stationId: id,
+              text: '✨ Évolution !',
+              color: '#E9C8FF',
+              born: Date.now(),
+            },
+          ],
+        }));
+      }
+      return ok;
+    },
     upgradeTrack: (id, tr) => purchased(upgradeTrack(get().game, id, tr)),
     buyCourse: (id) => purchased(buyCourse(get().game, id)),
     buyDorm: () => purchased(buyDorm(get().game)),

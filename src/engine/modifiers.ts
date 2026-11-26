@@ -94,13 +94,26 @@ export function receptionPatience(state: GameState): number {
 }
 
 /** Gain d'Éclats pour un cours validé. */
+/** Palier visuel d'un objet (0 = de base, 1 = amélioré, 2 = légendaire). */
+export function seatTier(level: number): 0 | 1 | 2 {
+  if (level >= ECONOMY.seatTiers.legendary) return 2;
+  if (level >= ECONOMY.seatTiers.improved) return 1;
+  return 0;
+}
+
+export function seatCoinMult(seatLevel: number): number {
+  return 1 + ECONOMY.seatUpgrade.coinPerLevel * (seatLevel - 1);
+}
+
 export function courseReward(
   st: Station,
   s: Pick<Student, 'house' | 'mood'> & { year?: number },
   state?: GameState,
+  seatIndex?: number,
 ): number {
   const def = COURSES[st.courseId!];
   let r = def.reward * levelCoinMult(st.level);
+  if (seatIndex !== undefined && st.seats[seatIndex]) r *= seatCoinMult(st.seats[seatIndex].level);
   if ((s.year ?? 1) >= YEARS.max) r *= YEARS.advanced.rewardMult;
   if (state) {
     r *= metaMult(state);

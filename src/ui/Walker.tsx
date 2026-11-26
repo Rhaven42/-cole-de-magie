@@ -1,11 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import { Animated, Easing, StyleSheet, Text, View } from 'react-native';
-import { HOUSES } from '../data/houses';
 import type { Student } from '../engine';
 import { Chibi } from './Chibi';
 import { iso, route, type Anchor } from './iso';
 
-const SIZE = 20;
+const SIZE = 34;
 /** Vitesse de marche (px de carte par seconde). */
 const SPEED = 110;
 
@@ -80,7 +79,6 @@ export function Walker({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key]);
 
-  const hat = student.house ? HOUSES[student.house].color : '#4B3B5E';
   return (
     <Animated.View
       pointerEvents="none"
@@ -89,7 +87,6 @@ export function Walker({
       <Animated.View style={{ transform: [{ translateY: bob }] }}>
         <View style={styles.shadow} />
         <Chibi student={student} size={SIZE} sleeping={sleeping} />
-        {!sleeping ? <View style={[styles.hat, { borderBottomColor: hat }]} /> : null}
         {sleeping ? <Text style={styles.zzz}>z</Text> : null}
       </Animated.View>
     </Animated.View>
@@ -106,18 +103,6 @@ const styles = StyleSheet.create({
     height: 5,
     borderRadius: 3,
     backgroundColor: 'rgba(0,0,0,0.25)',
-  },
-  hat: {
-    position: 'absolute',
-    top: -7,
-    left: SIZE / 2 - 6,
-    width: 0,
-    height: 0,
-    borderLeftWidth: 6,
-    borderRightWidth: 6,
-    borderBottomWidth: 10,
-    borderLeftColor: 'transparent',
-    borderRightColor: 'transparent',
   },
   zzz: {
     position: 'absolute',

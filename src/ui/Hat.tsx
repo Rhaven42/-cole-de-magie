@@ -1,47 +1,22 @@
 import { useEffect, useState } from 'react';
-import { Animated, Easing, View } from 'react-native';
-import Svg, { Circle, Ellipse, Path } from 'react-native-svg';
+import { Animated, Easing, Image, View } from 'react-native';
+import { SPRITES } from '../assets';
 import { HOUSE_IDS } from '../data/houses';
 import { Crest } from './Crest';
 
-/** Méliandre, le Chapeau Songeur : chapeau pointu rapiécé, yeux brodés, bouche cousue. */
+/** Méliandre, le Chapeau Songeur (sprite SpriteCook). Il se dandine quand il parle. */
 export function Hat({ size = 56, talking = false }: { size?: number; talking?: boolean }) {
+  const d = SPRITES.hat;
   return (
-    <Svg width={size} height={size} viewBox="0 0 100 100">
-      <Ellipse cx={50} cy={84} rx={44} ry={10} fill="#4A3020" />
-      <Path
-        d="M16 82 C30 70 36 50 46 30 C52 18 60 8 72 6 C66 14 64 22 66 30 C70 46 76 66 84 82 Z"
-        fill="#7A5634"
-      />
-      <Path
-        d="M58 40 L70 38 L72 50 L60 52 Z"
-        fill="#9C7A4E"
-        stroke="#3B2414"
-        strokeWidth={1.5}
-        strokeDasharray="3 2"
-      />
-      <Path
-        d="M28 70 L38 68 L40 76 L30 78 Z"
-        fill="#5E4A2E"
-        stroke="#3B2414"
-        strokeWidth={1.5}
-        strokeDasharray="3 2"
-      />
-      <Path d="M36 58 Q42 52 48 58" stroke="#2E2118" strokeWidth={3} fill="none" />
-      <Path d="M54 58 Q60 52 66 58" stroke="#2E2118" strokeWidth={3} fill="none" />
-      <Circle cx={42} cy={60} r={2} fill="#F6E9CC" />
-      <Circle cx={60} cy={60} r={2} fill="#F6E9CC" />
-      {talking ? (
-        <Ellipse cx={51} cy={72} rx={7} ry={4} fill="#2E2118" />
-      ) : (
-        <Path
-          d="M42 72 L46 70 L50 73 L54 70 L58 73 L62 71"
-          stroke="#2E2118"
-          strokeWidth={2.5}
-          fill="none"
-        />
-      )}
-    </Svg>
+    <Image
+      source={d.src}
+      style={{
+        width: size,
+        height: (size * d.h) / d.w,
+        transform: talking ? [{ rotate: '-6deg' }] : undefined,
+      }}
+      resizeMode="contain"
+    />
   );
 }
 

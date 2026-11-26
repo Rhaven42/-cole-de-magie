@@ -29,7 +29,7 @@ export const HOUSES: Record<HouseId, HouseDef> = {
     color: '#C0392B',
     light: '#F2C4BE',
     emblem: 'phoenix',
-    bonus: { courseTimeMult: { defense: 0.92, flying: 0.92 } },
+    bonus: { courseTimeMult: { defense: 0.92, flying: 0.92, duel: 0.92 } },
   },
   sylvaine: {
     id: 'sylvaine',

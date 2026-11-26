@@ -7,6 +7,7 @@ export type CourseId =
   | 'astronomy'
   | 'flying'
   | 'divination'
+  | 'duel'
   | 'transfiguration'
   | 'defense';
 
@@ -145,6 +146,22 @@ export const COURSES: Record<CourseId, CourseDef> = {
     hunger: 14,
     xp: 26,
     wall: '#6B3E6B',
+  },
+  duel: {
+    id: 'duel',
+    icon: '⚔️',
+    seatKey: 'arena',
+    seats: 3,
+    duration: 55,
+    reward: 52,
+    yearMin: 5,
+    price: 300000,
+    upgradeBase: 8000,
+    failRate: 0.1,
+    fatigue: 24,
+    hunger: 18,
+    xp: 30,
+    wall: '#5A3030',
   },
   transfiguration: {
     id: 'transfiguration',

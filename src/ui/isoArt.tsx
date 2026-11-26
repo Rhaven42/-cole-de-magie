@@ -2,7 +2,8 @@
  * Primitives de dessin isométrique (SVG) : boîtes, murs, meubles.
  * Tout est dessiné en code — placeholders cohérents en attendant les sprites.
  */
-import { Circle, Ellipse, G, Line, Path, Polygon } from 'react-native-svg';
+import { Circle, Ellipse, G, Image as SvgImage, Line, Path, Polygon } from 'react-native-svg';
+import { SPRITES, type SpriteName } from '../assets';
 import { ISO } from '../data/layout';
 import { iso, poly, type Pt } from './iso';
 
@@ -226,179 +227,63 @@ export function Tree({ p, s = 1 }: { p: Pt; s?: number }) {
   );
 }
 
-/** Meuble associé à une place, selon le type de lieu / matière. */
+/** Variante d'un sprite selon le palier d'évolution (0 de base, 1 amélioré, 2 légendaire). */
+export function tiered(name: SpriteName, tier: number): SpriteName {
+  if (tier <= 0) return name;
+  const v = `${name}-${tier + 1}` as SpriteName;
+  return v in SPRITES ? v : name;
+}
+
+/** Sprite posé au sol : (p) = point au sol, ancré en bas au centre. */
+export function Sprite({
+  name,
+  p,
+  width,
+  lift = 0,
+}: {
+  name: SpriteName;
+  p: Pt;
+  width: number;
+  lift?: number;
+}) {
+  const d = SPRITES[name];
+  const h = (width * d.h) / d.w;
+  return <SvgImage href={d.src} x={p.x - width / 2} y={p.y - h + lift} width={width} height={h} />;
+}
+
+/** Meuble (sprite) associé à une place, selon le type de lieu / matière. */
+const SEAT_SPRITES: Record<string, { name: SpriteName; width: number; lift: number }> = {
+  potions: { name: 'cauldron', width: 34, lift: 6 },
+  botany: { name: 'plant', width: 26, lift: 4 },
+  history: { name: 'desk', width: 40, lift: 8 },
+  charms: { name: 'stage', width: 44, lift: 9 },
+  astronomy: { name: 'telescope', width: 30, lift: 4 },
+  flying: { name: 'broom', width: 46, lift: 6 },
+  divination: { name: 'crystal', width: 32, lift: 6 },
+  transfiguration: { name: 'podium', width: 26, lift: 6 },
+  defense: { name: 'dummy', width: 30, lift: 6 },
+  duel: { name: 'duelCircle', width: 54, lift: 12 },
+  dorm: { name: 'bed', width: 46, lift: 12 },
+  reception: { name: 'counter', width: 44, lift: 10 },
+  sorting: { name: 'stool', width: 18, lift: 4 },
+};
+
 export function Furniture({
   kind,
   at,
   gx,
   gy,
-  blanket,
+  tier = 0,
 }: {
   kind: string;
   at: Pt;
   gx: number;
   gy: number;
-  blanket: string;
+  tier?: number;
 }) {
-  const p = at;
-  switch (kind) {
-    case 'potions':
-      return (
-        <G>
-          <Ellipse cx={p.x} cy={p.y + 2} rx={9} ry={4} fill="#E8742E" opacity={0.6} />
-          <Path
-            d={`M${p.x - 10} ${p.y - 8} Q${p.x - 11} ${p.y + 4} ${p.x} ${p.y + 4} Q${p.x + 11} ${p.y + 4} ${p.x + 10} ${p.y - 8} Z`}
-            fill="#2D2B36"
-          />
-          <Ellipse cx={p.x} cy={p.y - 8} rx={10} ry={4.5} fill="#3B3946" />
-          <Ellipse cx={p.x} cy={p.y - 8} rx={8} ry={3.2} fill="#7EE08F" />
-          <Circle cx={p.x + 3} cy={p.y - 12} r={2} fill="#B8F5C1" opacity={0.8} />
-        </G>
-      );
-    case 'botany':
-      return (
-        <G>
-          <Box gx={gx - 0.3} gy={gy - 0.3} w={0.6} d={0.6} h={8} color="#C0673A" />
-          <Circle cx={p.x} cy={p.y - 14} r={7} fill="#3E8E41" />
-          <Circle cx={p.x - 5} cy={p.y - 11} r={4.5} fill="#56A95A" />
-          <Circle cx={p.x + 4} cy={p.y - 17} r={3.5} fill="#F28DB2" />
-        </G>
-      );
-    case 'charms':
-      return (
-        <G>
-          <Ellipse
-            cx={p.x}
-            cy={p.y}
-            rx={14}
-            ry={7}
-            fill="#7E5BB5"
-            stroke="#F2B83B"
-            strokeWidth={1.5}
-          />
-          <Ellipse cx={p.x} cy={p.y - 2} rx={9} ry={4.5} fill="#9A7AD0" />
-        </G>
-      );
-    case 'astronomy':
-      return (
-        <G>
-          <Line
-            x1={p.x - 5}
-            y1={p.y + 2}
-            x2={p.x}
-            y2={p.y - 8}
-            stroke="#5A3A22"
-            strokeWidth={1.5}
-          />
-          <Line
-            x1={p.x + 5}
-            y1={p.y + 2}
-            x2={p.x}
-            y2={p.y - 8}
-            stroke="#5A3A22"
-            strokeWidth={1.5}
-          />
-          <Line
-            x1={p.x - 6}
-            y1={p.y - 4}
-            x2={p.x + 9}
-            y2={p.y - 16}
-            stroke="#C9A227"
-            strokeWidth={4}
-            strokeLinecap="round"
-          />
-        </G>
-      );
-    case 'flying':
-      return (
-        <G>
-          <Line
-            x1={p.x - 10}
-            y1={p.y - 6}
-            x2={p.x + 6}
-            y2={p.y - 12}
-            stroke="#8A5A34"
-            strokeWidth={2.5}
-          />
-          <Path
-            d={`M${p.x + 5} ${p.y - 12} L${p.x + 14} ${p.y - 18} L${p.x + 15} ${p.y - 10} Z`}
-            fill="#D9B45A"
-          />
-          <Ellipse cx={p.x} cy={p.y + 1} rx={8} ry={3} fill="rgba(0,0,0,0.15)" />
-        </G>
-      );
-    case 'divination':
-      return (
-        <G>
-          <Box gx={gx - 0.35} gy={gy - 0.35} w={0.7} d={0.7} h={9} color="#6B3E6B" />
-          <Circle cx={p.x} cy={p.y - 15} r={5} fill="#BFE6FF" stroke="#FFFFFF" strokeWidth={1} />
-          <Circle cx={p.x - 1.5} cy={p.y - 16.5} r={1.5} fill="#FFFFFF" />
-        </G>
-      );
-    case 'transfiguration':
-      return <Box gx={gx - 0.4} gy={gy - 0.4} w={0.8} d={0.8} h={10} color="#9AA5A8" />;
-    case 'defense':
-      return (
-        <G>
-          <Ellipse cx={p.x} cy={p.y} rx={14} ry={7} fill="none" stroke="#E0553B" strokeWidth={2} />
-          <Ellipse
-            cx={p.x}
-            cy={p.y}
-            rx={9}
-            ry={4.5}
-            fill="none"
-            stroke="#F2B83B"
-            strokeWidth={1.2}
-            strokeDasharray="2 2"
-          />
-        </G>
-      );
-    case 'dorm':
-      return (
-        <G>
-          <Box gx={gx - 0.65} gy={gy - 0.45} w={1.3} d={0.9} h={7} color="#7A4E2D" />
-          <Polygon
-            points={poly(
-              [
-                iso(gx - 0.25, gy - 0.45),
-                iso(gx + 0.65, gy - 0.45),
-                iso(gx + 0.65, gy + 0.45),
-                iso(gx - 0.25, gy + 0.45),
-              ].map((q) => ({ x: q.x, y: q.y - 8 })),
-            )}
-            fill={blanket}
-          />
-          <Box gx={gx - 0.6} gy={gy - 0.35} w={0.32} d={0.7} h={10} color="#F6F1E4" />
-        </G>
-      );
-    case 'reception':
-      return (
-        <G>
-          <Box gx={gx - 1.1} gy={gy - 0.45} w={0.55} d={0.9} h={14} color="#8A5A34" />
-          <Circle cx={iso(gx - 0.8, gy).x} cy={iso(gx - 0.8, gy).y - 16} r={2} fill="#F2B83B" />
-        </G>
-      );
-    case 'sorting':
-      return <Box gx={gx - 0.25} gy={gy - 0.25} w={0.5} d={0.5} h={6} color="#8A5A34" />;
-    case 'hall':
-      return null;
-    case 'history':
-    default:
-      return (
-        <G>
-          <Box gx={gx - 0.65} gy={gy - 0.4} w={0.5} d={0.8} h={10} color="#9C6B44" />
-          <Polygon
-            points={poly(
-              [
-                iso(gx - 0.55, gy - 0.25),
-                iso(gx - 0.3, gy - 0.25),
-                iso(gx - 0.3, gy + 0.2),
-                iso(gx - 0.55, gy + 0.2),
-              ].map((q) => ({ x: q.x, y: q.y - 10.5 })),
-            )}
-            fill="#FFF6E0"
-          />
-        </G>
-      );
-  }
+  const sp = SEAT_SPRITES[kind];
+  if (!sp) return null;
+  // Le comptoir de l'Accueil est devant l'élève (côté mur arrière).
+  const p = kind === 'reception' ? iso(gx - 0.9, gy) : kind === 'dorm' ? iso(gx, gy) : at;
+  return <Sprite name={tiered(sp.name, tier)} p={p} width={sp.width} lift={sp.lift} />;
 }

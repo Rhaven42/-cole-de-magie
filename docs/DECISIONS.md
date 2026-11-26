@@ -72,3 +72,9 @@ Temps réel = `base × 0,96^(niv−1) × (1 − 0,05·(niveauPlace−1)) × (1 �
 - **Prestige — « Nouvelle légende »** : à partir de 40 diplômé·es (+15 par reconstruction), on repart de zéro dans l'environnement suivant : Vieux Manoir → Académie des Abysses (sous-marine) → Citadelle des Nuages → Forêt profonde → Observatoire lunaire. On garde les Gemmes (+10), les reliques et le cadeau du jour, et on gagne +25 % d'Éclats permanents par niveau.
 - **Sauvegarde v2** : la migration v1 → v2 ajoute les nouveaux champs ; une ancienne partie se charge sans perte.
 - **Professeur·es nommé·es** (`src/data/professors.ts`, affichés dans la fiche de la salle) : Défense → Harvald ; Sortilèges → Taladon Morvard ; Métamorphose → Tenarius D’Arvay ; Potions → Dolohov ; Botanique → Solomon Tregahl ; Balais volants → Alva (professeure) ; Divination → à venir. Ils et elles seront les titulaires au J5.
+
+## Mise à jour 0.6.0
+
+- **Graphismes** : sprites SpriteCook découpés localement depuis des planches (4 planches de meubles, 1 planche de personnages), soit environ 80 crédits sur 1 000. Le reste est réservé aux portraits des professeur·es, d'après les descriptions physiques qui seront fournies. Les sprites sont réduits à 160 px maximum.
+- **Évolution des objets** : paliers visuels aux niveaux de place 3 et 5 (`ECONOMY.seatTiers`), +5 % d'Éclats par niveau de place sur les cours (`seatUpgrade.coinPerLevel`).
+- **10e matière « Duel »** (`duel`) : 3 arènes, 55 s, 52 Éclats, 5e année, 300 000 Éclats ; elle prend la parcelle (1,0), l'ancien jardin.
