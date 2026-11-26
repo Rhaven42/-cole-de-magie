@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.9.4 — Grande entrée, grand jardin, plus de fleurs
+
+- **Entrée monumentale** : allée pavée 3× plus large avec bordure de pierre, bordures fleuries et double rangée de lampadaires ; grand portail en fer forgé ; porche à 6 colonnes avec fronton, médaillon et perron à trois marches ; façade largement ouverte. Statues, bancs et arches de roses de chaque côté de l'allée.
+- **Un seul grand jardin au fond** (2 parcelles au lieu de 2 petits jardins) : allée centrale dans le prolongement du couloir des examens, allée transversale, rond-point et vasque, haies, massifs, bancs, arches de roses, arbres dans les coins.
+- **Plus de fleurs, moins d'arbres** : lisière plus clairsemée et variée (bosquets, massifs, buissons, herbes hautes, bordures fleuries) ; plusieurs arbres isolés remplacés par des massifs ; touches de fleurs autour de l'étang, du kiosque, du potager et de la prairie.
+
 ## 0.9.3 — Paysage dessiné à la main
 
 - Fin du semis aléatoire (arbres, rochers, points de fleurs) et des tapis rouges de couloirs, jugés artificiels.

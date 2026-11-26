@@ -33,6 +33,8 @@ const H = 22;
 /** Épaisseur des murs (cases) et hauteur de la tranche du sol surélevé (px). */
 const WALL_T = 0.28;
 const PLINTH = 7;
+/** Demi-largeur de la grande allée d'entrée (cases). */
+const PATH_HALF = 3;
 
 export interface RoomSnapshot {
   id: string;
@@ -215,17 +217,18 @@ function Fountain({ p }: { p: Pt }) {
 function forestEdge(): Placed[] {
   const out: Placed[] = [];
   const kinds: [SpriteName, number][] = [
-    ['grove', 120],
-    ['pine', 54],
-    ['oak', 72],
+    ['grove', 116],
+    ['flowerBed', 46],
+    ['bush', 32],
     ['pine', 50],
-    ['grove', 110],
     ['wildGrass', 40],
-    ['pine', 56],
+    ['flowerBed', 42],
     ['oak', 66],
+    ['bush', 30],
+    ['flowerBorder', 54],
   ];
   const jitter = [0.4, -0.6, 0.9, -0.2, 0.7, -0.9, 0.1, 0.5, -0.4, 0.8];
-  const step = [5.5, 4.5, 6.5, 3.8, 7.5, 5, 4.2, 6];
+  const step = [7, 5.5, 8.5, 6, 9.5, 6.5, 7.5];
   let k = 0;
   const line = (
     from: number,
@@ -259,9 +262,9 @@ function forestEdge(): Placed[] {
 
 const LANDSCAPE: Placed[] = [
   // Prairie du fond : volière, feu de camp, meule et charrette, cibles d'entraînement
-  { name: 'pine', x: 10, y: 2.5, w: 52 },
+  { name: 'flowerBed', x: 10, y: 2.5, w: 46 },
   { name: 'oak', x: 14.5, y: 2.2, w: 70 },
-  { name: 'pine', x: 20, y: 2.8, w: 54 },
+  { name: 'bush', x: 20, y: 2.8, w: 32 },
   { name: 'grove', x: 25, y: 2.2, w: 110 },
   { name: 'grove', x: 2.6, y: 18.5, w: 104 },
   { name: 'owlery', x: 33, y: 10, w: 80 },
@@ -297,12 +300,24 @@ const LANDSCAPE: Placed[] = [
   { name: 'flowerBorderM', x: 47.5, y: 83.8, w: 66 },
   { name: 'flowerBorderM', x: 54.5, y: 83.8, w: 66 },
   { name: 'flowerBorderM', x: 61, y: 83.8, w: 66 },
-  { name: 'roseArch', x: 34, y: 85.6, w: 58 },
+  { name: 'roseArch', x: 34 - PATH_HALF - 1.6, y: 85.4, w: 54 },
+  { name: 'roseArch', x: 34 + PATH_HALF + 1.6, y: 85.4, w: 54 },
   // Pelouse avant gauche : un coin de verger, un feu de veillée
   { name: 'grove', x: 9, y: 90, w: 116 },
   { name: 'oak', x: 18.5, y: 88.5, w: 70 },
   { name: 'wildGrass', x: 14, y: 93, w: 40 },
-  { name: 'oak', x: 24.5, y: 92, w: 66 },
+  { name: 'flowerBed', x: 24.5, y: 92, w: 46 },
+  // touches de fleurs autour des lieux
+  { name: 'flowerBed', x: 53.5, y: 86.5, w: 42 },
+  { name: 'bush', x: 61, y: 93.5, w: 30 },
+  { name: 'flowerBed', x: 66.5, y: 93, w: 40 },
+  { name: 'flowerBed', x: 75.5, y: 59.5, w: 42 },
+  { name: 'bush', x: 67.5, y: 51, w: 30 },
+  { name: 'flowerBed', x: 76, y: 33.5, w: 40 },
+  { name: 'flowerBed', x: 41.5, y: 6.5, w: 42 },
+  { name: 'bush', x: 29, y: 15.5, w: 30 },
+  { name: 'flowerBed', x: 12.5, y: 94, w: 42 },
+  { name: 'pumpkins', x: 67.5, y: 44.5, w: 36 },
   ...forestEdge(),
 ];
 
@@ -355,18 +370,25 @@ function Ground({ env }: { env: EnvDef }) {
   const yard: Outdoor[] = [];
   for (const l of courtyardLamps()) yard.push({ name: 'lamp', x: l.x, y: l.y, w: 22 });
   yard.push(
-    { name: 'statue', x: pathX - 5.5, y: y1 + 3.4, w: 40 },
-    { name: 'hedge', x: pathX - 3.4, y: y1 + 7, w: 40 },
-    { name: 'hedge', x: pathX - 3.4, y: y1 + 10, w: 40 },
-    { name: 'flowerBed', x: pathX + 12, y: y1 + 7, w: 44 },
-    { name: 'parkBench', x: pathX + 3.6, y: y1 + 9.5, w: 34 },
-    { name: 'flowerBed', x: pathX - 3.6, y: gateY - 3.5, w: 36 },
-    { name: 'flowerBed', x: pathX + 3.6, y: gateY - 3.5, w: 36 },
-    { name: 'owlPost', x: pathX + 3, y: gateY - 0.8, w: 22 },
-    { name: 'signpost', x: pathX - 3, y: gateY - 1.2, w: 28 },
-    { name: 'hedge', x: pathX - 5.5, y: gateY - 0.5, w: 40 },
-    { name: 'hedge', x: pathX + 5.5, y: gateY - 0.5, w: 40 },
+    { name: 'statue', x: pathX - PATH_HALF - 4, y: y1 + 3.4, w: 44 },
+    { name: 'statue', x: pathX + PATH_HALF + 4, y: y1 + 3.4, w: 44 },
+    { name: 'parkBench', x: pathX - PATH_HALF - 2.4, y: y1 + 7.5, w: 34 },
+    { name: 'parkBench', x: pathX + PATH_HALF + 2.4, y: y1 + 7.5, w: 34 },
+    { name: 'flowerBed', x: pathX + PATH_HALF + 9, y: y1 + 7, w: 46 },
+    { name: 'flowerBed', x: pathX - PATH_HALF - 3, y: gateY - 3.5, w: 40 },
+    { name: 'flowerBed', x: pathX + PATH_HALF + 3, y: gateY - 3.5, w: 40 },
+    { name: 'owlPost', x: pathX + PATH_HALF + 2.2, y: gateY - 0.8, w: 22 },
+    { name: 'signpost', x: pathX - PATH_HALF - 2.2, y: gateY - 1.2, w: 28 },
+    { name: 'hedge', x: pathX - PATH_HALF - 5, y: gateY - 0.5, w: 46 },
+    { name: 'hedge', x: pathX + PATH_HALF + 5, y: gateY - 0.5, w: 46 },
   );
+  // bordures fleuries le long de la grande allée
+  for (let y = y1 + 2.5; y < gateY - 5; y += 3.4) {
+    yard.push(
+      { name: 'flowerBorder', x: pathX - PATH_HALF - 0.9, y, w: 52 },
+      { name: 'flowerBorder', x: pathX + PATH_HALF + 0.9, y: y + 1.7, w: 52 },
+    );
+  }
   const yardEls = yard
     .filter((o) => isManor || !['oak', 'pine', 'bush', 'pumpkins'].includes(o.name))
     .sort((a, b) => a.x + a.y - (b.x + b.y))
@@ -408,20 +430,103 @@ function Ground({ env }: { env: EnvDef }) {
       {/* Allée pavée en « L » : du couloir de l'Accueil jusqu'au portail */}
       <TexFloor
         id="pathA"
-        gx={pathX - 1.1}
+        gx={pathX - PATH_HALF}
         gy={y1}
-        w={2.2}
+        w={2 * PATH_HALF}
         h={gateY + 1.1 - y1}
         tex="stone"
         tile={2}
         tint={env.path}
         tintOpacity={tinted ? 0.4 : 0}
       />
+      {/* bordures de pierre de la grande allée */}
+      <Polygon
+        points={floorPoly(pathX - PATH_HALF - 0.25, y1, 0.25, gateY + 1.1 - y1)}
+        fill="#7C7262"
+      />
+      <Polygon points={floorPoly(pathX + PATH_HALF, y1, 0.25, gateY + 1.1 - y1)} fill="#7C7262" />
       <ExamCorridor env={env} />
       <Landscape env={env} front={false} />
       {yardEls}
       <Fountain p={iso(fountainPoint().x, fountainPoint().y)} />
-      <Sprite name="gate" p={iso(gateX, gateY + 0.9)} width={100} lift={8} />
+      <Sprite name="gate" p={iso(gateX, gateY + 1.2)} width={190} lift={14} />
+    </G>
+  );
+}
+
+/**
+ * Grand jardin sur plusieurs parcelles (le couloir entre elles devient l'allée centrale,
+ * dans le prolongement du couloir de la Salle des Examens).
+ */
+function BigGarden({ px, py, span, env }: { px: number; py: number; span: number; env: EnvDef }) {
+  const o = plotOrigin(px, py);
+  const W = span * S + (span - 1) * PLOT.gap;
+  const k = `big-${px}-${py}`;
+  const cx = o.x + W / 2;
+  const cy = o.y + S / 2;
+  const at = (x: number, y: number) => iso(o.x + x, o.y + y);
+  const trees = env.deco === 'tree';
+  const tinted = env.id !== 'manor';
+  const placed: { name: SpriteName; x: number; y: number; w: number }[] = [
+    // bordures de haies au fond
+    { name: 'hedgeM', x: 3, y: 0.8, w: 46 },
+    { name: 'hedgeM', x: 7.5, y: 0.8, w: 46 },
+    { name: 'hedgeM', x: W - 7.5, y: 0.8, w: 46 },
+    { name: 'hedgeM', x: W - 3, y: 0.8, w: 46 },
+    // arbres dans les coins
+    { name: trees ? 'oak' : 'flowerBed', x: 2, y: 2.4, w: trees ? 70 : 40 },
+    { name: trees ? 'oak' : 'flowerBed', x: W - 2, y: 2.4, w: trees ? 66 : 40 },
+    { name: trees ? 'grove' : 'flowerBed', x: 2.4, y: S - 2, w: trees ? 104 : 40 },
+    { name: trees ? 'swingOak' : 'flowerBed', x: W - 2.4, y: S - 2, w: trees ? 92 : 40 },
+    // massifs le long de l'allée centrale
+    { name: 'flowerBorder', x: cx - 2.4, y: 2.4, w: 60 },
+    { name: 'flowerBorder', x: cx + 2.4, y: 2.4, w: 60 },
+    { name: 'flowerBorder', x: cx - 2.4, y: S - 2.4, w: 60 },
+    { name: 'flowerBorder', x: cx + 2.4, y: S - 2.4, w: 60 },
+    // parterres de chaque côté de l'allée transversale
+    { name: 'flowerBed', x: 6, y: cy - o.y - 2.2, w: 46 },
+    { name: 'flowerBed', x: W - 6, y: cy - o.y - 2.2, w: 46 },
+    { name: 'parkBench', x: 6.2, y: cy - o.y + 2.2, w: 34 },
+    { name: 'parkBench', x: W - 6.2, y: cy - o.y + 2.2, w: 34 },
+    { name: 'wildGrass', x: 3.6, y: cy - o.y + 2.6, w: 36 },
+    { name: 'wildGrass', x: W - 3.6, y: cy - o.y + 2.6, w: 36 },
+    // arches de roses à l'entrée de l'allée transversale
+    { name: 'roseArch', x: 1.2, y: S / 2, w: 50 },
+    { name: 'roseArch', x: W - 1.2, y: S / 2, w: 50 },
+  ];
+  placed.sort((a, b) => a.x + a.y - (b.x + b.y));
+  const c = iso(cx, cy);
+  return (
+    <G>
+      <TexFloor
+        id={`garden-${k}`}
+        gx={o.x}
+        gy={o.y}
+        w={W}
+        h={S}
+        tex="grass"
+        tile={4}
+        tint={env.groundAlt}
+        tintOpacity={tinted ? 0.55 : 0}
+      />
+      {/* allée centrale (prolonge le couloir) et allée transversale */}
+      <TexFloor
+        id={`gpathC-${k}`}
+        gx={cx - 1.1}
+        gy={o.y - PLOT.gap / 2}
+        w={2.2}
+        h={S + PLOT.gap}
+        tex="stone"
+        tile={2}
+      />
+      <TexFloor id={`gpathT-${k}`} gx={o.x} gy={cy - 0.6} w={W} h={1.2} tex="stone" tile={2} />
+      {/* rond-point central avec vasque */}
+      <Ellipse cx={c.x} cy={c.y} rx={46} ry={23} fill="#B8AE9C" />
+      <Ellipse cx={c.x} cy={c.y} rx={38} ry={19} fill="#7DA35C" />
+      {placed.map((d, i) => (
+        <Decor key={i} name={d.name} p={at(d.x, d.y)} width={d.w} />
+      ))}
+      <Decor name="birdbath" p={c} width={28} />
     </G>
   );
 }
@@ -654,7 +759,7 @@ function FrontLips({
   door: 'x' | 'y';
 }) {
   const c = '#8A7F72';
-  const gap = 0.75;
+  const gap = door === 'y' ? 3.2 : 0.75;
   if (door === 'y') {
     return (
       <G>
@@ -678,25 +783,28 @@ function Porch({ ox, oy, w, h }: { ox: number; oy: number; w: number; h: number 
   const cx = ox + w / 2;
   const y = oy + h;
   const stone = '#B8AE9C';
-  const top = 46;
-  const a = iso(cx - 1.6, y + 0.9);
-  const b = iso(cx + 1.6, y + 0.9);
+  const top = 56;
+  const half = 3.6;
+  const a = iso(cx - half, y + 1.1);
+  const b = iso(cx + half, y + 1.1);
+  const apex = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 - top - 40 };
   return (
     <G>
-      {/* marches */}
-      <Box gx={cx - 1.9} gy={y + 0.1} w={3.8} d={1.6} h={3} color="#9C9384" />
-      <Box gx={cx - 1.7} gy={y + 0.1} w={3.4} d={1.1} h={6} color="#A89F8F" />
-      {/* colonnes */}
-      {[-1.5, -0.6, 0.6, 1.5].map((dx) => (
-        <Box key={dx} gx={cx + dx - 0.15} gy={y + 0.75} w={0.3} d={0.3} h={top} color={stone} />
+      {/* grand perron à trois marches */}
+      <Box gx={cx - half - 0.6} gy={y + 0.1} w={2 * half + 1.2} d={2.4} h={3} color="#9C9384" />
+      <Box gx={cx - half - 0.3} gy={y + 0.1} w={2 * half + 0.6} d={1.8} h={6} color="#A89F8F" />
+      <Box gx={cx - half} gy={y + 0.1} w={2 * half} d={1.3} h={9} color="#B3AA99" />
+      {/* six colonnes */}
+      {[-3.3, -2.0, -0.7, 0.7, 2.0, 3.3].map((dx) => (
+        <Box key={dx} gx={cx + dx - 0.2} gy={y + 0.95} w={0.4} d={0.4} h={top} color={stone} />
       ))}
       {/* entablement et fronton */}
-      <Box gx={cx - 1.8} gy={y + 0.6} w={3.6} d={0.55} h={6} color="#A39883" />
+      <Box gx={cx - half - 0.2} gy={y + 0.7} w={2 * half + 0.4} d={0.7} h={8} color="#A39883" />
       <Polygon
         points={poly([
-          lift(iso(cx - 1.8, y + 1.15), top + 6),
-          lift(iso(cx + 1.8, y + 1.15), top + 6),
-          { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 - top - 26 },
+          lift(iso(cx - half - 0.2, y + 1.4), top + 8),
+          lift(iso(cx + half + 0.2, y + 1.4), top + 8),
+          apex,
         ])}
         fill="#C9BFAD"
         stroke="#7C7262"
@@ -704,11 +812,20 @@ function Porch({ ox, oy, w, h }: { ox: number; oy: number; w: number; h: number 
       />
       <Polygon
         points={poly([
-          lift(iso(cx - 1.8, y + 0.6), top + 6),
-          lift(iso(cx - 1.8, y + 1.15), top + 6),
-          { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 - top - 26 },
+          lift(iso(cx - half - 0.2, y + 0.7), top + 8),
+          lift(iso(cx - half - 0.2, y + 1.4), top + 8),
+          apex,
         ])}
         fill="#A89E8B"
+      />
+      {/* médaillon au centre du fronton */}
+      <Circle
+        cx={apex.x + (a.x - b.x) * 0.0}
+        cy={apex.y + 22}
+        r={6}
+        fill="#8C7A5A"
+        stroke="#5A4A32"
+        strokeWidth={1}
       />
     </G>
   );
@@ -908,7 +1025,15 @@ function MapArtBase({ rooms, plots, env: envIndex }: Props) {
       });
   }
   GARDENS.forEach((g, i) =>
-    items.push({ order: g.px + g.py, el: <Garden key={`g${i}`} px={g.px} py={g.py} env={env} /> }),
+    items.push({
+      order: g.px + g.py,
+      el:
+        g.spanX && g.spanX > 1 ? (
+          <BigGarden key={`g${i}`} px={g.px} py={g.py} span={g.spanX} env={env} />
+        ) : (
+          <Garden key={`g${i}`} px={g.px} py={g.py} env={env} />
+        ),
+    }),
   );
   items.sort((a, b) => a.order - b.order);
   return (

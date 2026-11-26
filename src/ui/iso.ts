@@ -253,14 +253,14 @@ export function courtyardLamps(): Pt[] {
   const { pathX, schoolFrontY, gateY } = courtyard();
   const out: Pt[] = [];
   for (let y = schoolFrontY + 2; y < gateY - 1.5; y += 3.4)
-    out.push({ x: pathX - 1.7, y }, { x: pathX + 1.7, y });
+    out.push({ x: pathX - 3.5, y }, { x: pathX + 3.5, y });
   return out;
 }
 
 /** Fontaine de la cour d'entrée (grille absolue). */
 export function fountainPoint(): Pt {
   const { pathX, schoolFrontY } = courtyard();
-  return { x: pathX + 7.5, y: schoolFrontY + 6.5 };
+  return { x: pathX + 11, y: schoolFrontY + 7 };
 }
 
 /** File d'attente d'un lieu : le long de l'allée pour l'entrée, sinon dans le couloir. */

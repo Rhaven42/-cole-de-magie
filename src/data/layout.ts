@@ -62,11 +62,11 @@ export const PLOTS: Record<string, PlotDef> = {
 };
 
 /** Parcelles de jardin (décor). */
-export const GARDENS: { px: number; py: number }[] = [
+/** Jardins : petits jardins de chaque côté de l'Accueil, grand jardin au fond (2 parcelles). */
+export const GARDENS: { px: number; py: number; spanX?: number }[] = [
   { px: 0, py: 4 },
   { px: 4, py: 4 },
-  { px: 0, py: 0 },
-  { px: 1, py: 0 },
+  { px: 0, py: 0, spanX: 2 },
 ];
 
 /** Décor d'une salle : sprite posé à une position de grille relative à la salle. */
