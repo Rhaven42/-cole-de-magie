@@ -190,10 +190,16 @@
       "role": "Duel"
     },
     {
-      "asset_id": "65bcc7ab-db74-4102-9c13-c006a409b73f",
+      "asset_id": "851b7839-8abf-4759-aad8-618292e385e2",
       "name": "Alva",
       "file": "portraits/alva.png",
       "role": "Astronomie"
+    },
+    {
+      "asset_id": "46b6f443-4627-4994-8249-16f0ca7b9b03",
+      "name": "Dolohov",
+      "file": "portraits/dolohov.png",
+      "role": "Potions"
     }
   ]
 }
