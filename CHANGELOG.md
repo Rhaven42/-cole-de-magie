@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.9.1 — L'Accueil devant, les cours derrière
+
+- Rangée avant réservée au **grand Accueil** (3 parcelles, centré) entre deux jardins ; tous les cours sont derrière lui. Le Salon des Destinées est juste derrière l'Accueil, dans son axe, et les cours suivent l'ordre des années de l'avant vers le fond. La Grande Salle et les dortoirs sont à droite.
+- **Salle des Examens agrandie** (2 parcelles, 12 tables en 2 rangées, statue, chandeliers).
+- Jardins (allées, massifs, banc, vasque, chêne) à côté de l'Accueil et au fond.
+
 ## 0.9.0 — Grande entrée, examen final, école vivante
 
 - **Grande entrée** : le portail est à l'avant de la carte ; une allée droite, bordée de lampadaires, de haies et de massifs, mène au **grand Accueil** (2 parcelles), qui a un **porche à colonnes et fronton**. La cour d'entrée accueille une fontaine, une statue, des bancs, un puits, des arbres et un potager.

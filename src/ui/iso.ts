@@ -83,7 +83,9 @@ export function hitPlot(g: Pt): string | null {
 /** Position (grille, relative à la salle) de chaque place selon le type de lieu. */
 export function seatSpot(kind: string, i: number): Pt {
   // Grand Accueil (2 parcelles) : guichets alignés au centre, face à l'entrée.
-  if (kind === 'reception') return { x: 7.6 + i * 1.4, y: 5.6 };
+  if (kind === 'reception') return { x: roomSize('reception').w / 2 - 3.5 + i * 1.4, y: 5.6 };
+  // Grande Salle des Examens : tables en 2 rangées de 6, face à l'examinateur.
+  if (kind === 'exam') return { x: 3.4 + (i % 6) * 3.0, y: 2.6 + Math.floor(i / 6) * 2.8 };
   const p = baseSeatSpot(kind, i);
   return { x: p.x * ROOM_SCALE, y: p.y * ROOM_SCALE };
 }
@@ -156,7 +158,7 @@ export function doorOf(id: string): { inside: Pt; outside: Pt; axis: 'x' | 'y' }
 function freeCorridorX(): number[] {
   return CORRIDOR_X.filter((x) =>
     Object.entries(PLOTS).every(([id, p]) => {
-      if ((p.spanX ?? 1) < 2) return true;
+      if ((p.spanX ?? 1) < 2 || p.py < 0) return true;
       const o = plotOrigin(p.px, p.py);
       return !(x > o.x && x < o.x + roomSize(id).w);
     }),

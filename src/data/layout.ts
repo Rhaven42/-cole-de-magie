@@ -1,9 +1,9 @@
 /**
  * Plan isométrique de l'école (vue de dessus 3/4).
- * Organisation : entrée à l'avant (Accueil, Salon des Destinées, Grande Salle au centre),
- * aile des cours à gauche rangée par année (de l'avant vers le fond),
- * aile des dortoirs à droite et au fond. Grand Accueil sur 2 parcelles avec porche,
- * relié au portail par une allée droite dans la cour d'entrée (fontaine, jardin).
+ * Organisation : à l'avant, seul, le grand Accueil (3 parcelles, porche) entre deux jardins,
+ * relié au portail par une allée droite. Derrière lui : le Salon des Destinées (dans l'axe),
+ * les cours rangés par année de l'avant vers le fond, la Grande Salle et l'aile des dortoirs
+ * à droite. Tout en haut, la grande Salle des Examens au bout de son couloir.
  * Grille de « parcelles » : chaque lieu occupe une parcelle carrée.
  * px/py = coordonnées de parcelle ; (4,3) est le coin avant (entrée).
  */
@@ -16,7 +16,7 @@ export const ISO = {
 };
 
 /** front : profondeur de la cour d'entrée devant l'école (portail, allée, jardin). */
-export const PLOT = { size: 10, gap: 2, cols: 5, rows: 4, margin: 5, front: 13, top: 18 };
+export const PLOT = { size: 10, gap: 2, cols: 5, rows: 5, margin: 5, front: 13, top: 18 };
 
 /** Échelle des aménagements intérieurs (conçus pour une salle de 8 cases). */
 export const ROOM_SCALE = PLOT.size / 8;
@@ -38,31 +38,36 @@ export interface PlotDef {
 
 /** Emplacement de chaque lieu (id de Station) ou décor. */
 export const PLOTS: Record<string, PlotDef> = {
-  reception: { px: 3, py: 3, spanX: 2, door: 'y', floor: '#C9A27A', floorAlt: '#BD946B' },
+  reception: { px: 1, py: 4, spanX: 3, door: 'y', floor: '#C9A27A', floorAlt: '#BD946B' },
   sorting: { px: 2, py: 3, floor: '#5B4A86', floorAlt: '#52417A' },
-  hall: { px: 4, py: 2, floor: '#A2553C', floorAlt: '#954C35' },
+  hall: { px: 4, py: 3, floor: '#A2553C', floorAlt: '#954C35' },
   'course-potions': { px: 1, py: 3, floor: '#4E7F6A', floorAlt: '#46735F' },
   'course-botany': { px: 0, py: 3, floor: '#6E9A4B', floorAlt: '#638C43' },
-  'course-history': { px: 0, py: 2, floor: '#9C6B44', floorAlt: '#8F613D' },
-  'course-charms': { px: 3, py: 2, floor: '#4D78A8', floorAlt: '#456D99' },
-  'course-astronomy': { px: 2, py: 2, floor: '#33406E', floorAlt: '#2C3862' },
-  'course-flying': { px: 1, py: 2, floor: '#7FB069', floorAlt: '#75A35F' },
-  'course-divination': { px: 0, py: 1, floor: '#7E4A86', floorAlt: '#72427A' },
-  'course-transfiguration': { px: 2, py: 1, floor: '#5E7C82', floorAlt: '#557177' },
-  'course-defense': { px: 0, py: 0, floor: '#6B3A3A', floorAlt: '#603434' },
-  'course-duel': { px: 1, py: 1, floor: '#7A4B3A', floorAlt: '#6C4233' },
+  'course-history': { px: 3, py: 3, floor: '#9C6B44', floorAlt: '#8F613D' },
+  'course-charms': { px: 0, py: 2, floor: '#4D78A8', floorAlt: '#456D99' },
+  'course-astronomy': { px: 1, py: 2, floor: '#33406E', floorAlt: '#2C3862' },
+  'course-flying': { px: 2, py: 2, floor: '#7FB069', floorAlt: '#75A35F' },
+  'course-divination': { px: 3, py: 2, floor: '#7E4A86', floorAlt: '#72427A' },
+  'course-transfiguration': { px: 1, py: 1, floor: '#5E7C82', floorAlt: '#557177' },
+  'course-defense': { px: 2, py: 1, floor: '#6B3A3A', floorAlt: '#603434' },
+  'course-duel': { px: 0, py: 1, floor: '#7A4B3A', floorAlt: '#6C4233' },
   // Tout en haut : la Salle des Examens, au bout d'un long couloir (centrée sur un axe de couloir).
-  exam: { px: 0, py: -1, shiftX: 6, shiftY: -6, door: 'y', floor: '#6E6250', floorAlt: '#625746' },
-  'dorm-0': { px: 4, py: 1, floor: '#4A5A8C', floorAlt: '#42517F' },
-  'dorm-1': { px: 3, py: 1, floor: '#4A5A8C', floorAlt: '#42517F' },
-  'dorm-2': { px: 4, py: 0, floor: '#4A5A8C', floorAlt: '#42517F' },
-  'dorm-3': { px: 3, py: 0, floor: '#4A5A8C', floorAlt: '#42517F' },
-  'dorm-4': { px: 2, py: 0, floor: '#4A5A8C', floorAlt: '#42517F' },
-  'dorm-5': { px: 1, py: 0, floor: '#4A5A8C', floorAlt: '#42517F' },
+  exam: { px: 0, py: -1, shiftY: -6, spanX: 2, door: 'y', floor: '#6E6250', floorAlt: '#625746' },
+  'dorm-0': { px: 4, py: 2, floor: '#4A5A8C', floorAlt: '#42517F' },
+  'dorm-1': { px: 4, py: 1, floor: '#4A5A8C', floorAlt: '#42517F' },
+  'dorm-2': { px: 3, py: 1, floor: '#4A5A8C', floorAlt: '#42517F' },
+  'dorm-3': { px: 4, py: 0, floor: '#4A5A8C', floorAlt: '#42517F' },
+  'dorm-4': { px: 3, py: 0, floor: '#4A5A8C', floorAlt: '#42517F' },
+  'dorm-5': { px: 2, py: 0, floor: '#4A5A8C', floorAlt: '#42517F' },
 };
 
 /** Parcelles de jardin (décor). */
-export const GARDENS: { px: number; py: number }[] = [];
+export const GARDENS: { px: number; py: number }[] = [
+  { px: 0, py: 4 },
+  { px: 4, py: 4 },
+  { px: 0, py: 0 },
+  { px: 1, py: 0 },
+];
 
 /** Décor d'une salle : sprite posé à une position de grille relative à la salle. */
 export interface DecorItem {
@@ -151,28 +156,36 @@ export const ROOM_DECOR: Record<string, DecorItem[]> = {
     { sprite: 'bookshelf', x: 0.6, y: 1.5, width: 30 },
     { sprite: 'bookshelf', x: 0.6, y: 3.6, width: 30 },
     { sprite: 'clock', x: 0.6, y: 6.2, width: 22 },
-    { sprite: 'noticeBoard', x: 3.5, y: 0.7, width: 30 },
-    { sprite: 'bookshelf', x: 6.0, y: 0.5, width: 30 },
-    { sprite: 'statue', x: 11, y: 1.2, width: 34 },
-    { sprite: 'bookshelf', x: 16.0, y: 0.5, width: 30 },
-    { sprite: 'jarShelf', x: 18.5, y: 0.5, width: 30 },
-    { sprite: 'coatStand', x: 21.0, y: 1.0, width: 24 },
-    { sprite: 'armchair', x: 3.0, y: 8.0, width: 32 },
-    { sprite: 'armchair', x: 5.0, y: 8.6, width: 32 },
-    { sprite: 'planterTree', x: 8.2, y: 9.0, width: 30 },
-    { sprite: 'planterTree', x: 13.8, y: 9.0, width: 30 },
-    { sprite: 'parkBench', x: 17.5, y: 8.4, width: 32 },
-    { sprite: 'candelabra', x: 21.0, y: 8.8, width: 22 },
-    { sprite: 'globe', x: 21.0, y: 5.0, width: 26 },
     { sprite: 'candelabra', x: 1.2, y: 9.0, width: 22 },
+    { sprite: 'noticeBoard', x: 4.0, y: 0.7, width: 30 },
+    { sprite: 'bookshelf', x: 7.5, y: 0.5, width: 30 },
+    { sprite: 'planterTree', x: 10.5, y: 0.8, width: 30 },
+    { sprite: 'statue', x: 17.0, y: 1.0, width: 36 },
+    { sprite: 'planterTree', x: 23.5, y: 0.8, width: 30 },
+    { sprite: 'bookshelf', x: 26.5, y: 0.5, width: 30 },
+    { sprite: 'jarShelf', x: 29.0, y: 0.5, width: 30 },
+    { sprite: 'coatStand', x: 32.8, y: 1.0, width: 24 },
+    { sprite: 'globe', x: 32.8, y: 5.0, width: 26 },
+    { sprite: 'candelabra', x: 32.8, y: 8.8, width: 22 },
+    { sprite: 'armchair', x: 3.0, y: 8.0, width: 32 },
+    { sprite: 'armchair', x: 5.2, y: 8.6, width: 32 },
+    { sprite: 'planterTree', x: 13.8, y: 9.0, width: 30 },
+    { sprite: 'planterTree', x: 20.2, y: 9.0, width: 30 },
+    { sprite: 'parkBench', x: 25.5, y: 8.4, width: 32 },
+    { sprite: 'armchair', x: 29.0, y: 8.2, width: 32 },
+    { sprite: 'books', x: 31.0, y: 8.9, width: 26 },
   ],
   exam: [
-    { sprite: 'clock', x: 0.6, y: 1.2, width: 22 },
-    { sprite: 'bookshelf', x: 0.6, y: 6.8, width: 30 },
-    { sprite: 'candelabra', x: 7.3, y: 0.8, width: 22 },
-    { sprite: 'candelabra', x: 7.3, y: 7.2, width: 22 },
-    { sprite: 'books', x: 1.2, y: 7.4, width: 26 },
-    { sprite: 'owl', x: 3.0, y: 0.6, width: 20 },
+    { sprite: 'clock', x: 0.6, y: 1.0, width: 22 },
+    { sprite: 'bookshelf', x: 0.6, y: 8.6, width: 30 },
+    { sprite: 'candelabra', x: 6.0, y: 0.7, width: 22 },
+    { sprite: 'owl', x: 9.0, y: 0.6, width: 20 },
+    { sprite: 'statue', x: 12.0, y: 0.9, width: 34 },
+    { sprite: 'candelabra', x: 16.0, y: 0.7, width: 22 },
+    { sprite: 'noticeBoard', x: 19.0, y: 0.7, width: 30 },
+    { sprite: 'candelabra', x: 21.0, y: 4.5, width: 22 },
+    { sprite: 'books', x: 21.0, y: 9.0, width: 26 },
+    { sprite: 'chest', x: 1.4, y: 9.2, width: 26 },
   ],
   sorting: [
     { sprite: 'candelabra', x: 1.0, y: 1.0, width: 22 },

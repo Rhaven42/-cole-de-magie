@@ -91,3 +91,5 @@ Temps réel = `base × 0,96^(niv−1) × (1 − 0,05·(niveauPlace−1)) × (1 �
 - **Vie** (`src/ui/Ambient.tsx`) : animations natives en boucle, purement visuelles, qui ne touchent pas à la simulation.
 - **Jour/nuit** (`src/data/daynight.ts`) : la phase dépend du temps de jeu, donc reste déterministe ; bonus de nuit de l'Astronomie.
 - Crédits SpriteCook restants : 672 (planches « extérieur » et « élèves en civil » ajoutées).
+
+- **Plan 0.9.1** : 5 rangées de parcelles. La rangée avant ne contient que l'Accueil (`spanX: 3`), entre deux jardins. La Salle des Examens fait 2 parcelles ; `freeCorridorX()` ignore les grandes salles hors de l'école (py < 0).

@@ -317,8 +317,9 @@ function Ground({ env }: { env: EnvDef }) {
 
 function Garden({ px, py, env }: { px: number; py: number; env: EnvDef }) {
   const o = plotOrigin(px, py);
-  const c = iso(o.x + S / 2, o.y + S / 2);
   const k = `${px}-${py}`;
+  const at = (x: number, y: number) => iso(o.x + x, o.y + y);
+  const trees = env.deco === 'tree';
   return (
     <G>
       <TexFloor
@@ -350,15 +351,17 @@ function Garden({ px, py, env }: { px: number; py: number; env: EnvDef }) {
         tex="stone"
         tile={2}
       />
-      <Ellipse cx={c.x} cy={c.y + 4} rx={38} ry={19} fill="#000" opacity={0.2} />
-      <Ellipse cx={c.x} cy={c.y} rx={34} ry={17} fill="#9AA5A8" />
-      <Ellipse cx={c.x} cy={c.y - 2} rx={28} ry={13} fill="#5FA9CF" />
-      <Ellipse cx={c.x - 6} cy={c.y - 4} rx={10} ry={4} fill="#BFE6FF" opacity={0.6} />
-      <Line x1={c.x} y1={c.y - 4} x2={c.x} y2={c.y - 18} stroke="#8A9497" strokeWidth={5} />
-      <Ellipse cx={c.x} cy={c.y - 18} rx={8} ry={3.5} fill="#9AA5A8" />
-      <Decor name="owl" p={iso(o.x + 1.2 * R, o.y + 6.8 * R)} width={20} />
-      <Deco p={iso(o.x + 1.3 * R, o.y + 1.3 * R)} env={env} />
-      <Deco p={iso(o.x + 6.6 * R, o.y + 1.4 * R)} s={0.9} env={env} />
+      {trees ? (
+        <Decor name="oak" p={at(2.2, 2.2)} width={60} />
+      ) : (
+        <Deco p={at(2.2, 2.2)} env={env} />
+      )}
+      <Decor name="flowerBed" p={at(7.6, 2.4)} width={40} />
+      <Decor name="hedge" p={at(2.4, 7.6)} width={40} />
+      <Decor name="birdbath" p={at(S / 2, S / 2)} width={22} />
+      <Decor name="parkBench" p={at(6.2, 4.0)} width={32} />
+      <Decor name="flowerBed" p={at(7.6, 7.6)} width={40} />
+      {trees ? <Decor name="bush" p={at(3.8, 4.0)} width={26} /> : null}
     </G>
   );
 }
