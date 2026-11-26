@@ -93,3 +93,5 @@ Temps réel = `base × 0,96^(niv−1) × (1 − 0,05·(niveauPlace−1)) × (1 �
 - Crédits SpriteCook restants : 672 (planches « extérieur » et « élèves en civil » ajoutées).
 
 - **Plan 0.9.1** : 5 rangées de parcelles. La rangée avant ne contient que l'Accueil (`spanX: 3`), entre deux jardins. La Salle des Examens fait 2 parcelles ; `freeCorridorX()` ignore les grandes salles hors de l'école (py < 0).
+
+- **Professeur·es (mise à jour)** : Divination → Rhaven Morvard ; Histoire de la magie → Morganvar ; Astronomie → Alva (auparavant Balais volants, qui n'a plus de professeur·e). Portraits pixel art dans `src/assets/portraits/`.

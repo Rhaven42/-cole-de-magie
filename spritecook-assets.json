@@ -175,13 +175,13 @@
       "asset_id": "742e1f6d-6321-4938-a131-f99839984f6b",
       "name": "Rhaven Morvard",
       "file": "portraits/rhaven.png",
-      "role": "professeure (matière à choisir)"
+      "role": "Divination"
     },
     {
       "asset_id": "ad3bfa53-7d3a-4b4d-9678-bd279519b41e",
       "name": "Morganvar",
       "file": "portraits/morganvar.png",
-      "role": "à définir"
+      "role": "Histoire de la magie"
     }
   ]
 }

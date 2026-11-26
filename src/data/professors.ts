@@ -18,9 +18,11 @@ export const NAMED_PROFESSORS: Partial<Record<CourseId, ProfessorName>> = {
   transfiguration: { firstName: 'Tenarius', lastName: 'D’Arvay', gender: 'm' },
   potions: { firstName: null, lastName: 'Dolohov' },
   botany: { firstName: 'Solomon', lastName: 'Tregahl', gender: 'm' },
-  flying: { firstName: 'Alva', lastName: null, gender: 'f' },
-  divination: { firstName: null, lastName: null },
+  astronomy: { firstName: 'Alva', lastName: null, gender: 'f' },
+  divination: { firstName: 'Rhaven', lastName: 'Morvard', gender: 'f' },
+  history: { firstName: 'Morganvar', lastName: null, gender: 'm' },
   duel: { firstName: 'Delan', lastName: 'Lanatre', gender: 'm' },
+  // Balais volants : professeur·e à venir.
 };
 
 export function professorLabel(p: ProfessorName): string {
