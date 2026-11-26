@@ -1,6 +1,7 @@
 import { StatusBar } from 'expo-status-bar';
 import { useState } from 'react';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { HousesScreen } from './src/screens/HousesScreen';
 import { RoomSheet } from './src/screens/RoomSheet';
@@ -47,12 +48,14 @@ function Game() {
 
 export default function App() {
   return (
-    <SafeAreaProvider>
-      <SafeAreaView style={styles.root} edges={['top', 'bottom']}>
-        <StatusBar style="light" />
-        <Game />
-      </SafeAreaView>
-    </SafeAreaProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <SafeAreaProvider>
+        <SafeAreaView style={styles.root} edges={['top', 'bottom']}>
+          <StatusBar style="light" />
+          <Game />
+        </SafeAreaView>
+      </SafeAreaProvider>
+    </GestureHandlerRootView>
   );
 }
 

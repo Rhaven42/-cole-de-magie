@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { COURSES } from '../data/courses';
+import { COURSES, UNLOCKED_COURSES, type CourseId } from '../data/courses';
 import { ECONOMY } from '../data/economy';
 import { HOUSE_IDS, HOUSES } from '../data/houses';
 import { SERVICES, type UpgradeTrack } from '../data/stations';
 import {
   addSeatCost,
+  courseCost,
+  dormCost,
   comfortOf,
   courseReward,
   estimatedWait,
@@ -61,6 +63,7 @@ export function RoomSheet() {
   const store = useGame.getState();
   const [seatSel, setSeatSel] = useState<number | null>(null);
   const st = id ? game.stations[id] : undefined;
+  if (id && !st) return <BuildSheet id={id} />;
   if (!st) return null;
 
   const coins = game.coins;
@@ -272,3 +275,58 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
 });
+
+/** Parcelle vide : construire une salle de cours ou un dortoir. */
+function BuildSheet({ id }: { id: string }) {
+  useTick();
+  const game = useGame((s) => s.game);
+  const store = useGame.getState();
+  const close = () => store.select(null);
+  const isCourse = id.startsWith('course-');
+  const cid = id.slice(7) as CourseId;
+  const def = isCourse ? COURSES[cid] : null;
+  const locked = isCourse && !UNLOCKED_COURSES.includes(cid);
+  const title = def ? `${def.icon} ${t(`course.${cid}`)}` : `🛏️ ${t('shop.newDorm')}`;
+  const buy = () => {
+    const ok = def ? store.buyCourse(cid) : store.buyDorm();
+    if (ok) store.select(id);
+  };
+  return (
+    <Modal visible animationType="slide" transparent onRequestClose={close}>
+      <Pressable style={styles.backdrop} onPress={close} />
+      <View style={styles.sheet}>
+        <View style={styles.head}>
+          <Title style={{ flex: 1 }}>{title}</Title>
+          <Pressable onPress={close} style={styles.close} accessibilityLabel={t('room.close')}>
+            <Text style={{ fontSize: 22 }}>✕</Text>
+          </Pressable>
+        </View>
+        {def ? (
+          <View style={styles.stats}>
+            <Stat label={t('room.seats')} value={String(def.seats)} />
+            <Stat label={t('room.duration')} value={formatDuration(def.duration)} />
+            <Stat label={t('room.reward')} value={`${def.reward} 💰`} />
+            <Stat label="🎓" value={t('shop.yearMin', { n: def.yearMin })} />
+          </View>
+        ) : (
+          <Body style={styles.hint}>
+            4 lits : plus de places de sommeil, et l’école peut accueillir plus d’élèves.
+          </Body>
+        )}
+        {locked ? (
+          <Body style={[styles.hint, { marginBottom: space.xl }]}>🔒 {t('shop.comingSoon')}</Body>
+        ) : (
+          <View style={{ marginBottom: space.xl }}>
+            <BuyButton
+              icon="🔨"
+              label={t('shop.buy')}
+              cost={def ? courseCost(game, cid) : dormCost(game)}
+              coins={game.coins}
+              onPress={buy}
+            />
+          </View>
+        )}
+      </View>
+    </Modal>
+  );
+}
