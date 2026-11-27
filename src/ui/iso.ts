@@ -295,8 +295,47 @@ export function route(from: Anchor, to: Anchor): Pt[] {
     const ok = (y: number) =>
       clearV(c1.x, c1.y, y) && clearV(c2.x, y, c2.y) && clearH(y, c1.x, c2.x);
     const lines = [...CORRIDOR_Y].sort((a, b) => cost(a) - cost(b));
-    const yLine = lines.find(ok) ?? lines[0];
-    pts.push({ x: c1.x, y: yLine }, { x: c2.x, y: yLine });
+    const yLine = lines.find(ok);
+    if (yLine !== undefined) {
+      pts.push({ x: c1.x, y: yLine }, { x: c2.x, y: yLine });
+    } else {
+      // Détour : descendre/monter jusqu'à un couloir, longer, changer d'axe x, puis rejoindre.
+      let best: Pt[] | null = null;
+      let bestLen = Infinity;
+      for (const ya of CORRIDOR_Y)
+        for (const xd of CORRIDOR_X)
+          for (const yb of CORRIDOR_Y) {
+            if (
+              !clearV(c1.x, c1.y, ya) ||
+              !clearH(ya, c1.x, xd) ||
+              !clearV(xd, ya, yb) ||
+              !clearH(yb, xd, c2.x) ||
+              !clearV(c2.x, yb, c2.y)
+            )
+              continue;
+            const len =
+              Math.abs(c1.y - ya) +
+              Math.abs(c1.x - xd) +
+              Math.abs(ya - yb) +
+              Math.abs(xd - c2.x) +
+              Math.abs(yb - c2.y);
+            if (len < bestLen) {
+              bestLen = len;
+              best = [
+                { x: c1.x, y: ya },
+                { x: xd, y: ya },
+                { x: xd, y: yb },
+                { x: c2.x, y: yb },
+              ];
+            }
+          }
+      pts.push(
+        ...(best ?? [
+          { x: c1.x, y: lines[0] },
+          { x: c2.x, y: lines[0] },
+        ]),
+      );
+    }
   }
   pts.push(c2, ...tail, to.g);
   return clean(pts);

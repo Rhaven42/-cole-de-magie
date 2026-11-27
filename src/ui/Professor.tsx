@@ -70,7 +70,7 @@ export function Professor({
     const hall = PLOTS.hall ? roomOrigin(PLOTS.hall) : null;
     const tableG: Pt | null = hall
       ? {
-          x: hall.x + HALL_PROF_X + 1.35,
+          x: hall.x + HALL_PROF_X - 1.1,
           y: hall.y + PROF_TABLE_Y + 0.3 + PROF_SEAT_GAP * (seat + 0.5),
         }
       : null;
@@ -182,7 +182,7 @@ export function Professor({
         {/* Les portraits regardent vers la gauche : miroir pour faire face aux élèves. */}
         <Image
           source={src}
-          style={{ width: w, height: HEIGHT, transform: [{ scaleX: eating ? 1 : -1 }] }}
+          style={{ width: w, height: HEIGHT, transform: [{ scaleX: -1 }] }}
           resizeMode="contain"
         />
       </Animated.View>

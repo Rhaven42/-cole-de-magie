@@ -59,14 +59,15 @@ export const PLOTS: Record<string, PlotDef> = {
     floorAlt: '#52417A',
   },
   // Cantine : grande salle sur 2 parcelles, juste derrière l'Accueil.
-  hall: { px: 2, py: 2, spanX: 2, spanY: 2, floor: '#A2553C', floorAlt: '#954C35' },
+  // Grande Salle (cantine) : en haut à gauche, sur 2 × 2 parcelles.
+  hall: { px: 0, py: 1, spanX: 2, spanY: 2, floor: '#A2553C', floorAlt: '#954C35' },
   // Salle des professeurs (amélioration des profs).
   staff: { px: 2, py: 0, floor: '#6B4E3A', floorAlt: '#5F4433' },
   'course-potions': { px: 1, py: 3, floor: '#4E7F6A', floorAlt: '#46735F' },
-  'course-botany': { px: 0, py: 3, floor: '#6E9A4B', floorAlt: '#638C43' },
+  'course-botany': { px: 0, py: 3, door: 'y', floor: '#6E9A4B', floorAlt: '#638C43' },
   'course-history': { px: 4, py: 3, door: 'y', floor: '#9C6B44', floorAlt: '#8F613D' },
-  'course-charms': { px: 0, py: 2, floor: '#4D78A8', floorAlt: '#456D99' },
-  'course-astronomy': { px: 1, py: 2, floor: '#33406E', floorAlt: '#2C3862' },
+  'course-charms': { px: 0, py: 0, floor: '#4D78A8', floorAlt: '#456D99' },
+  'course-astronomy': { px: 1, py: 0, floor: '#33406E', floorAlt: '#2C3862' },
   // Balais volants : grand terrain en plein air, au fond de l'école (à droite des Examens).
   'course-flying': {
     px: 3,
@@ -79,11 +80,11 @@ export const PLOTS: Record<string, PlotDef> = {
     floorAlt: '#75A35F',
   },
   'course-divination': { px: 3, py: 1, floor: '#7E4A86', floorAlt: '#72427A' },
-  'course-transfiguration': { px: 1, py: 1, floor: '#5E7C82', floorAlt: '#557177' },
+  'course-transfiguration': { px: 3, py: 2, floor: '#5E7C82', floorAlt: '#557177' },
   'course-defense': { px: 2, py: 1, floor: '#6B3A3A', floorAlt: '#603434' },
-  'course-duel': { px: 0, py: 1, floor: '#7A4B3A', floorAlt: '#6C4233' },
+  'course-duel': { px: 2, py: 2, floor: '#7A4B3A', floorAlt: '#6C4233' },
   // Tout en haut : la Salle des Examens, au bout d'un long couloir (centrée sur un axe de couloir).
-  exam: { px: 0, py: -1, shiftY: -6, spanX: 2, door: 'y', floor: '#6E6250', floorAlt: '#625746' },
+  exam: { px: 1, py: -1, shiftY: -6, spanX: 2, door: 'y', floor: '#6E6250', floorAlt: '#625746' },
   // Aile des dortoirs (colonne de droite : portes côté intérieur de l'école).
   'dorm-0': { px: 4, py: 2, door: 'y', floor: '#4A5A8C', floorAlt: '#42517F' },
   'dorm-1': { px: 4, py: 1, door: 'y', floor: '#4A5A8C', floorAlt: '#42517F' },
@@ -93,12 +94,13 @@ export const PLOTS: Record<string, PlotDef> = {
 
 /** Cantine : lignes des 4 tables de Maison (y, en cases), début des tables, table des profs. */
 export const HALL_ROWS = [4.5, 9.5, 14.5, 19.5];
-export const HALL_X0 = 2.2;
+export const HALL_X0 = 5.0;
 /** Longueur des tables des Maisons (cases). */
 export const HALL_TABLE_LEN = 15;
-export const HALL_PROF_X = 20.2;
+/** Table des profs : en travers, au fond (côté mur de gauche), face aux élèves. */
+export const HALL_PROF_X = 2.0;
 /** Table des profs : début (y) et espace par prof. */
-export const PROF_TABLE_Y = 3;
+export const PROF_TABLE_Y = 2.5;
 export const PROF_SEAT_GAP = 1.9;
 
 /** Parcelles de jardin (décor). */
@@ -106,7 +108,8 @@ export const PROF_SEAT_GAP = 1.9;
 export const GARDENS: { px: number; py: number; spanX?: number }[] = [
   { px: 0, py: 4 },
   { px: 4, py: 4 },
-  { px: 0, py: 0, spanX: 2 },
+  // Cour-jardin intérieure, juste derrière l'Accueil.
+  { px: 2, py: 3, spanX: 2 },
 ];
 
 /** Décor d'une salle : sprite posé à une position de grille relative à la salle. */
@@ -128,6 +131,11 @@ const COURSE_COMMON: DecorItem[] = [
   { sprite: 'books', x: 4.6, y: 7.55, width: 24 },
   { sprite: 'planterTree', x: 7.45, y: 6.1, width: 24 },
   { sprite: 'chest', x: 2.6, y: 7.55, width: 24 },
+  // contre les murs : horloge, coin lecture, chandelier, plante
+  { sprite: 'clock', x: 0.45, y: 6.0, width: 20 },
+  { sprite: 'candelabra', x: 7.5, y: 0.5, width: 20 },
+  { sprite: 'roseBush', x: 7.4, y: 7.35, width: 22 },
+  { sprite: 'books', x: 0.6, y: 5.0, width: 18 },
 ];
 
 /** Décorations par type de salle (matière ou lieu). Positions hors des places. */
@@ -151,20 +159,20 @@ export const ROOM_DECOR: Record<string, DecorItem[]> = {
     { sprite: 'planterTree', x: 0.8, y: 7.3, width: 28 },
     { sprite: 'chest', x: 7.4, y: 7.3, width: 26 },
     { sprite: 'candelabra', x: 0.6, y: 0.7, width: 20 },
-    { sprite: 'armchair', x: 4.0, y: 7.6, width: 28 },
+    { sprite: 'armchair', x: 4.0, y: 0.75, width: 28 },
     { sprite: 'books', x: 0.7, y: 4.0, width: 22 },
   ],
   // Positions en cases réelles converties (÷ ROOM_SCALE) : voir `at`.
   hall: [
-    at('candelabra', 0.5, 0.5, 22),
-    at('fireplace', 11.0, 0.7, 50),
+    // Grande cheminée au centre du mur du fond, bougies flottantes, bannières.
+    at('candelabra', 0.6, 0.6, 22),
+    at('jarShelf', 4.0, 0.5, 30),
+    at('jarShelf', 19.6, 0.5, 30),
     at('clock', 23.3, 0.6, 22),
-    at('jarShelf', 6.0, 0.5, 30),
-    at('jarShelf', 16.0, 0.5, 30),
     at('planterTree', 23.3, 23.2, 28),
     at('planterTree', 0.7, 23.2, 28),
-    at('candelabra', 0.5, 12.0, 22),
-    at('candelabra', 23.4, 12.0, 22),
+    at('candelabra', 23.4, 17.5, 22),
+    at('candelabra', 23.4, 6.5, 22),
   ],
   // Accueil : guichets à gauche, coin d'attente, le Chaporacle à droite (zone violette).
   reception: [
@@ -180,8 +188,8 @@ export const ROOM_DECOR: Record<string, DecorItem[]> = {
     at('candelabra', 26.0, 0.7, 22),
     at('globe', 0.8, 3.0, 26),
     at('planterTree', 0.8, 9.1, 28),
-    at('armchair', 3.0, 8.6, 32),
-    at('armchair', 5.4, 9.0, 32),
+    at('armchair', 0.9, 6.2, 32),
+    at('armchair', 0.9, 8.4, 32),
     at('books', 7.6, 9.2, 24),
     at('planterTree', 13.0, 9.1, 28),
     at('planterTree', 25.0, 9.1, 28),
@@ -191,19 +199,21 @@ export const ROOM_DECOR: Record<string, DecorItem[]> = {
   ],
   // Salle des professeurs : coin cheminée, fauteuils, bibliothèques.
   staff: [
-    at('fireplace', 1.0, 4.8, 46),
-    at('armchair', 3.2, 3.2, 32),
-    at('armchair', 3.4, 6.4, 32),
-    at('stool', 4.2, 4.9, 18),
-    at('bookshelf', 4.0, 0.6, 30),
-    at('bookshelf', 6.4, 0.6, 30),
-    at('clock', 8.8, 0.6, 22),
-    at('globe', 8.8, 3.2, 26),
-    at('table', 7.0, 6.0, 60),
+    // Coin cheminée au fond, fauteuils de part et d'autre, bibliothèques sur le mur de gauche.
+    at('fireplace', 5.0, 0.8, 52),
+    at('armchair', 2.6, 1.0, 32),
+    at('armchair', 7.6, 1.0, 32),
+    at('stool', 5.0, 3.2, 18),
+    at('bookshelf', 0.6, 3.4, 30),
+    at('bookshelf', 0.6, 6.0, 30),
+    at('clock', 9.3, 0.6, 22),
+    at('globe', 8.8, 3.6, 26),
+    at('table', 6.5, 6.4, 60),
     at('candelabra', 9.2, 9.1, 22),
     at('coatStand', 0.7, 9.0, 24),
     at('planterTree', 0.7, 0.8, 28),
-    at('books', 6.0, 9.2, 24),
+    at('books', 4.0, 9.2, 24),
+    at('floatCandles', 4.0, 5.6, 22),
   ],
   exam: [
     at('clock', 0.7, 1.0, 22),

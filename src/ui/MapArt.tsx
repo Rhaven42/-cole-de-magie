@@ -128,6 +128,12 @@ function naturalize(name: SpriteName, p: Pt, width: number): [SpriteName, number
 }
 
 /** Sprite de décor avec son ombre. */
+/** Pente d'un mur isométrique (tuiles 2:1) : façades plaquées contre les murs. */
+const WALL_SKEW = (Math.atan(0.5) * 180) / Math.PI;
+/** Meubles qui se posent contre un mur (armoires, horloges, cheminées, tableaux…). */
+const WALL_FURNITURE =
+  /^(bookshelf|jarShelf|clock|fireplace|noticeBoard|coatStand|wandRack|herbRack|broomRack|worldMap|creatureJars|duelBanner|starChart|mistMirror|toolRack|easel|counter)/;
+
 /** Grandes constructions posées au sol : pas d'ombre portée (elles sembleraient flotter). */
 const NO_SHADOW = new Set<string>([
   'owlery',
@@ -154,17 +160,26 @@ function Decor({
   p,
   width: w0,
   mirror = false,
+  skew = 0,
 }: {
   name: SpriteName;
   p: Pt;
   width: number;
   mirror?: boolean;
+  skew?: number;
 }) {
   const [name, width] = naturalize(raw, p, w0);
   return (
     <G>
       {NO_SHADOW.has(name) ? null : <Shadow p={p} w={width} />}
-      <Sprite name={name} p={p} width={width} lift={NO_SHADOW.has(name) ? 0 : 3} mirror={mirror} />
+      <Sprite
+        name={name}
+        p={p}
+        width={width}
+        lift={NO_SHADOW.has(name) ? 0 : 3}
+        mirror={mirror}
+        skew={skew}
+      />
     </G>
   );
 }
@@ -276,6 +291,8 @@ interface Placed {
   x: number;
   y: number;
   w: number;
+  /** Retourné pour faire face à l'école. */
+  mirror?: boolean;
 }
 
 /** Fontaine de la cour d'entrée. */
@@ -293,105 +310,60 @@ function Fountain({ p }: { p: Pt }) {
   );
 }
 
-/**
- * Paysage dessiné à la main autour de l'école (positions en cases).
- * Des « lieux » cohérents plutôt qu'un semis : prairie du fond, coin de l'étang,
- * potager et serre, bosquets, bordures fleuries le long des murs.
- */
-/** Lisière boisée : bosquets en grappes irrégulières, avec des clairières. */
-function forestEdge(): Placed[] {
+/** Rangée régulière d'arbres (lisière ordonnée, pas de semis au hasard). */
+function treeRow(
+  name: SpriteName,
+  w: number,
+  from: number,
+  to: number,
+  step: number,
+  at: (t: number) => [number, number],
+): Placed[] {
   const out: Placed[] = [];
-  const kinds: [SpriteName, number][] = [
-    ['grove', 116],
-    ['flowerBed', 46],
-    ['bush', 32],
-    ['pine', 50],
-    ['wildGrass', 40],
-    ['flowerBed', 42],
-    ['oak', 66],
-    ['bush', 30],
-    ['flowerBorder', 54],
-  ];
-  const jitter = [0.4, -0.6, 0.9, -0.2, 0.7, -0.9, 0.1, 0.5, -0.4, 0.8];
-  const step = [7, 5.5, 8.5, 6, 9.5, 6.5, 7.5];
-  let k = 0;
-  const line = (
-    from: number,
-    to: number,
-    at: (t: number, j: number) => [number, number],
-    skip?: (t: number) => boolean,
-  ) => {
-    for (let t = from; t < to; t += step[k % step.length]) {
-      if (skip && skip(t)) {
-        k++;
-        continue;
-      }
-      const [x, y] = at(t, jitter[k % jitter.length]);
-      const [name, w] = kinds[k % kinds.length];
-      out.push({ name, x, y, w });
-      k++;
-    }
-  };
-  // bords du fond (haut gauche et haut droit), bord droit et bord avant
-  line(
-    2,
-    GRID_X - 2,
-    (t, j) => [t, 1.2 + j * 0.4],
-    (t) => t > 28 && t < 48,
-  );
-  line(24, GRID_Y - 2, (t, j) => [1.4 + j * 0.5, t]);
-  line(82, GRID_Y - 4, (t, j) => [GRID_X - 1.8 + j * 0.5, t]);
-  line(
-    2,
-    GRID_X - 6,
-    (t, j) => [t, GRID_Y - 1.6 + j * 0.4],
-    (t) => Math.abs(t - courtyard().gateX) < 9,
-  );
+  for (let t = from; t <= to; t += step) {
+    const [x, y] = at(t);
+    out.push({ name, x, y, w });
+  }
   return out;
 }
 
 /*
- * Plan de l'extérieur (cases) : école x 3→73, y 21→91 ; au fond, Examens (x 5→29) et
- * terrain de Balais (x 47→71) sur y 3→13 ; à droite une bande libre x 75→87 ;
- * devant, la cour (allée x≈38, portail y≈103).
+ * Extérieur composé (cases) : école x 3→73, y 21→91 ; au fond, Examens (x 19→43) et
+ * terrain de Balais (x 47→71) sur y 3→13 ; à droite une bande x 74→88 avec son allée ;
+ * devant, la cour symétrique autour de la grande allée (x = 38).
  */
 const LANDSCAPE: Placed[] = [
-  // Au fond, entre les Examens et le terrain : la prairie de la volière
-  { name: 'owlery', x: 38.5, y: 9, w: 190 },
-  { name: 'campfire', x: 33, y: 16, w: 80 },
-  { name: 'wildGrass', x: 42.5, y: 15.5, w: 40 },
-  { name: 'lavender', x: 31.5, y: 5, w: 36 },
-  { name: 'foxgloves', x: 44.5, y: 16, w: 30 },
-  // Près du terrain de Balais : meule, cibles
-  { name: 'haystack', x: 74, y: 6, w: 70 },
-  { name: 'targets', x: 76, y: 14, w: 70 },
-  // Côté droit, le long de l'aile des dortoirs : jardin botanique
-  { name: 'greenhouse', x: 81, y: 31, w: 230 },
-  { name: 'vegGarden', x: 80.5, y: 45, w: 170 },
-  { name: 'pumpkins', x: 86, y: 50.5, w: 36 },
-  { name: 'wheelbarrow', x: 75.5, y: 50, w: 34 },
-  { name: 'gazebo', x: 81, y: 60, w: 200 },
-  { name: 'roseBush', x: 75.5, y: 55.5, w: 34 },
-  { name: 'hydrangea', x: 86.5, y: 63.5, w: 34 },
-  { name: 'parkBench', x: 75.5, y: 64, w: 34 },
-  // L'étang, sa passerelle et le saule
-  { name: 'pond', x: 81, y: 76, w: 130 },
-  { name: 'footbridge', x: 76.5, y: 72.5, w: 60 },
-  { name: 'willow', x: 86, y: 71, w: 96 },
-  { name: 'tulips', x: 76, y: 81.5, w: 32 },
-  { name: 'poppies', x: 85.5, y: 83, w: 32 },
-  // Avant droit : verger et coin pique-nique
-  { name: 'oak', x: 58, y: 97.5, w: 70 },
-  { name: 'grove', x: 68, y: 99, w: 110 },
-  { name: 'picnic', x: 78, y: 88.5, w: 56 },
-  { name: 'swingOak', x: 83, y: 96, w: 96 },
-  { name: 'whiteShrub', x: 52.5, y: 102, w: 36 },
-  // Avant gauche : le puits, un bosquet, des fleurs
-  { name: 'well', x: 22, y: 97, w: 46 },
-  { name: 'grove', x: 10, y: 98.5, w: 110 },
-  { name: 'lavender', x: 26.5, y: 101.5, w: 34 },
-  { name: 'roseBush', x: 17, y: 103, w: 32 },
-  ...forestEdge(),
+  // Lisières : pins réguliers au fond et à droite, chênes à gauche
+  ...treeRow('pine', 50, 2, 86, 5, (t) => [t, 1.0]),
+  ...treeRow('pine', 50, 24, 90, 6, (t) => [87.2, t]),
+  ...treeRow('oak', 64, 26, 88, 8, (t) => [1.3, t]),
+  // Au fond à gauche : la volière, entourée de lavande
+  { name: 'owlery', x: 10, y: 12, w: 190 },
+  { name: 'lavender', x: 5.5, y: 17.5, w: 34 },
+  { name: 'lavender', x: 14.5, y: 17.5, w: 34 },
+  // Au fond à droite, près du terrain : cibles et meule
+  { name: 'targets', x: 79, y: 8, w: 76 },
+  { name: 'haystack', x: 80, y: 16, w: 70 },
+  // Bande de droite : jardin botanique le long de son allée (bâtiments tournés vers l'école)
+  { name: 'greenhouse', x: 81.5, y: 31, w: 230, mirror: true },
+  { name: 'vegGarden', x: 81.5, y: 45, w: 170 },
+  { name: 'gazebo', x: 81.5, y: 60, w: 200, mirror: true },
+  { name: 'pond', x: 81.5, y: 76, w: 130 },
+  { name: 'willow', x: 85.5, y: 84, w: 96 },
+  ...[38, 52, 68, 84].map((y, i): Placed => ({
+    name: i % 2 ? 'hydrangea' : 'roseBush',
+    x: 76.6,
+    y,
+    w: 32,
+  })),
+  // Devant, de part et d'autre de la cour (symétrique autour de l'allée)
+  { name: 'well', x: 27, y: 98, w: 46 },
+  { name: 'oak', x: 24, y: 103, w: 68 },
+  { name: 'oak', x: 52, y: 103, w: 68 },
+  { name: 'grove', x: 12, y: 100, w: 110 },
+  { name: 'grove', x: 64, y: 100, w: 110 },
+  { name: 'tulips', x: 18, y: 95, w: 30 },
+  { name: 'tulips', x: 58, y: 95, w: 30 },
 ];
 
 /** Paysage : couche arrière (avant les bâtiments) ou avant (devant la façade). */
@@ -417,7 +389,7 @@ function Landscape({ env, front }: { env: EnvDef; front: boolean }) {
           'vegGarden',
           'haystack',
         ].includes(o.name) ? (
-          <Decor key={i} name={o.name} p={iso(o.x, o.y)} width={o.w} />
+          <Decor key={i} name={o.name} p={iso(o.x, o.y)} width={o.w} mirror={o.mirror} />
         ) : (
           <Deco key={i} p={iso(o.x, o.y)} s={1.2} env={env} />
         ),
@@ -458,14 +430,17 @@ function CorridorRunners({ x0, y0, x1, y1 }: { x0: number; y0: number; x1: numbe
       </G>,
     );
   };
+  // Les tapis courent jusqu'au bord de l'école (même sans couloir extérieur).
+  const ysAll = [y0, ...ys, y1];
+  const xsAll = [x0, ...xs, x1];
   for (const x of xs)
-    for (let i = 1; i < ys.length; i++)
-      if (clearV(x, ys[i - 1], ys[i]))
-        runner(`v${x}-${i}`, x - W / 2, ys[i - 1], W, ys[i] - ys[i - 1]);
+    for (let i = 1; i < ysAll.length; i++)
+      if (clearV(x, ysAll[i - 1], ysAll[i]))
+        runner(`v${x}-${i}`, x - W / 2, ysAll[i - 1], W, ysAll[i] - ysAll[i - 1]);
   for (const y of ys)
-    for (let i = 1; i < xs.length; i++)
-      if (clearH(y, xs[i - 1], xs[i]))
-        runner(`h${y}-${i}`, xs[i - 1], y - W / 2, xs[i] - xs[i - 1], W);
+    for (let i = 1; i < xsAll.length; i++)
+      if (clearH(y, xsAll[i - 1], xsAll[i]))
+        runner(`h${y}-${i}`, xsAll[i - 1], y - W / 2, xsAll[i] - xsAll[i - 1], W);
   return <G>{out}</G>;
 }
 
@@ -491,7 +466,6 @@ function Ground({ env }: { env: EnvDef }) {
     { name: 'statue', x: pathX + PATH_HALF + 4, y: y1 + 3.4, w: 44 },
     { name: 'parkBench', x: pathX - PATH_HALF - 2.4, y: y1 + 7.5, w: 34 },
     { name: 'parkBench', x: pathX + PATH_HALF + 2.4, y: y1 + 7.5, w: 34 },
-    { name: 'flowerBed', x: pathX + PATH_HALF + 9, y: y1 + 7, w: 46 },
     { name: 'flowerBed', x: pathX - PATH_HALF - 3, y: gateY - 3.5, w: 40 },
     { name: 'flowerBed', x: pathX + PATH_HALF + 3, y: gateY - 3.5, w: 40 },
     { name: 'owlPost', x: pathX + PATH_HALF + 2.2, y: gateY - 0.8, w: 22 },
@@ -545,6 +519,18 @@ function Ground({ env }: { env: EnvDef }) {
         tintOpacity={tinted ? 0.45 : 0.18}
       />
       <CorridorRunners x0={x0} y0={y0} x1={x1} y1={y1} />
+      {/* Allée du jardin botanique, le long de l'aile droite */}
+      <TexFloor
+        id="gardenPath"
+        gx={74.4}
+        gy={22}
+        w={1.6}
+        h={70}
+        tex="stone"
+        tile={2}
+        tint={env.path}
+        tintOpacity={tinted ? 0.4 : 0}
+      />
       {/* Allée pavée en « L » : du couloir de l'Accueil jusqu'au portail */}
       <TexFloor
         id="pathA"
@@ -1036,10 +1022,29 @@ function LongTable({
   );
 }
 
-/** Tapis aux couleurs des Maisons sous les tables de la cantine. */
+/** Tapis aux couleurs des Maisons sous les tables de la cantine, et sol enchanté. */
 function HallRugs({ ox, oy }: { ox: number; oy: number }) {
+  const r = rand(29);
+  const motes: ReactElement[] = [];
+  for (let i = 0; i < 60; i++) {
+    const p = iso(ox + 1 + r() * 22, oy + 1 + r() * 22);
+    motes.push(
+      <Circle
+        key={i}
+        cx={p.x}
+        cy={p.y - r() * 30}
+        r={0.6 + r()}
+        fill="#FFE7A0"
+        opacity={0.35 + r() * 0.5}
+      />,
+    );
+  }
+  const c = iso(ox + 12, oy + 12);
   return (
     <G>
+      <Ellipse cx={c.x} cy={c.y} rx={230} ry={115} fill="#6B4FA0" opacity={0.16} />
+      <Ellipse cx={c.x} cy={c.y} rx={150} ry={75} fill="#FFD27A" opacity={0.1} />
+      {motes}
       {HALL_ROWS.map((row, i) => (
         <Polygon
           key={i}
@@ -1232,17 +1237,7 @@ function DimRoom({
   );
 }
 
-function Room({
-  r,
-  env,
-  guests = [],
-  profCount = 0,
-}: {
-  r: RoomSnapshot;
-  env: EnvDef;
-  guests?: RoomSnapshot[];
-  profCount?: number;
-}) {
+function Room({ r, env, guests = [] }: { r: RoomSnapshot; env: EnvDef; guests?: RoomSnapshot[] }) {
   const def = PLOTS[r.id];
   const o = roomOrigin(def);
   const { w: RW, h: RH } = roomSize(r.id);
@@ -1254,12 +1249,20 @@ function Room({
   const wall: ReactElement[] = [];
   const objects: { order: number; el: ReactElement }[] = [];
   const add = (gx: number, gy: number, el: ReactElement) => objects.push({ order: gx + gy, el });
-  // Dos au mur : contre le mur de gauche (x minimal), l'objet est retourné pour faire face à la salle.
+  // Dos au mur : les meubles muraux sont plaqués contre le mur le plus proche (façade
+  // inclinée comme le mur) ; contre le mur de gauche, ils sont aussi retournés.
   const decor = (key: string, name: SpriteName, gx: number, gy: number, width: number) => {
     const dx = gx - o.x;
     const dy = gy - o.y;
-    const mirror = dx < 1.8 && dx < dy && !String(name).startsWith('teacherDesk');
-    add(gx, gy, <Decor key={key} name={name} p={iso(gx, gy)} width={width} mirror={mirror} />);
+    const wallish = WALL_FURNITURE.test(String(name));
+    const left = dx < 1.8 && dx < dy && !String(name).startsWith('teacherDesk');
+    const back = !left && dy < 1.8;
+    const skew = wallish ? (left ? -WALL_SKEW : back ? WALL_SKEW : 0) : 0;
+    add(
+      gx,
+      gy,
+      <Decor key={key} name={name} p={iso(gx, gy)} width={width} mirror={left} skew={skew} />,
+    );
   };
 
   /** Tentures aux couleurs des Maisons sur le muret. */
@@ -1290,7 +1293,7 @@ function Room({
     // Cantine : une longue table par Maison (en ligne), la table des professeurs au bout.
     tapestries(
       () => 'x',
-      (i) => (3 + i * 4) / R,
+      (i) => [2.2, 5.6, 17.6, 21.0][i] / R,
     );
     HALL_ROWS.forEach((row, hi) => {
       const gx = o.x + HALL_X0;
@@ -1334,7 +1337,8 @@ function Room({
       );
     });
     // Table des professeurs, en travers au bout de la salle : une chaise par prof.
-    const n = Math.max(1, profCount);
+    // Dix professeur·es : dix places, toujours.
+    const n = 10;
     const len = n * PROF_SEAT_GAP + 0.6;
     add(
       o.x + HALL_PROF_X - 0.7,
@@ -1348,17 +1352,23 @@ function Room({
         runner="#C9A25A"
       />,
     );
+    // Chaises côté mur, dossier contre le mur : les profs font face aux élèves.
     for (let k = 0; k < n; k++) {
       const cy = o.y + PROF_TABLE_Y + 0.3 + PROF_SEAT_GAP * (k + 0.5) - 0.35;
       add(
-        o.x + HALL_PROF_X + 1.0,
+        o.x + HALL_PROF_X - 1.6,
         cy,
         <G key={`chair${k}`}>
-          <Box gx={o.x + HALL_PROF_X + 1.0} gy={cy} w={0.7} d={0.7} h={5} color="#6B3E22" />
-          <Box gx={o.x + HALL_PROF_X + 1.55} gy={cy} w={0.15} d={0.7} h={14} color="#5A3420" />
+          <Box gx={o.x + HALL_PROF_X - 1.75} gy={cy} w={0.15} d={0.7} h={16} color="#5A3420" />
+          <Box gx={o.x + HALL_PROF_X - 1.6} gy={cy} w={0.7} d={0.7} h={5} color="#7A2430" />
         </G>,
       );
     }
+    // Grande cheminée au centre du mur du fond, bougies flottantes au-dessus des tables.
+    decor('bigFire', 'fireplace', o.x + 12.5, o.y + 0.9, 118);
+    [7, 12, 17].forEach((y) =>
+      [9, 15].forEach((x) => decor(`fc-${x}-${y}`, 'floatCandles', o.x + x, o.y + y, 24)),
+    );
   }
 
   // Accueil : le personnel derrière chaque guichet, face à l'entrée.
@@ -1551,10 +1561,9 @@ function MapArtBase({ rooms, plots, env: envIndex }: Props) {
     const p = PLOTS[r.id];
     if (!p || p.hostedIn) continue;
     const guests = all.filter((g) => PLOTS[g.id]?.hostedIn === r.id);
-    const profCount = rooms.filter((x) => x.kind === 'course').length;
     items.push({
       order: p.px + p.py,
-      el: <Room key={r.id} r={r} env={env} guests={guests} profCount={profCount} />,
+      el: <Room key={r.id} r={r} env={env} guests={guests} />,
     });
   }
   for (const pl of plots) {

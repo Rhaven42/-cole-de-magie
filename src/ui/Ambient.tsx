@@ -6,7 +6,7 @@
 import { useEffect, useState } from 'react';
 import { Animated, Easing, Image, StyleSheet, View } from 'react-native';
 import { SPRITES } from '../assets';
-import { ROOM_SCALE } from '../data/layout';
+import { HALL_ROWS, HALL_X0 } from '../data/layout';
 import type { GameState } from '../engine';
 import {
   CORRIDOR_X,
@@ -293,6 +293,29 @@ export function Explosion({ p }: { p: Pt }) {
   );
 }
 
+/** Bougie qui flotte et oscille doucement au-dessus des tables de la cantine. */
+function FloatingCandle({ p, delay }: { p: Pt; delay: number }) {
+  const v = useLoop(2600 + (delay % 5) * 300, delay, Easing.inOut(Easing.sin));
+  return (
+    <Animated.View
+      pointerEvents="none"
+      style={{
+        position: 'absolute',
+        left: p.x - 2,
+        top: p.y,
+        alignItems: 'center',
+        transform: [
+          { translateY: v.interpolate({ inputRange: [0, 0.5, 1], outputRange: [0, -5, 0] }) },
+        ],
+      }}
+    >
+      <View style={styles.candleGlow} />
+      <View style={styles.candleFlame} />
+      <View style={styles.candleStick} />
+    </Animated.View>
+  );
+}
+
 /** Lueur qui vacille (cheminée, bougies). */
 function Flicker({ p, size, color }: { p: Pt; size: number; color: string }) {
   const v = useLoop(900, 0, Easing.inOut(Easing.sin));
@@ -352,14 +375,44 @@ export function Ambient({ game }: { game: GameState }) {
           })
         : null}
       {hall ? (
-        <Flicker
-          p={{
-            x: iso(hall.x + 0.6 * ROOM_SCALE, hall.y + 4.3 * ROOM_SCALE).x,
-            y: iso(hall.x + 0.6 * ROOM_SCALE, hall.y + 4.3 * ROOM_SCALE).y - 14,
-          }}
-          size={70}
-          color="#FF9A3C"
-        />
+        <>
+          <Flicker
+            p={{
+              x: iso(hall.x + 12.5, hall.y + 0.9).x,
+              y: iso(hall.x + 12.5, hall.y + 0.9).y - 34,
+            }}
+            size={150}
+            color="#FF9A3C"
+          />
+          {[
+            [6, 6],
+            [11, 9],
+            [16, 6],
+            [8, 14],
+            [14, 16],
+            [19, 12],
+            [10, 20],
+            [17, 20],
+          ].map(([x, y], i) => (
+            <Sparkle
+              key={`hs${i}`}
+              p={{ x: iso(hall.x + x, hall.y + y).x, y: iso(hall.x + x, hall.y + y).y - 40 }}
+              delay={i * 350}
+            />
+          ))}
+          {HALL_ROWS.flatMap((row, r) =>
+            [0, 1, 2, 3, 4].map((k) => {
+              const q = iso(hall.x + HALL_X0 + 1.5 + k * 3 + (r % 2) * 1.2, hall.y + row);
+              return (
+                <FloatingCandle
+                  key={`fc${r}-${k}`}
+                  p={{ x: q.x, y: q.y - 62 }}
+                  delay={(r * 5 + k) * 370}
+                />
+              );
+            }),
+          )}
+        </>
       ) : null}
       {gc
         ? [0, 1, 2, 3].map((i) => (
@@ -381,6 +434,16 @@ export function Ambient({ game }: { game: GameState }) {
 }
 
 const styles = StyleSheet.create({
+  candleGlow: {
+    position: 'absolute',
+    top: -7,
+    width: 14,
+    height: 14,
+    borderRadius: 7,
+    backgroundColor: 'rgba(255,200,90,0.35)',
+  },
+  candleFlame: { width: 3, height: 5, borderRadius: 2, backgroundColor: '#FFC24A' },
+  candleStick: { width: 3, height: 9, backgroundColor: '#F4EBD0', borderRadius: 1 },
   cloud: { position: 'absolute', left: 0, width: 480, height: 160 },
   puff: { position: 'absolute', borderRadius: 200, backgroundColor: '#0B1A10', opacity: 0.07 },
   steam: {

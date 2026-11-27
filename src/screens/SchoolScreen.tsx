@@ -1,3 +1,4 @@
+import { COURSE_IDS } from '../data/courses';
 import { AdOffer } from '../ui/AdOffer';
 import { isMealBreak } from '../data/progression';
 import { HALL_ROWS, HALL_X0, PLOT, PLOTS } from '../data/layout';
@@ -445,7 +446,8 @@ export function SchoolScreen() {
       onLayout={(e) => setSize({ w: e.nativeEvent.layout.width, h: e.nativeEvent.layout.height })}
     >
       <GestureDetector gesture={gesture}>
-        <View style={StyleSheet.absoluteFill}>
+        {/* touchAction « none » : sur le web/mobile, le navigateur ne vole plus le glissé à un doigt. */}
+        <View style={[StyleSheet.absoluteFill, styles.noTouchScroll]}>
           <Animated.View style={[styles.map, mapStyle]}>
             <MapArt env={stableSnap.env} rooms={stableSnap.rooms} plots={stableSnap.plots} />
             {stableSnap.plots
@@ -455,14 +457,14 @@ export function SchoolScreen() {
               ))}
             {game.stationOrder
               .filter((id) => game.stations[id].kind === 'course' && !!PLOTS[id])
-              .map((id, k) => {
+              .map((id) => {
                 const st = game.stations[id];
                 return (
                   <Professor
                     key={`prof-${id}`}
                     stationId={id}
                     courseId={st.courseId!}
-                    seat={k}
+                    seat={Math.max(0, COURSE_IDS.indexOf(st.courseId!))}
                     teaching={st.seats.some((x) => x.occupant !== null)}
                     eating={isMealBreak(game.time)}
                   />
@@ -539,6 +541,8 @@ export function SchoolScreen() {
 
 const styles = StyleSheet.create({
   viewport: { flex: 1, overflow: 'hidden' },
+  // Propriété web (react-native-web) : désactive le défilement natif au doigt.
+  noTouchScroll: { touchAction: 'none' } as object,
   mealBanner: {
     position: 'absolute',
     bottom: 96,

@@ -241,6 +241,7 @@ export function Sprite({
   width,
   lift = 0,
   mirror = false,
+  skew = 0,
 }: {
   name: SpriteName;
   p: Pt;
@@ -248,13 +249,22 @@ export function Sprite({
   lift?: number;
   /** Miroir horizontal (objet tourné vers l'autre mur). */
   mirror?: boolean;
+  /** Inclinaison (degrés) pour plaquer la façade contre un mur isométrique. */
+  skew?: number;
 }) {
   const d = SPRITES[name];
   const h = (width * d.h) / d.w;
   const img = (
     <SvgImage href={d.src} x={p.x - width / 2} y={p.y - h + lift} width={width} height={h} />
   );
-  return mirror ? <G transform={`translate(${2 * p.x} 0) scale(-1 1)`}>{img}</G> : img;
+  const flipped = mirror ? <G transform={`translate(${2 * p.x} 0) scale(-1 1)`}>{img}</G> : img;
+  return skew ? (
+    <G transform={`translate(${p.x} ${p.y}) skewY(${skew}) translate(${-p.x} ${-p.y})`}>
+      {flipped}
+    </G>
+  ) : (
+    flipped
+  );
 }
 
 /** Meuble (sprite) associé à une place, selon le type de lieu / matière. */
@@ -290,8 +300,9 @@ export function Furniture({
 }) {
   const sp = SEAT_SPRITES[kind];
   if (!sp) return null;
-  // Le comptoir de l'Accueil est devant l'élève (côté mur arrière).
-  // Le comptoir de l'Accueil est derrière l'élève, côté fond de la salle.
+  // Le comptoir de l'Accueil est entre l'élève et le personnel, façade tournée vers l'entrée
+  // (alignée sur le mur d'entrée).
   const p = kind === 'reception' ? iso(gx, gy - 1.1) : kind === 'dorm' ? iso(gx, gy) : at;
-  return <Sprite name={tiered(sp.name, tier)} p={p} width={sp.width} lift={sp.lift} />;
+  const skew = kind === 'reception' ? (Math.atan(0.5) * 180) / Math.PI : 0;
+  return <Sprite name={tiered(sp.name, tier)} p={p} width={sp.width} lift={sp.lift} skew={skew} />;
 }
