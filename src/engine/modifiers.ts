@@ -130,6 +130,7 @@ export function courseReward(
   let r = def.reward * levelCoinMult(st.level);
   if (seatIndex !== undefined && st.seats[seatIndex]) r *= seatCoinMult(st.seats[seatIndex].level);
   r *= propCoinMult(st);
+  if (state && (state.boostUntil ?? 0) > state.time) r *= 2;
   if (state && st.courseId)
     r *= 1 + PROF_UPGRADE.coinPerLevel * (profLevel(state, st.courseId) - 1);
   if ((s.year ?? 1) >= YEARS.max) r *= YEARS.advanced.rewardMult;

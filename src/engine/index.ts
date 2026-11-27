@@ -8,4 +8,5 @@ export * from './save';
 export * from './offline';
 export * from './meta';
 export * from './progression';
+export * from './ads';
 export * from './events';

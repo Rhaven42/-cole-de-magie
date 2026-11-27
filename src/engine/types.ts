@@ -1,3 +1,4 @@
+import type { AdKind } from '../data/ads';
 import type { CourseId } from '../data/courses';
 import type { HouseId } from '../data/houses';
 import type { TraitId } from '../data/traits';
@@ -149,6 +150,10 @@ export interface GameState {
   sortingBias: HouseId | null;
   /** Niveau de chaque professeur·e (salle des profs). Absent = niveau 1. */
   profLevels?: Partial<Record<CourseId, number>>;
+  /** Prochaine offre « pub » (temps de jeu) et sa nature. */
+  ad?: { nextAt: number; kind: AdKind };
+  /** Fin du bonus Éclats ×2 (temps de jeu). */
+  boostUntil?: number;
   totals: Totals;
   /** Salles avec un manager (récolte automatique). */
   managers: Record<string, boolean>;

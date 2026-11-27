@@ -1,3 +1,4 @@
+import { AdOffer } from '../ui/AdOffer';
 import { isMealBreak } from '../data/progression';
 import { HALL_ROWS, HALL_X0, PLOT, PLOTS } from '../data/layout';
 import { HOUSE_IDS } from '../data/houses';
@@ -522,12 +523,28 @@ export function SchoolScreen() {
       >
         <Text style={styles.collectText}>💰 Tout récolter</Text>
       </Pressable>
+      {isMealBreak(game.time) ? (
+        <View style={styles.mealBanner} pointerEvents="none">
+          <Text style={styles.mealText}>🍽️ Pause repas : les profs sont à la cantine</Text>
+        </View>
+      ) : null}
+      <AdOffer />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   viewport: { flex: 1, overflow: 'hidden' },
+  mealBanner: {
+    position: 'absolute',
+    bottom: 96,
+    alignSelf: 'center',
+    backgroundColor: 'rgba(43,26,14,0.85)',
+    borderRadius: 14,
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+  },
+  mealText: { color: '#FFE9B8', fontWeight: '800', fontSize: 12 },
   map: {
     position: 'absolute',
     left: 0,

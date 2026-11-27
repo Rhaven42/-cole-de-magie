@@ -78,3 +78,30 @@ describe('pause repas', () => {
     expect(st.seats[0].remaining).toBe(50);
   });
 });
+
+describe('bonus « pub »', () => {
+  it('offre après un délai, récompense, puis temps de recharge', () => {
+    const { adOffer, claimAd, dismissAd, boostActive } = jest.requireActual('../ads');
+    const { ADS } = jest.requireActual('../../data/ads');
+    const g = createGame();
+    expect(adOffer(g)).toBeNull();
+    g.time = ADS.firstAt;
+    expect(adOffer(g)).toBe('double');
+    expect(claimAd(g)).toBe(true);
+    expect(boostActive(g)).toBe(true);
+    expect(adOffer(g)).toBeNull();
+    expect(claimAd(g)).toBe(false);
+    g.time += ADS.cooldown;
+    expect(adOffer(g)).not.toBeNull();
+    dismissAd(g);
+    expect(adOffer(g)).toBeNull();
+  });
+  it('le ×2 double les gains des cours', () => {
+    const g = createGame();
+    const st = g.stations['course-potions'];
+    const who = { house: null, mood: 100 };
+    const base = courseReward(st, who, g);
+    g.boostUntil = g.time + 100;
+    expect(courseReward(st, who, g)).toBe(base * 2);
+  });
+});
