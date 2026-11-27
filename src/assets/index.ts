@@ -164,6 +164,7 @@ export const SPRITES = {
   relicCase: { src: require('./sprites/relicCase.png'), w: 156, h: 200 },
   rocks: { src: require('./sprites/rocks.png'), w: 202, h: 178 },
   roseArch: { src: require('./sprites/roseArch.png'), w: 167, h: 220 },
+  roseArchM: { src: require('./sprites/roseArchM.png'), w: 167, h: 220 },
   roseBush: { src: require('./sprites/roseBush.png'), w: 147, h: 180 },
   runePillar: { src: require('./sprites/runePillar.png'), w: 97, h: 200 },
   runeTablet: { src: require('./sprites/runeTablet.png'), w: 127, h: 200 },

@@ -27,6 +27,8 @@ export interface PlotDef {
   py: number;
   /** Nombre de parcelles occupées le long de x (grande salle sur 2 parcelles). */
   spanX?: number;
+  /** Nombre de parcelles occupées le long de y (la cantine, sur 2 × 2 parcelles). */
+  spanY?: number;
   /** Décalage (cases) de la salle par rapport à sa parcelle. */
   shiftX?: number;
   shiftY?: number;
@@ -57,12 +59,12 @@ export const PLOTS: Record<string, PlotDef> = {
     floorAlt: '#52417A',
   },
   // Cantine : grande salle sur 2 parcelles, juste derrière l'Accueil.
-  hall: { px: 2, py: 3, spanX: 2, floor: '#A2553C', floorAlt: '#954C35' },
+  hall: { px: 2, py: 2, spanX: 2, spanY: 2, floor: '#A2553C', floorAlt: '#954C35' },
   // Salle des professeurs (amélioration des profs).
-  staff: { px: 2, py: 2, floor: '#6B4E3A', floorAlt: '#5F4433' },
+  staff: { px: 2, py: 0, floor: '#6B4E3A', floorAlt: '#5F4433' },
   'course-potions': { px: 1, py: 3, floor: '#4E7F6A', floorAlt: '#46735F' },
   'course-botany': { px: 0, py: 3, floor: '#6E9A4B', floorAlt: '#638C43' },
-  'course-history': { px: 4, py: 3, floor: '#9C6B44', floorAlt: '#8F613D' },
+  'course-history': { px: 4, py: 3, door: 'y', floor: '#9C6B44', floorAlt: '#8F613D' },
   'course-charms': { px: 0, py: 2, floor: '#4D78A8', floorAlt: '#456D99' },
   'course-astronomy': { px: 1, py: 2, floor: '#33406E', floorAlt: '#2C3862' },
   // Balais volants : grand terrain en plein air, au fond de l'école (à droite des Examens).
@@ -76,24 +78,24 @@ export const PLOTS: Record<string, PlotDef> = {
     floor: '#7FB069',
     floorAlt: '#75A35F',
   },
-  'course-divination': { px: 3, py: 2, floor: '#7E4A86', floorAlt: '#72427A' },
+  'course-divination': { px: 3, py: 1, floor: '#7E4A86', floorAlt: '#72427A' },
   'course-transfiguration': { px: 1, py: 1, floor: '#5E7C82', floorAlt: '#557177' },
   'course-defense': { px: 2, py: 1, floor: '#6B3A3A', floorAlt: '#603434' },
   'course-duel': { px: 0, py: 1, floor: '#7A4B3A', floorAlt: '#6C4233' },
   // Tout en haut : la Salle des Examens, au bout d'un long couloir (centrée sur un axe de couloir).
   exam: { px: 0, py: -1, shiftY: -6, spanX: 2, door: 'y', floor: '#6E6250', floorAlt: '#625746' },
-  'dorm-0': { px: 4, py: 2, floor: '#4A5A8C', floorAlt: '#42517F' },
-  'dorm-1': { px: 4, py: 1, floor: '#4A5A8C', floorAlt: '#42517F' },
-  'dorm-2': { px: 3, py: 1, floor: '#4A5A8C', floorAlt: '#42517F' },
-  'dorm-3': { px: 4, py: 0, floor: '#4A5A8C', floorAlt: '#42517F' },
-  'dorm-4': { px: 3, py: 0, floor: '#4A5A8C', floorAlt: '#42517F' },
-  'dorm-5': { px: 2, py: 0, floor: '#4A5A8C', floorAlt: '#42517F' },
+  // Aile des dortoirs (colonne de droite : portes côté intérieur de l'école).
+  'dorm-0': { px: 4, py: 2, door: 'y', floor: '#4A5A8C', floorAlt: '#42517F' },
+  'dorm-1': { px: 4, py: 1, door: 'y', floor: '#4A5A8C', floorAlt: '#42517F' },
+  'dorm-2': { px: 4, py: 0, door: 'y', floor: '#4A5A8C', floorAlt: '#42517F' },
+  'dorm-3': { px: 3, py: 0, floor: '#4A5A8C', floorAlt: '#42517F' },
 };
 
 /** Cantine : lignes des 4 tables de Maison (y, en cases), début des tables, table des profs. */
-export const HALL_ROWS = [1.7, 4.0, 6.3, 8.6];
-export const HALL_X0 = 1.2;
-export const HALL_TABLE_SEGMENTS = 5;
+export const HALL_ROWS = [4.5, 9.5, 14.5, 19.5];
+export const HALL_X0 = 2.2;
+/** Longueur des tables des Maisons (cases). */
+export const HALL_TABLE_LEN = 15;
 export const HALL_PROF_X = 20.2;
 
 /** Parcelles de jardin (décor). */
@@ -152,11 +154,14 @@ export const ROOM_DECOR: Record<string, DecorItem[]> = {
   // Positions en cases réelles converties (÷ ROOM_SCALE) : voir `at`.
   hall: [
     at('candelabra', 0.5, 0.5, 22),
-    at('fireplace', 18.4, 0.7, 46),
+    at('fireplace', 11.0, 0.7, 50),
     at('clock', 23.3, 0.6, 22),
-    at('jarShelf', 21.8, 0.5, 30),
-    at('planterTree', 23.3, 9.2, 28),
-    at('candelabra', 17.8, 9.3, 22),
+    at('jarShelf', 6.0, 0.5, 30),
+    at('jarShelf', 16.0, 0.5, 30),
+    at('planterTree', 23.3, 23.2, 28),
+    at('planterTree', 0.7, 23.2, 28),
+    at('candelabra', 0.5, 12.0, 22),
+    at('candelabra', 23.4, 12.0, 22),
   ],
   // Accueil : guichets à gauche, coin d'attente, le Chaporacle à droite (zone violette).
   reception: [

@@ -8,7 +8,7 @@ import {
   GARDENS,
   HALL_PROF_X,
   HALL_ROWS,
-  HALL_TABLE_SEGMENTS,
+  HALL_TABLE_LEN,
   HALL_X0,
   ISO,
   PLOT,
@@ -300,7 +300,12 @@ function forestEdge(): Placed[] {
     }
   };
   // bords du fond (haut gauche et haut droit), bord droit et bord avant
-  line(2, GRID_X - 2, (t, j) => [t, 1.2 + j * 0.4], (t) => (t > 28 && t < 48));
+  line(
+    2,
+    GRID_X - 2,
+    (t, j) => [t, 1.2 + j * 0.4],
+    (t) => t > 28 && t < 48,
+  );
   line(24, GRID_Y - 2, (t, j) => [1.4 + j * 0.5, t]);
   line(82, GRID_Y - 4, (t, j) => [GRID_X - 1.8 + j * 0.5, t]);
   line(
@@ -319,29 +324,29 @@ function forestEdge(): Placed[] {
  */
 const LANDSCAPE: Placed[] = [
   // Au fond, entre les Examens et le terrain : la prairie de la volière
-  { name: 'owlery', x: 38, y: 7.5, w: 84 },
-  { name: 'campfire', x: 34, y: 14.5, w: 80 },
+  { name: 'owlery', x: 38.5, y: 9, w: 190 },
+  { name: 'campfire', x: 33, y: 16, w: 80 },
   { name: 'wildGrass', x: 42.5, y: 15.5, w: 40 },
-  { name: 'lavender', x: 31.5, y: 9.5, w: 36 },
-  { name: 'foxgloves', x: 44, y: 9, w: 30 },
+  { name: 'lavender', x: 31.5, y: 5, w: 36 },
+  { name: 'foxgloves', x: 44.5, y: 16, w: 30 },
   // Près du terrain de Balais : meule, cibles
   { name: 'haystack', x: 74, y: 6, w: 70 },
   { name: 'targets', x: 76, y: 14, w: 70 },
   // Côté droit, le long de l'aile des dortoirs : jardin botanique
-  { name: 'greenhouse', x: 80.5, y: 27, w: 104 },
-  { name: 'vegGarden', x: 80, y: 38, w: 108 },
-  { name: 'pumpkins', x: 85.5, y: 44, w: 36 },
-  { name: 'wheelbarrow', x: 76, y: 44.5, w: 34 },
-  { name: 'gazebo', x: 80.5, y: 53, w: 96 },
-  { name: 'roseBush', x: 76.5, y: 50, w: 34 },
-  { name: 'hydrangea', x: 85.5, y: 57.5, w: 34 },
-  { name: 'parkBench', x: 76.5, y: 58.5, w: 34 },
+  { name: 'greenhouse', x: 81, y: 31, w: 230 },
+  { name: 'vegGarden', x: 80.5, y: 45, w: 170 },
+  { name: 'pumpkins', x: 86, y: 50.5, w: 36 },
+  { name: 'wheelbarrow', x: 75.5, y: 50, w: 34 },
+  { name: 'gazebo', x: 81, y: 60, w: 200 },
+  { name: 'roseBush', x: 75.5, y: 55.5, w: 34 },
+  { name: 'hydrangea', x: 86.5, y: 63.5, w: 34 },
+  { name: 'parkBench', x: 75.5, y: 64, w: 34 },
   // L'étang, sa passerelle et le saule
-  { name: 'pond', x: 81, y: 70, w: 130 },
-  { name: 'footbridge', x: 76.5, y: 66.5, w: 60 },
-  { name: 'willow', x: 86, y: 64.5, w: 96 },
-  { name: 'tulips', x: 76, y: 75.5, w: 32 },
-  { name: 'poppies', x: 85.5, y: 77, w: 32 },
+  { name: 'pond', x: 81, y: 76, w: 130 },
+  { name: 'footbridge', x: 76.5, y: 72.5, w: 60 },
+  { name: 'willow', x: 86, y: 71, w: 96 },
+  { name: 'tulips', x: 76, y: 81.5, w: 32 },
+  { name: 'poppies', x: 85.5, y: 83, w: 32 },
   // Avant droit : verger et coin pique-nique
   { name: 'oak', x: 58, y: 97.5, w: 70 },
   { name: 'grove', x: 68, y: 99, w: 110 },
@@ -435,7 +440,8 @@ function Ground({ env }: { env: EnvDef }) {
   const school0 = plotOrigin(0, 0);
   const w = PLOT.cols * (S + PLOT.gap) - PLOT.gap;
   const h = PLOT.rows * (S + PLOT.gap) - PLOT.gap;
-  const pad = PLOT.gap / 2;
+  // Pas de couloir tout autour : le parquet s'arrête aux murs des salles.
+  const pad = 0;
   const tinted = env.id !== 'manor';
   const { pathX, gateX, gateY } = courtyard();
   const x0 = school0.x - pad;
@@ -571,8 +577,8 @@ function BigGarden({ px, py, span, env }: { px: number; py: number; span: number
     { name: 'wildGrass', x: 3.6, y: cy - o.y + 2.6, w: 36 },
     { name: 'wildGrass', x: W - 3.6, y: cy - o.y + 2.6, w: 36 },
     // arches de roses à l'entrée de l'allée transversale
-    { name: 'roseArch', x: 1.2, y: S / 2, w: 50 },
-    { name: 'roseArch', x: W - 1.2, y: S / 2, w: 50 },
+    { name: 'roseArchM', x: 1.2, y: S / 2, w: 50 },
+    { name: 'roseArchM', x: W - 1.2, y: S / 2, w: 50 },
   ];
   placed.sort((a, b) => a.x + a.y - (b.x + b.y));
   const c = iso(cx, cy);
@@ -904,6 +910,71 @@ function BackDoorway({ ox, oy }: { ox: number; oy: number }) {
   );
 }
 
+/** Longue table « à plat » (boîte isométrique) avec chemin de table, assiettes et bougies. */
+function LongTable({
+  gx,
+  gy,
+  len,
+  along = 'x',
+  runner,
+}: {
+  gx: number;
+  gy: number;
+  len: number;
+  along?: 'x' | 'y';
+  runner: string;
+}) {
+  const h = 8;
+  const w = along === 'x' ? len : 1.4;
+  const d = along === 'x' ? 1.2 : len;
+  const top = (x: number, y: number) => lift(iso(x, y), h);
+  const items: ReactElement[] = [];
+  for (let t = 1; t < len - 0.5; t += 1.5) {
+    for (const side of [0.28, 0.92]) {
+      const p = along === 'x' ? top(gx + t, gy + side * d) : top(gx + side * w, gy + t);
+      items.push(
+        <Ellipse
+          key={`p${t}-${side}`}
+          cx={p.x}
+          cy={p.y}
+          rx={3.2}
+          ry={1.6}
+          fill="#EDE6D6"
+          stroke="#B8AE9C"
+          strokeWidth={0.5}
+        />,
+      );
+    }
+  }
+  for (let t = 2.5; t < len - 1; t += 4) {
+    const p = along === 'x' ? top(gx + t, gy + d / 2) : top(gx + w / 2, gy + t);
+    items.push(
+      <G key={`c${t}`}>
+        <Line x1={p.x} y1={p.y} x2={p.x} y2={p.y - 6} stroke="#F4EBD0" strokeWidth={1.6} />
+        <Circle cx={p.x} cy={p.y - 7} r={1.4} fill="#FFC24A" />
+      </G>,
+    );
+  }
+  const r0 =
+    along === 'x' ? [gx, gy + d * 0.38, len, d * 0.24] : [gx + w * 0.38, gy, w * 0.24, len];
+  return (
+    <G>
+      <Box gx={gx} gy={gy} w={w} d={d} h={h} color="#7A4A28" />
+      <Polygon
+        points={poly([
+          top(r0[0], r0[1]),
+          top(r0[0] + r0[2], r0[1]),
+          top(r0[0] + r0[2], r0[1] + r0[3]),
+          top(r0[0], r0[1] + r0[3]),
+        ])}
+        fill={runner}
+        opacity={0.9}
+      />
+      {items}
+    </G>
+  );
+}
+
 /** Tapis aux couleurs des Maisons sous les tables de la cantine. */
 function HallRugs({ ox, oy }: { ox: number; oy: number }) {
   return (
@@ -911,13 +982,13 @@ function HallRugs({ ox, oy }: { ox: number; oy: number }) {
       {HALL_ROWS.map((row, i) => (
         <Polygon
           key={i}
-          points={floorPoly(ox + HALL_X0, oy + row - 1.0, HALL_TABLE_SEGMENTS * 3, 2.0)}
+          points={floorPoly(ox + HALL_X0 - 0.6, oy + row - 2.0, HALL_TABLE_LEN + 1.2, 4.0)}
           fill={HOUSES[HOUSE_IDS[i]].color}
           opacity={0.28}
         />
       ))}
       <Polygon
-        points={floorPoly(ox + HALL_PROF_X - 1.2, oy + 1.2, 2.6, 7.8)}
+        points={floorPoly(ox + HALL_PROF_X - 1.4, oy + 1.8, 3.2, 20.4)}
         fill="#C9A25A"
         opacity={0.25}
       />
@@ -1151,15 +1222,72 @@ function Room({ r, env, guests = [] }: { r: RoomSnapshot; env: EnvDef; guests?: 
       (i) => (3 + i * 4) / R,
     );
     HALL_ROWS.forEach((row, hi) => {
-      for (let k = 0; k < HALL_TABLE_SEGMENTS; k++) {
-        const gx = o.x + HALL_X0 + 1.5 + k * 3;
-        decor(`bb${hi}-${k}`, 'bench', gx, o.y + row - 0.95, 56);
-        decor(`t${hi}-${k}`, tiered('table', t), gx, o.y + row, 64);
-        decor(`bf${hi}-${k}`, 'bench', gx, o.y + row + 0.95, 56);
-      }
+      const gx = o.x + HALL_X0;
+      const gy = o.y + row;
+      add(
+        gx,
+        gy - 1.4,
+        <Box
+          key={`bb${hi}`}
+          gx={gx}
+          gy={gy - 1.4}
+          w={HALL_TABLE_LEN}
+          d={0.45}
+          h={5}
+          color="#5E3A20"
+        />,
+      );
+      add(
+        gx,
+        gy - 0.6,
+        <LongTable
+          key={`t${hi}`}
+          gx={gx}
+          gy={gy - 0.6}
+          len={HALL_TABLE_LEN}
+          runner={HOUSES[HOUSE_IDS[hi]].color}
+        />,
+      );
+      add(
+        gx,
+        gy + 0.95,
+        <Box
+          key={`bf${hi}`}
+          gx={gx}
+          gy={gy + 0.95}
+          w={HALL_TABLE_LEN}
+          d={0.45}
+          h={5}
+          color="#5E3A20"
+        />,
+      );
     });
-    for (let k = 0; k < 3; k++)
-      decor(`prof-${k}`, 'tableM' as SpriteName, o.x + HALL_PROF_X, o.y + 2.4 + k * 2.6, 64);
+    // Table des professeurs, en travers au bout de la salle.
+    add(
+      o.x + HALL_PROF_X - 0.7,
+      o.y + 2.5,
+      <LongTable
+        key="prof"
+        gx={o.x + HALL_PROF_X - 0.7}
+        gy={o.y + 2.5}
+        len={19}
+        along="y"
+        runner="#C9A25A"
+      />,
+    );
+    add(
+      o.x + HALL_PROF_X + 1.0,
+      o.y + 2.5,
+      <Box
+        key="profbench"
+        gx={o.x + HALL_PROF_X + 1.0}
+        gy={o.y + 2.5}
+        w={0.45}
+        d={19}
+        h={6}
+        color="#5E3A20"
+      />,
+    );
   }
 
   // Lieux situés dans cette salle (le Chaporacle dans l'Accueil) : tentures, places.

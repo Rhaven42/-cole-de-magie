@@ -67,7 +67,7 @@ export function Professor({
     const hall = PLOTS.hall ? roomOrigin(PLOTS.hall) : null;
     const seat = Math.max(0, COURSE_IDS.indexOf(courseId));
     const tableG: Pt | null = hall
-      ? { x: hall.x + HALL_PROF_X + 0.95, y: hall.y + 1.5 + seat * 0.75 }
+      ? { x: hall.x + HALL_PROF_X + 1.2, y: hall.y + 3.2 + seat * 1.9 }
       : null;
     let anim: Animated.CompositeAnimation | null = null;
     const along = (pts: Pt[], from: Pt) => {

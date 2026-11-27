@@ -64,7 +64,11 @@ export function examCorridor() {
 /** Taille d'une salle en cases (les grandes salles occupent plusieurs parcelles). */
 export function roomSize(id: string): { w: number; h: number } {
   const span = PLOTS[id]?.spanX ?? 1;
-  return { w: span * PLOT.size + (span - 1) * PLOT.gap, h: PLOT.size };
+  const spanY = PLOTS[id]?.spanY ?? 1;
+  return {
+    w: span * PLOT.size + (span - 1) * PLOT.gap,
+    h: spanY * PLOT.size + (spanY - 1) * PLOT.gap,
+  };
 }
 
 export function poly(pts: Pt[]): string {
@@ -144,15 +148,18 @@ export interface Anchor {
 
 const HALF_GAP = PLOT.gap / 2;
 
-/** Axes des couloirs (le long de y, à x fixe) et (le long de x, à y fixe). */
-export const CORRIDOR_X = [
-  PLOT.margin - HALF_GAP,
-  ...Array.from({ length: PLOT.cols }, (_, p) => plotOrigin(p, 0).x + PLOT.size + HALF_GAP),
-];
-export const CORRIDOR_Y = [
-  PLOT.margin - HALF_GAP,
-  ...Array.from({ length: PLOT.rows }, (_, q) => plotOrigin(0, q).y + PLOT.size + HALF_GAP),
-];
+/**
+ * Axes des couloirs intérieurs (le long de y, à x fixe) et (le long de x, à y fixe).
+ * Pas de couloir tout autour de l'école : on circule entre les salles.
+ */
+export const CORRIDOR_X = Array.from(
+  { length: PLOT.cols - 1 },
+  (_, p) => plotOrigin(p, 0).x + PLOT.size + HALF_GAP,
+);
+export const CORRIDOR_Y = Array.from(
+  { length: PLOT.rows - 1 },
+  (_, q) => plotOrigin(0, q).y + PLOT.size + HALF_GAP,
+);
 
 /** Porte d'une salle : au milieu du mur avant droit. */
 export function doorOf(id: string): { inside: Pt; outside: Pt; axis: 'x' | 'y' } | null {
@@ -317,7 +324,11 @@ export function queueSpotFor(id: string, k: number): Pt {
     // File intérieure (devant le Chaporacle), dans la salle hôte.
     return { x: 0.8 + (k % 7) * 1.15, y: h - 0.9 - Math.floor(k / 7) * 0.9 };
   }
-  if (PLOTS[id]?.door === 'y') return { x: w / 2, y: h + 1.4 + k * 0.75 };
+  // L'entrée : file le long de la grande allée.
+  if (id === 'reception') return { x: w / 2, y: h + 1.4 + k * 0.75 };
+  // Porte « y » : file serrée dans le couloir, à gauche de la porte.
+  if (PLOTS[id]?.door === 'y')
+    return { x: w / 2 - 1.2 - Math.floor(k / 4) * 0.7, y: h + 0.8 + (k % 4) * 0.7 };
   const q = queueSpot(k);
   return { x: q.x + (w - PLOT.size), y: q.y };
 }

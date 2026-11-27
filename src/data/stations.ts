@@ -201,4 +201,4 @@ export const SERVICES: Record<ServiceKind, ServiceDef> = {
 };
 
 /** Prix d'un nouveau dortoir (× growth^dortoirsAchetés). */
-export const DORM_PURCHASE = { base: 300, growth: 2.2, max: 6 };
+export const DORM_PURCHASE = { base: 300, growth: 2.2, max: 4 };

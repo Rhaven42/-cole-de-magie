@@ -92,7 +92,7 @@ function placeStudents(game: GameState): Placed[] {
           anchor: {
             g: {
               x: o.x + HALL_X0 + 0.8 + (Math.floor(k / 2) % 10) * 1.45,
-              y: o.y + HALL_ROWS[hi] + side * 0.85,
+              y: o.y + HALL_ROWS[hi] + side * 1.15,
             },
             room: st.id,
           },
