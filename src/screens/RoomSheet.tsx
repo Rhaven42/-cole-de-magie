@@ -1,25 +1,21 @@
 import { StaffSheet } from './StaffSheet';
+import { RoomTop } from './RoomTop';
 import { useState } from 'react';
-import { Image, Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { PORTRAITS } from '../assets/portraits';
-import { SPRITES, type SpriteName } from '../assets';
-import { COURSE_PROPS } from '../data/roomProps';
+import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { COURSES, type CourseId } from '../data/courses';
 import { ECONOMY } from '../data/economy';
 import { HOUSE_IDS, HOUSES } from '../data/houses';
 import { MANAGERS } from '../data/managers';
 import { PLOT } from '../data/layout';
-import { NAMED_PROFESSORS, professorLabel, professorTitle } from '../data/professors';
+import { NAMED_PROFESSORS } from '../data/professors';
 import { SERVICES, type UpgradeTrack } from '../data/stations';
 import {
-  addSeatCost,
   comfortOf,
   courseCost,
   courseReward,
   dormCost,
   estimatedWait,
   isClosed,
-  levelUpCost,
   managerCost,
   optimizeStation,
   receptionPatience,
@@ -28,7 +24,6 @@ import {
   serviceTime,
   storageCap,
   trackCost,
-  propCost,
   examCost,
   type Purchase,
   type Station,
@@ -146,10 +141,6 @@ export function RoomSheet() {
   const coins = game.coins;
   const best = optimizeStation(game, st);
   const isCourse = st.kind === 'course';
-  const levelSub = isCourse
-    ? `−${ECONOMY.level.timePerLevel * 100} % durée, +${ECONOMY.level.coinPerLevel * 100} % gains, +1 place / ${ECONOMY.level.seatEveryLevels} niv.`
-    : `−${ECONOMY.level.timePerLevel * 100} % durée, +1 place / ${ECONOMY.level.seatEveryLevels} niv.`;
-
   const close = () => {
     setSeatSel(null);
     setRearrange(false);
@@ -160,38 +151,20 @@ export function RoomSheet() {
     <Modal visible animationType="slide" transparent onRequestClose={close}>
       <Pressable style={styles.backdrop} onPress={close} />
       <View style={styles.sheet}>
-        <View style={styles.head}>
-          <Title style={{ flex: 1 }}>{stationName(st)}</Title>
-          <Text style={styles.lvl}>{t('room.level', { n: st.level })}</Text>
-          <Pressable onPress={close} style={styles.close} accessibilityLabel={t('room.close')}>
-            <Text style={{ fontSize: 22 }}>✕</Text>
+        <View style={styles.banner}>
+          <Text style={styles.bannerText}>
+            {stationName(st)} · {t('room.level', { n: st.level })}
+          </Text>
+          <Pressable
+            onPress={close}
+            style={styles.bannerClose}
+            accessibilityLabel={t('room.close')}
+          >
+            <Text style={styles.bannerCloseText}>✕</Text>
           </Pressable>
         </View>
         <ScrollView contentContainerStyle={{ paddingBottom: space.xl }}>
-          {isCourse && NAMED_PROFESSORS[st.courseId!] ? (
-            <View style={styles.profRow}>
-              {PORTRAITS[st.courseId!] ? (
-                <Image
-                  source={PORTRAITS[st.courseId!]!}
-                  style={styles.portrait}
-                  resizeMode="contain"
-                  accessibilityIgnoresInvertColors
-                />
-              ) : null}
-              <Text style={[styles.prof, { flex: 1 }]}>
-                {professorTitle(NAMED_PROFESSORS[st.courseId!]!)}
-                {'\n'}
-                <Text style={styles.profName}>
-                  {professorLabel(NAMED_PROFESSORS[st.courseId!]!)}
-                </Text>
-                {NAMED_PROFESSORS[st.courseId!]!.trait ? (
-                  <Text style={styles.profTrait}>
-                    {'\n'}« {NAMED_PROFESSORS[st.courseId!]!.trait} »
-                  </Text>
-                ) : null}
-              </Text>
-            </View>
-          ) : null}
+          <RoomTop st={st} game={game} />
           {isCourse && NAMED_PROFESSORS[st.courseId!]?.bio ? (
             <Pressable onPress={() => setBioOpen((v) => !v)} accessibilityRole="button">
               <Text style={styles.bioToggle}>
@@ -277,23 +250,6 @@ export function RoomSheet() {
             <Body style={styles.hint}>✨ {t('room.optimizeNone')}</Body>
           )}
 
-          <BuyButton
-            icon="⬆️"
-            label={t('room.levelUp')}
-            sub={levelSub}
-            cost={levelUpCost(st)}
-            coins={coins}
-            onPress={() => store.levelUp(st.id)}
-          />
-          <BuyButton
-            icon="➕"
-            label={t('room.addSeat', { seat: seatName(st) })}
-            sub="File d’attente plus courte"
-            cost={addSeatCost(st)}
-            coins={coins}
-            onPress={() => store.addSeat(st.id)}
-          />
-
           <View style={styles.sectionRow}>
             <Text style={[styles.section, { flex: 1 }]}>{t('room.seatsTitle')}</Text>
             <Chip
@@ -330,47 +286,6 @@ export function RoomSheet() {
               coins={coins}
               onPress={() => store.upgradeSeat(st.id, seatSel)}
             />
-          ) : null}
-
-          {isCourse && COURSE_PROPS[st.courseId!] ? (
-            <>
-              <Text style={styles.section}>Mobilier spécial</Text>
-              {COURSE_PROPS[st.courseId!].map((p) => {
-                const owned = !p.cost || (st.props ?? []).includes(p.id);
-                const sp = SPRITES[p.sprite as SpriteName];
-                return (
-                  <View key={p.id} style={styles.propRow}>
-                    {sp ? (
-                      <Image
-                        source={sp.src}
-                        style={[styles.propImg, !owned && { opacity: 0.45 }]}
-                        resizeMode="contain"
-                      />
-                    ) : null}
-                    {owned ? (
-                      <View style={{ flex: 1 }}>
-                        <Text style={styles.propName}>{p.name}</Text>
-                        <Text style={styles.propSub}>
-                          {p.cost
-                            ? `✓ Installé · +${Math.round((p.coinBonus ?? 0) * 100)} % d’Éclats`
-                            : 'Décor de la salle'}
-                        </Text>
-                      </View>
-                    ) : (
-                      <BuyButton
-                        style={{ flex: 1 }}
-                        icon="🔒"
-                        label={p.name}
-                        sub={`+${Math.round((p.coinBonus ?? 0) * 100)} % d’Éclats dans cette salle`}
-                        cost={propCost(st, p.id)}
-                        coins={coins}
-                        onPress={() => store.buyProp(st.id, p.id)}
-                      />
-                    )}
-                  </View>
-                );
-              })}
-            </>
           ) : null}
 
           {st.kind !== 'course' && SERVICES[st.kind].tracks.length ? (
@@ -496,10 +411,34 @@ function BuildSheet({ id }: { id: string }) {
 }
 
 const styles = StyleSheet.create({
+  banner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#8A5A2B',
+    marginHorizontal: -space.lg,
+    marginTop: -space.md,
+    marginBottom: space.sm,
+    paddingVertical: space.sm,
+    borderTopLeftRadius: radius.lg - 4,
+    borderTopRightRadius: radius.lg - 4,
+  },
+  bannerText: { color: '#FFF3D6', fontWeight: '900', fontSize: 17 },
+  bannerClose: {
+    position: 'absolute',
+    right: space.sm,
+    backgroundColor: '#C0392B',
+    borderRadius: 6,
+    width: 32,
+    height: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  bannerCloseText: { color: '#fff', fontWeight: '900', fontSize: 18 },
   backdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.45)' },
   sheet: {
     maxHeight: '85%',
-    backgroundColor: colors.parchment,
+    backgroundColor: '#E9D2A6',
     borderTopLeftRadius: radius.lg,
     borderTopRightRadius: radius.lg,
     borderTopWidth: 4,

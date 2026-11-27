@@ -16,7 +16,7 @@ function unitPrice(st: Station): number {
   return st.kind === 'course' ? COURSES[st.courseId!].reward : SERVICES[st.kind].seatPrice / 6;
 }
 
-function maxSeats(st: Station): number {
+export function maxSeats(st: Station): number {
   return st.kind === 'course' ? ECONOMY.courseMaxSeats : SERVICES[st.kind].maxSeats;
 }
 
