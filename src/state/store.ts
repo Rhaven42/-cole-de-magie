@@ -19,6 +19,7 @@ import {
   levelUp,
   addSeat,
   upgradeSeat,
+  upgradeSeatMany,
   seatTier,
   upgradeTrack,
   buyProp,
@@ -114,7 +115,7 @@ interface Store {
   buy(p: Purchase): boolean;
   levelUp(id: string): boolean;
   addSeat(id: string): boolean;
-  upgradeSeat(id: string, seat: number): boolean;
+  upgradeSeat(id: string, seat: number, n?: number): boolean;
   upgradeTrack(id: string, track: string): boolean;
   buyProp(id: string, prop: string): boolean;
   buyCourse(id: CourseId): boolean;
@@ -147,7 +148,7 @@ interface Store {
 let keySeq = 1;
 /** Dernière annonce par type : le Chaporacle et les départs ne s'affichent pas à chaque fois. */
 const lastToast: Record<string, number> = {};
-const TOAST_GAP_MS = { sorted: 40_000, left: 30_000 } as const;
+const TOAST_GAP_MS = { sorted: 120_000, left: 300_000, graduated: 30_000 } as const;
 function throttled(kind: keyof typeof TOAST_GAP_MS, now: number): boolean {
   if (now - (lastToast[kind] ?? -Infinity) < TOAST_GAP_MS[kind]) return true;
   lastToast[kind] = now;
@@ -183,10 +184,14 @@ export const useGame = create<Store>((set, get) => {
     for (const e of events) {
       if (e.type === 'coins') {
         // « Coffre plein » : au plus une fois toutes les 5 s par salle.
+        // Moins de textes à l'écran : un gain par salle toutes les 2 s, « coffre plein » toutes les 30 s.
         if (
-          e.amount <= 0 &&
           floaters.some(
-            (f) => f.stationId === e.stationId && f.text.startsWith('📦') && now - f.born < 5000,
+            (f) =>
+              f.stationId === e.stationId &&
+              (e.amount <= 0
+                ? f.text.startsWith('📦') && now - f.born < 30_000
+                : now - f.born < 2000),
           )
         )
           continue;
@@ -198,13 +203,7 @@ export const useGame = create<Store>((set, get) => {
           born: now,
         });
       } else if (e.type === 'fail') {
-        floaters.push({
-          key: keySeq++,
-          stationId: e.stationId,
-          text: '💥 Raté !',
-          color: '#FF8A7A',
-          born: now,
-        });
+        continue;
       } else if (e.type === 'sorted') {
         if (throttled('sorted', now)) continue;
         toasts.push({
@@ -218,6 +217,7 @@ export const useGame = create<Store>((set, get) => {
       } else if (e.type === 'left') {
         // Départ normal (scolarité terminée) : pas d'annonce ; attente trop longue : de temps en temps.
         if (e.reason === 'done' || throttled('left', now)) continue;
+        if (toasts.length) continue;
         toasts.push({
           key: keySeq++,
           kind: 'left',
@@ -233,17 +233,10 @@ export const useGame = create<Store>((set, get) => {
           born: now,
         });
       } else if (e.type === 'yearUp') {
-        const a = get().game.students[e.studentId]?.activity;
-        if (a && a.mode !== 'free') {
-          floaters.push({
-            key: keySeq++,
-            stationId: a.stationId,
-            text: t('event.yearUp', { n: e.year }),
-            color: '#BFE6FF',
-            born: now,
-          });
-        }
+        // Passage d'année : plus d'annonce (trop fréquent).
+        continue;
       } else if (e.type === 'graduated') {
+        if (throttled('graduated', now)) continue;
         toasts.push({
           key: keySeq++,
           kind: 'graduated',
@@ -430,10 +423,10 @@ export const useGame = create<Store>((set, get) => {
     buy: (p) => purchased(applyPurchase(get().game, p)),
     levelUp: (id) => purchased(levelUp(get().game, id)),
     addSeat: (id) => purchased(addSeat(get().game, id)),
-    upgradeSeat: (id, seat) => {
+    upgradeSeat: (id, seat, n = 1) => {
       const st = get().game.stations[id];
       const before = st ? seatTier(st.seats[seat]?.level ?? 1) : 0;
-      const ok = purchased(upgradeSeat(get().game, id, seat));
+      const ok = purchased(upgradeSeatMany(get().game, id, seat, n) > 0);
       if (ok && st && seatTier(st.seats[seat].level) > before) {
         set((s) => ({
           floaters: [

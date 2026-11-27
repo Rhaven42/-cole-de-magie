@@ -450,6 +450,42 @@
         "greenPotion",
         "coinStack"
       ]
+    },
+    {
+      "asset_id": "31323625-fa7a-4032-9c36-ec8695046567",
+      "label": "meubles de profil (mur du fond ; *Gauche = miroir pour le mur de gauche)",
+      "slices": [
+        "bibliothequeFond",
+        "armoireFond",
+        "chemineeFond",
+        "vitrinePotionsFond",
+        "horlogeFond",
+        "commodeFond",
+        "ratelierBaguettesFond",
+        "vitrineTropheesFond",
+        "secretaireFond",
+        "orgueFond",
+        "sechoirHerbesFond",
+        "etagereCristauxFond"
+      ]
+    },
+    {
+      "asset_id": "7e34a403-49fd-4f94-9b45-1cb8affb37ec",
+      "label": "objets de profil (mur du fond ; *Gauche = miroir pour le mur de gauche)",
+      "slices": [
+        "canapeFond",
+        "harpeFond",
+        "miroirFond",
+        "tentureFond",
+        "perchoirHibouFond",
+        "pianoFond",
+        "armureFond",
+        "aquariumFond",
+        "etagereIngredientsFond",
+        "carteFond",
+        "banquetteFond",
+        "planteMagiqueFond"
+      ]
     }
   ],
   "notes": "Planches découpées localement dans src/assets/sprites/. Les variantes *-unsorted.png sont des versions désaturées (élèves pas encore répartis). Les sprites teacherDeskM* sont des miroirs (bureau tourné vers les élèves). Ancienne planche tier-3 dorée (54244606…) remplacée. Index régénéré par `npm run assets`.",

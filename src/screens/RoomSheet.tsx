@@ -1,5 +1,6 @@
 import { StaffSheet } from './StaffSheet';
 import { RoomTop } from './RoomTop';
+import { SeatCards } from './SeatCards';
 import { useState } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { COURSES, type CourseId } from '../data/courses';
@@ -57,7 +58,7 @@ function describe(st: Station, p: Purchase): string {
     case 'addSeat':
       return t('room.addSeat', { seat: seatName(st) });
     case 'seat':
-      return `${seatName(st)} n°${p.seat + 1} ★`;
+      return `${seatName(st)} n°${p.seat + 1} → niv. ${(st.seats[p.seat]?.level ?? 1) + 1}`;
     case 'track':
       return t(`track.${p.trackId}`);
     default:
@@ -261,32 +262,8 @@ export function RoomSheet() {
           {rearrange ? (
             <RearrangeGrid st={st} />
           ) : (
-            <View style={styles.seatGrid}>
-              {st.seats.map((seat, i) => (
-                <Pressable
-                  key={i}
-                  onPress={() => setSeatSel(i)}
-                  onLongPress={() => store.upgradeSeat(st.id, i)}
-                  style={[styles.seatCell, seatSel === i && { borderColor: colors.gold }]}
-                >
-                  <Text style={{ fontSize: 11, fontWeight: '700' }}>{i + 1}</Text>
-                  <Text style={{ fontSize: 10, color: colors.goldDark }}>
-                    {'★'.repeat(seat.level)}
-                  </Text>
-                </Pressable>
-              ))}
-            </View>
+            <SeatCards st={st} game={game} name={seatName(st)} />
           )}
-          {!rearrange && seatSel !== null && st.seats[seatSel] ? (
-            <BuyButton
-              icon="⭐"
-              label={`${t('room.seatUpgrade')} (n°${seatSel + 1})`}
-              sub={`−${ECONOMY.seatUpgrade.timePerLevel * 100} % de temps${isCourse ? `, −${ECONOMY.seatUpgrade.failPerLevel * 100} % d’échec` : ''}`}
-              cost={seatUpgradeCost(st, seatSel)}
-              coins={coins}
-              onPress={() => store.upgradeSeat(st.id, seatSel)}
-            />
-          ) : null}
 
           {st.kind !== 'course' && SERVICES[st.kind].tracks.length ? (
             <>

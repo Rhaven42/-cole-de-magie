@@ -45,6 +45,13 @@ export const MIGRATIONS: Record<number, Migration> = {
       schemaVersion: 3,
     };
   },
+  /** v3 → v4 : objets améliorables jusqu'au niveau 50 (nouveaux paliers visuels 20 et 40). */
+  3: (raw) => {
+    const map = [1, 1, 5, 20, 30, 40];
+    for (const st of Object.values(raw.stations ?? {}) as any[])
+      for (const seat of st.seats ?? []) seat.level = map[Math.min(5, seat.level ?? 1)] ?? 1;
+    return { ...raw, schemaVersion: 4 };
+  },
 };
 
 export function serialize(state: GameState): string {

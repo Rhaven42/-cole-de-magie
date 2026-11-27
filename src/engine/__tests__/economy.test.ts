@@ -1,3 +1,4 @@
+import { ECONOMY } from '../../data/economy';
 import { COURSE_IDS, COURSES } from '../../data/courses';
 import { createGame } from '../state';
 import {
@@ -61,7 +62,7 @@ describe('économie et achats', () => {
     expect(addSeatCost(rec)).toBeNull();
   });
 
-  it('amélioration place par place jusqu’au niveau 5', () => {
+  it('amélioration place par place jusqu’au niveau max (50)', () => {
     const g = createGame();
     g.coins = 1e9;
     const st = g.stations['course-potions'];
@@ -69,7 +70,7 @@ describe('économie et achats', () => {
     expect(upgradeSeat(g, st.id, 0)).toBe(true);
     expect(seatUpgradeCost(st, 0)!).toBeGreaterThan(c1);
     while (upgradeSeat(g, st.id, 0));
-    expect(st.seats[0].level).toBe(5);
+    expect(st.seats[0].level).toBe(ECONOMY.seatUpgrade.maxLevel);
     expect(seatUpgradeCost(st, 99)).toBeNull();
   });
 
@@ -122,6 +123,7 @@ describe('économie et achats', () => {
 
   it('le bot cible d’abord les salles, puis le goulot', () => {
     const g = createGame();
+    g.coins = 500;
     expect(globalTarget(g)).toMatchObject({ kind: 'course', courseId: 'botany' });
     g.coins = 1e8;
     for (const c of COURSE_IDS) buyCourse(g, c);

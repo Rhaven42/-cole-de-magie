@@ -9,16 +9,16 @@ export const ECONOMY = {
   seatGrowth: 1.45,
   /** Amélioration place par place (niveaux 1→5) : coût = prixUnitaire × base × growth^(niveau−1). */
   seatUpgrade: {
-    maxLevel: 5,
-    base: 4,
-    growth: 2.1,
-    timePerLevel: 0.05,
-    failPerLevel: 0.02,
+    maxLevel: 50,
+    base: 2,
+    growth: 1.17,
+    timePerLevel: 0.012,
+    failPerLevel: 0.002,
     /** Bonus d'Éclats par niveau de place (places de cours uniquement). */
-    coinPerLevel: 0.05,
+    coinPerLevel: 0.04,
   },
   /** Évolution visuelle des objets : niveau à partir duquel l'objet change d'aspect. */
-  seatTiers: { improved: 3, legendary: 5 },
+  seatTiers: { improved: 20, legendary: 40 },
   /** Effets d'un niveau de salle. */
   level: { timePerLevel: 0.04, coinPerLevel: 0.06, seatEveryLevels: 2 },
   /** Places maximum dans une salle de cours. */

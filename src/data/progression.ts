@@ -34,7 +34,7 @@ export function isMealBreak(time: number): boolean {
 }
 
 /** Prix d'ouverture de la Salle des Examens (la plus chère de l'école). */
-export const EXAM_PRICE = 2_500_000;
+export const EXAM_PRICE = 8_000_000;
 /** Valeurs modifiables depuis l'interface d'administration. */
 export const RULES = { examPrice: EXAM_PRICE, coursePatience: 150 };
 

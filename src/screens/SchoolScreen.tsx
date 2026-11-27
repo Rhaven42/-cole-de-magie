@@ -558,11 +558,6 @@ export function SchoolScreen() {
       >
         <Text style={styles.collectText}>💰 Tout récolter</Text>
       </Pressable>
-      {isMealBreak(game.time) ? (
-        <View style={styles.mealBanner} pointerEvents="none">
-          <Text style={styles.mealText}>🍽️ Pause repas : les profs sont à la cantine</Text>
-        </View>
-      ) : null}
       {editing ? null : <AdOffer />}
       <DecorEditorBar />
     </View>

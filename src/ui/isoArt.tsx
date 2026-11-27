@@ -268,7 +268,7 @@ export function Sprite({
 }
 
 /** Meuble (sprite) associé à une place, selon le type de lieu / matière. */
-const SEAT_SPRITES: Record<string, { name: SpriteName; width: number; lift: number }> = {
+export const SEAT_SPRITES: Record<string, { name: SpriteName; width: number; lift: number }> = {
   potions: { name: 'cauldron', width: 34, lift: 6 },
   botany: { name: 'plant', width: 26, lift: 4 },
   history: { name: 'desk', width: 40, lift: 8 },
@@ -284,6 +284,12 @@ const SEAT_SPRITES: Record<string, { name: SpriteName; width: number; lift: numb
   sorting: { name: 'stool', width: 18, lift: 4 },
   exam: { name: 'desk', width: 40, lift: 8 },
 };
+
+/** Sprite du meuble d'une place selon son palier visuel (pour les fiches). */
+export function seatSprite(kind: string, tier: number): SpriteName | null {
+  const sp = SEAT_SPRITES[kind];
+  return sp ? tiered(sp.name, tier) : null;
+}
 
 export function Furniture({
   kind,

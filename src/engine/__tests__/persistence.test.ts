@@ -87,7 +87,7 @@ describe('migration v1 → v2', () => {
     v1.coins = 1234;
     v1.students = { 1: { id: 1, name: 'Test', activity: { mode: 'free', since: 0 } } };
     const g = deserialize(JSON.stringify(v1))!;
-    expect(g.schemaVersion).toBe(3);
+    expect(g.schemaVersion).toBe(SCHEMA_VERSION);
     expect(g.stations.exam).toBeDefined();
     expect(g.stationOrder).toContain('exam');
     expect(g.coins).toBe(1234);
@@ -95,5 +95,21 @@ describe('migration v1 → v2', () => {
     expect(g.stations.reception.pending).toBe(0);
     expect(g.students[1].passedBy).toEqual({});
     for (let i = 0; i < 100; i++) tick(g);
+  });
+});
+
+describe('migration v3 → v4', () => {
+  it('convertit les anciens niveaux d’objets (1-5) en niveaux 1-50', () => {
+    const g = createGame(1, 0);
+    const raw = JSON.parse(JSON.stringify(g));
+    raw.schemaVersion = 3;
+    const st = Object.values(raw.stations as Record<string, { seats: { level: number }[] }>)[0];
+    st.seats[0].level = 5;
+    if (st.seats[1]) st.seats[1].level = 3;
+    const back = deserialize(JSON.stringify(raw))!;
+    const st2 = Object.values(back.stations)[0];
+    expect(st2.seats[0].level).toBe(40);
+    if (st2.seats[1]) expect(st2.seats[1].level).toBe(20);
+    expect(back.schemaVersion).toBe(4);
   });
 });

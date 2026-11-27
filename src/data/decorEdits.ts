@@ -13,7 +13,11 @@ export interface ItemEdit {
   /** Inverse le sens de l'objet. */
   flip?: boolean;
   hidden?: boolean;
+  /** Contre un mur : plaqué (incliné) contre le mur de gauche ou du fond, ou de face. */
+  wall?: WallMode;
 }
+
+export type WallMode = 'auto' | 'face' | 'left' | 'back';
 
 export interface AddedItem {
   id: string;
@@ -22,6 +26,7 @@ export interface AddedItem {
   y: number;
   w: number;
   flip?: boolean;
+  wall?: WallMode;
 }
 
 export interface AreaEdits {
@@ -70,6 +75,7 @@ export function patchItem(a: string, key: string, patch: ItemEdit): void {
           y: patch.y ?? it.y,
           w: patch.w ?? it.w,
           flip: patch.flip ?? it.flip,
+          wall: patch.wall ?? it.wall,
         };
       })
       .filter((it) => !(it.id === id && patch.hidden));
@@ -131,6 +137,7 @@ export interface PlacedDecor {
   oy: number;
   /** Décalage d'affichage vertical (px) du sprite. */
   lift?: number;
+  wall?: WallMode;
 }
 
 /** Rempli à chaque dessin de la carte. */

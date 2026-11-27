@@ -5,7 +5,7 @@ import { EVENT_RULES } from '../data/events';
 import { SERVICES, type ServiceKind } from '../data/stations';
 import type { GameState, Meta, Seat, Station, StationKind } from './types';
 
-export const SCHEMA_VERSION = 3;
+export const SCHEMA_VERSION = 4;
 
 export function makeSeat(level = 1): Seat {
   return { level, occupant: null, remaining: 0, total: 0 };

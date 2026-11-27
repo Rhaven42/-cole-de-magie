@@ -1,3 +1,4 @@
+import { ECONOMY } from '../../data/economy';
 import { applyTime, comfortReduction, expCost, TIME_FLOOR } from '../../data/formulas';
 import { createGame } from '../state';
 import {
@@ -42,7 +43,7 @@ describe('formules', () => {
     const dorm = g.stations['dorm-0'];
     dorm.seats[0].level = 3;
     dorm.tracks.fireplace = 2; // +10 confort → −20 %
-    expect(serviceTime(dorm, 0)).toBeCloseTo(40 * 0.9 * 0.8);
+    expect(serviceTime(dorm, 0)).toBeCloseTo(40 * (1 - 2 * ECONOMY.seatUpgrade.timePerLevel) * 0.8);
   });
 
   it('étoiles de réputation, population et cadence', () => {
@@ -66,7 +67,7 @@ describe('formules', () => {
 describe('évolution des objets (places)', () => {
   it('change de palier visuel aux niveaux 3 et 5', () => {
     const { seatTier } = jest.requireActual('../modifiers');
-    expect([1, 2, 3, 4, 5].map(seatTier)).toEqual([0, 0, 1, 1, 2]);
+    expect([1, 19, 20, 39, 40, 50].map(seatTier)).toEqual([0, 0, 1, 1, 2, 2]);
   });
 
   it('une place améliorée rapporte plus d’Éclats et va plus vite', () => {

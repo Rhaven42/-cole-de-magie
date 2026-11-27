@@ -9,7 +9,8 @@ import { colors, radius, space } from './theme';
 /** Annonces : répartition du Chapeau, départs, Coupe des Maisons. */
 export function Toasts() {
   const toasts = useGame((s) => s.toasts);
-  const visible = toasts;
+  // Une seule annonce à la fois (la plus récente).
+  const visible = toasts.slice(-1);
   if (!visible.length) return null;
   return (
     <View style={styles.wrap} pointerEvents="none">

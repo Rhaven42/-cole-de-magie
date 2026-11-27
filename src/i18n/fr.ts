@@ -102,7 +102,7 @@ export const fr = {
   'room.optimizeHint': 'Meilleur achat : {what}',
   'room.optimizeNone': 'Rien d’abordable pour l’instant.',
   'room.seatUpgrade': 'Améliorer cette place',
-  'room.seatsTitle': 'Places (appui long pour améliorer)',
+  'room.seatsTitle': 'Objets de la salle',
   'room.upgradesTitle': 'Aménagements',
   'room.comfort': 'Confort',
   'room.patience': 'Patience',

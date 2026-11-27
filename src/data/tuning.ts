@@ -37,6 +37,7 @@ const P = (
 export const PARAMS: Param[] = [
   P('💰 Économie', 'eco.startCoins', 'Éclats au départ', ECONOMY, 'startCoins'),
   P('💰 Économie', 'eco.startGems', 'Diamants au départ', ECONOMY, 'startGems'),
+  P('💰 Économie', 'eco.seatGrowth', 'Hausse du prix des places (×)', ECONOMY, 'seatGrowth'),
   P('💰 Économie', 'eco.levelGrowth', 'Hausse du prix des niveaux (×)', ECONOMY, 'levelGrowth'),
   P('💰 Économie', 'eco.maxLevel', 'Niveau max des salles', ECONOMY, 'maxLevel'),
   P(
@@ -47,6 +48,25 @@ export const PARAMS: Param[] = [
     'courseSeatPriceFactor',
   ),
   P('💰 Économie', 'eco.maxSeats', 'Places max par salle', ECONOMY, 'courseMaxSeats'),
+  P('🪑 Objets', 'seat.max', 'Niveau max des objets', ECONOMY.seatUpgrade, 'maxLevel'),
+  P('🪑 Objets', 'seat.base', 'Prix de base (× gain du cours)', ECONOMY.seatUpgrade, 'base'),
+  P('🪑 Objets', 'seat.growth', 'Hausse du prix par niveau (×)', ECONOMY.seatUpgrade, 'growth'),
+  P(
+    '🪑 Objets',
+    'seat.time',
+    'Durée en moins par niveau (0,012 = 1,2 %)',
+    ECONOMY.seatUpgrade,
+    'timePerLevel',
+  ),
+  P(
+    '🪑 Objets',
+    'seat.coin',
+    'Gains en plus par niveau (0,03 = 3 %)',
+    ECONOMY.seatUpgrade,
+    'coinPerLevel',
+  ),
+  P('🪑 Objets', 'seat.tier1', 'Nouveau look au niveau', ECONOMY.seatTiers, 'improved'),
+  P('🪑 Objets', 'seat.tier2', 'Look légendaire au niveau', ECONOMY.seatTiers, 'legendary'),
   P('💰 Économie', 'enr.fee', 'Frais d’inscription', ENROLLMENT, 'fee', 'Éclats'),
   P('💰 Économie', 'grad.coins', 'Prime de diplôme', GRADUATION, 'coins', 'Éclats'),
   P('💰 Économie', 'rules.exam', 'Prix de la Salle des Examens', RULES, 'examPrice', 'Éclats'),

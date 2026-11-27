@@ -103,6 +103,38 @@ export function upgradeSeat(state: GameState, stationId: string, seatIndex: numb
   return true;
 }
 
+/** Coût de `n` niveaux d'une place (null si aucun possible) et nombre réellement achetables. */
+export function seatUpgradeBulk(
+  st: Station,
+  seatIndex: number,
+  n: number,
+  coins = Infinity,
+): { levels: number; cost: number } | null {
+  const seat = st.seats[seatIndex];
+  if (!seat) return null;
+  let cost = 0;
+  let levels = 0;
+  for (let l = seat.level; levels < n && l < ECONOMY.seatUpgrade.maxLevel; l++) {
+    const c = expCost(unitPrice(st) * ECONOMY.seatUpgrade.base, ECONOMY.seatUpgrade.growth, l - 1);
+    if (levels > 0 && cost + c > coins) break;
+    cost += c;
+    levels++;
+  }
+  return levels ? { levels, cost } : null;
+}
+
+/** Achète jusqu'à `n` niveaux d'une place (×10, Max). Renvoie le nombre de niveaux achetés. */
+export function upgradeSeatMany(
+  state: GameState,
+  stationId: string,
+  seatIndex: number,
+  n: number,
+): number {
+  let done = 0;
+  while (done < n && upgradeSeat(state, stationId, seatIndex)) done++;
+  return done;
+}
+
 /** Place la plus lente (la moins améliorée) : cible du chrono. */
 export function slowestSeat(st: Station): number {
   let slow = 0;

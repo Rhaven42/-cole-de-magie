@@ -14,6 +14,7 @@ import {
   maxSeats,
   profLevel,
   propCost,
+  slowestSeat,
   speedUpgradeCost,
   serviceTime,
   type GameState,
@@ -89,7 +90,11 @@ export function RoomTop({ st, game }: { st: Station; game: GameState }) {
   const who = { house: null, mood: 100 };
   const reward = isCourse ? courseReward(st, who, game) : 0;
   const next = isCourse ? courseReward({ ...st, level: st.level + 1 }, who, game) : 0;
-  const duration = serviceTime(st, 0, undefined, game);
+  // Durée moyenne des places : chaque appui sur le chrono la fait baisser.
+  const duration = st.seats.length
+    ? st.seats.reduce((a, _, i) => a + serviceTime(st, i, undefined, game), 0) / st.seats.length
+    : serviceTime(st, 0, undefined, game);
+  const target = st.seats.length ? slowestSeat(st) : -1;
   const max = maxSeats(st);
   // Chrono : améliore la place la plus lente (la moins améliorée).
   const prof = isCourse ? NAMED_PROFESSORS[st.courseId!] : undefined;
@@ -174,7 +179,13 @@ export function RoomTop({ st, game }: { st: Station; game: GameState }) {
           <View style={styles.clock}>
             <View style={styles.clockKnob} />
             <Text style={styles.clockText}>{duration.toFixed(1)} s</Text>
+            <Text style={styles.clockSub}>moyenne</Text>
           </View>
+          {target >= 0 ? (
+            <Text style={styles.clockTarget}>
+              Place n°{target + 1} · niv. {st.seats[target].level}
+            </Text>
+          ) : null}
           <UpgradeButton
             cost={speedUpgradeCost(st)}
             coins={coins}
@@ -343,6 +354,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#C9A25A',
   },
   clockText: { fontWeight: '900', fontSize: 18, color: '#4A2E16' },
+  clockSub: { fontSize: 9, color: '#7A6446', fontWeight: '700' },
+  clockTarget: { fontSize: 11, color: '#6B4A2A', fontWeight: '800', marginTop: -4 },
   slots: {
     flexDirection: 'row',
     gap: space.sm,

@@ -19,7 +19,14 @@ import {
   ROOM_SCALE,
 } from '../data/layout';
 import { COURSE_PROPS } from '../data/roomProps';
-import { addedItems, AREA_ORIGINS, DECOR_INDEX, itemEdit, OUTDOOR } from '../data/decorEdits';
+import {
+  addedItems,
+  AREA_ORIGINS,
+  DECOR_INDEX,
+  itemEdit,
+  OUTDOOR,
+  type WallMode,
+} from '../data/decorEdits';
 import type { CourseId } from '../data/courses';
 import type { Station } from '../engine';
 import {
@@ -189,7 +196,14 @@ function edited(
   gy: number,
   w: number,
   origin: { x: number; y: number } = { x: 0, y: 0 },
-): { name: SpriteName; gx: number; gy: number; w: number; flip: boolean } | null {
+): {
+  name: SpriteName;
+  gx: number;
+  gy: number;
+  w: number;
+  flip: boolean;
+  wall: WallMode;
+} | null {
   const e = itemEdit(area, key);
   if (e?.hidden) return null;
   const r = {
@@ -198,6 +212,7 @@ function edited(
     gy: e?.y !== undefined ? origin.y + e.y : gy,
     w: e?.w ?? w,
     flip: !!e?.flip,
+    wall: e?.wall ?? addedItems(area).find((a) => `add-${a.id}` === key)?.wall ?? 'auto',
   };
   DECOR_INDEX.set(`${area}|${key}`, {
     area,
@@ -206,6 +221,7 @@ function edited(
     gx: r.gx,
     gy: r.gy,
     w: r.w,
+    wall: r.wall,
     ox: origin.x,
     oy: origin.y,
   });
@@ -1362,10 +1378,23 @@ function Room({ r, env, guests = [] }: { r: RoomSnapshot; env: EnvDef; guests?: 
     const { name, gx, gy, w: width } = ed;
     const dx = gx - o.x;
     const dy = gy - o.y;
-    const wallish = WALL_FURNITURE.test(String(name));
-    const left = dx < 1.8 && dx < dy && !String(name).startsWith('teacherDesk');
+    // Objets déjà dessinés de profil (…Fond / …Gauche) : ni miroir ni inclinaison automatiques.
+    const preRotated = /(Fond|Gauche)$/.test(String(name));
+    const wallish = !preRotated && WALL_FURNITURE.test(String(name));
+    let left = !preRotated && dx < 1.8 && dx < dy && !String(name).startsWith('teacherDesk');
     const back = !left && dy < 1.8;
-    const skew = wallish ? (left ? -WALL_SKEW : back ? WALL_SKEW : 0) : 0;
+    let skew = wallish ? (left ? -WALL_SKEW : back ? WALL_SKEW : 0) : 0;
+    // Choix fait dans l'éditeur : de face, ou plaqué contre un mur.
+    if (ed.wall === 'face') {
+      left = false;
+      skew = 0;
+    } else if (ed.wall === 'left') {
+      left = !preRotated;
+      skew = preRotated ? 0 : -WALL_SKEW;
+    } else if (ed.wall === 'back') {
+      left = false;
+      skew = preRotated ? 0 : WALL_SKEW;
+    }
     add(
       gx,
       gy,

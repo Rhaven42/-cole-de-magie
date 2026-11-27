@@ -11,6 +11,7 @@ import {
   patchItem,
   resetArea,
   resetItem,
+  type WallMode,
 } from '../data/decorEdits';
 import { useGame } from '../state/store';
 import { iso, roomSize, unIso } from './iso';
@@ -18,6 +19,13 @@ import { stationName } from './kit';
 import { radius, space } from './theme';
 
 const STEP = 0.5;
+const WALLS: WallMode[] = ['auto', 'face', 'left', 'back'];
+const WALL_LABEL: Record<WallMode, string> = {
+  auto: '🧱 Auto',
+  face: '🧱 De face',
+  left: '🧱 Mur gauche',
+  back: '🧱 Mur du fond',
+};
 
 function areaLabel(area: string): string {
   if (area === OUTDOOR) return 'Extérieur';
@@ -50,7 +58,7 @@ export function editorTap(mx: number, my: number): void {
     const area = areaAt(g);
     const o = area === OUTDOOR ? { x: 0, y: 0 } : AREA_ORIGINS.get(area)!;
     const d = SPRITES[ed.placing.sprite as SpriteName];
-    const w = Math.round(Math.min(90, Math.max(22, (d?.w ?? 120) / 5)));
+    const w = Math.round(Math.min(90, Math.max(area === OUTDOOR ? 22 : 40, (d?.w ?? 120) / 5)));
     const key = addItem(area, ed.placing.sprite, round(g.x - o.x), round(g.y - o.y), w);
     store.setEditor({ placing: null, sel: `${area}|${key}` });
     store.decorChanged();
@@ -211,6 +219,19 @@ export function DecorEditorBar() {
               )}
             />
           </View>
+          {it.area !== OUTDOOR ? (
+            <View style={styles.row}>
+              <Tool
+                label={WALL_LABEL[it.wall ?? 'auto']}
+                wide
+                color="#7A5A3A"
+                onPress={change(() => {
+                  const cur = WALLS.indexOf(it.wall ?? 'auto');
+                  patchItem(it.area, it.key, { wall: WALLS[(cur + 1) % WALLS.length] });
+                })}
+              />
+            </View>
+          ) : null}
           <View style={styles.row}>
             <Tool
               label="🗑 Supprimer"
@@ -317,6 +338,21 @@ function Catalog({
           placeholderTextColor="#998"
           style={styles.search}
         />
+        <View style={styles.chips}>
+          {[
+            ['', 'Tous'],
+            ['Fond', '🧱 Mur du fond'],
+            ['Gauche', '🧱 Mur de gauche'],
+          ].map(([v, l]) => (
+            <Pressable
+              key={l}
+              onPress={() => setQ(v)}
+              style={[styles.chip, q === v && styles.chipOn]}
+            >
+              <Text style={styles.chipText}>{l}</Text>
+            </Pressable>
+          ))}
+        </View>
         <FlatList
           data={names}
           numColumns={4}
@@ -445,5 +481,9 @@ const styles = StyleSheet.create({
   },
   cellImg: { width: 60, height: 60 },
   cellText: { color: '#DDD', fontSize: 10 },
+  chips: { flexDirection: 'row', gap: 6, paddingHorizontal: space.sm, paddingTop: 6 },
+  chip: { backgroundColor: '#3A342F', borderRadius: 12, paddingHorizontal: 10, paddingVertical: 5 },
+  chipOn: { backgroundColor: '#E07B2E' },
+  chipText: { color: '#fff', fontWeight: '800', fontSize: 12 },
   empty: { color: '#AAA', textAlign: 'center', marginTop: 30 },
 });
