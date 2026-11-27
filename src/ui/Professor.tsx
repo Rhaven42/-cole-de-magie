@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Animated, Easing, Image, StyleSheet, Text, View } from 'react-native';
-import { PORTRAITS } from '../assets/portraits';
+import { SPRITES } from '../assets';
+import { PORTRAITS, PORTRAITS_SIT, PROF_SIT_SCALE } from '../assets/portraits';
 import { COURSE_IDS, COURSES, type CourseId } from '../data/courses';
 import { HALL_PROF_X, PLOTS, PROF_SEAT_GAP, PROF_TABLE_Y, ROOM_SCALE } from '../data/layout';
 import { PROF_LINES } from '../data/professors';
@@ -45,6 +46,8 @@ export function Professor({
   const [face] = useState(() => new Animated.Value(-1));
   const [seated] = useState(() => new Animated.Value(0));
   const [line, setLine] = useState<string | null>(null);
+  /** Assis à la table de la cantine (le bas du corps est caché par la table). */
+  const [atTable, setAtTable] = useState(false);
   const atHall = useRef(false);
 
   // Respiration (toujours).
@@ -127,6 +130,7 @@ export function Professor({
         walkPath(route({ g: homeG, room: stationId }, { g: tableG, room: 'hall' }), homeG, () => {
           // Assis à la table des profs, tourné vers la salle.
           face.setValue(-1);
+          setAtTable(true);
           seated.setValue(1);
         });
       }
@@ -134,6 +138,7 @@ export function Professor({
     }
     if (atHall.current && tableG) {
       atHall.current = false;
+      setAtTable(false);
       walkPath(route({ g: tableG, room: 'hall' }, { g: homeG, room: stationId }), tableG, () =>
         face.setValue(-1),
       );
@@ -141,9 +146,11 @@ export function Professor({
     }
     seated.setValue(0);
     if (!teaching) {
+      // Pas de cours : s'assoit à sa place, près du tableau.
       pos.setValue(a);
       face.setValue(-1);
       spark.setValue(0);
+      if (PORTRAITS_SIT[courseId]) seated.setValue(1);
       return stopAll;
     }
     // En cours : fait les cent pas devant le tableau, en se retournant à chaque bout.
@@ -214,8 +221,10 @@ export function Professor({
   const scaleY = breath.interpolate({ inputRange: [0, 1], outputRange: [1, 1.025] });
   const bob = stride.interpolate({ inputRange: [-1, 0, 1], outputRange: [-2.5, 0, -2.5] });
   const sway = stride.interpolate({ inputRange: [-1, 1], outputRange: ['-2deg', '2deg'] });
-  // Assis : il descend un peu, et la table cache le bas de son corps.
-  const sitDrop = seated.interpolate({ inputRange: [0, 1], outputRange: [0, HEIGHT * 0.22] });
+  // Assis : image assise à la place de l'image debout.
+  const sitSrc = PORTRAITS_SIT[courseId];
+  const sh = HEIGHT * PROF_SIT_SCALE;
+  const sw = sh * 0.55;
   const standO = seated.interpolate({ inputRange: [0, 1], outputRange: [1, 0] });
 
   return (
@@ -248,23 +257,39 @@ export function Professor({
         {/* Les portraits regardent vers la gauche : miroir (face = -1) pour regarder à droite. */}
         <Image source={src} style={{ width: w, height: HEIGHT }} resizeMode="contain" />
       </Animated.View>
-      {/* Assis à la table des profs : seul le haut du corps dépasse de la table. */}
-      <Animated.View
-        style={{
-          position: 'absolute',
-          width: w,
-          height: HEIGHT * 0.6,
-          overflow: 'hidden',
-          opacity: seated,
-          transform: [{ translateY: sitDrop }],
-        }}
-      >
-        <Image
-          source={src}
-          style={{ width: w, height: HEIGHT, transform: [{ scaleX: -1 }] }}
-          resizeMode="contain"
-        />
-      </Animated.View>
+      {/* Assis (image assise) ; à la cantine, la table cache le bas du corps. */}
+      {sitSrc ? (
+        <Animated.View
+          style={{
+            position: 'absolute',
+            left: (w - sw) / 2,
+            top: HEIGHT - sh,
+            width: sw,
+            height: atTable ? sh * 0.7 : sh,
+            overflow: 'hidden',
+            opacity: seated,
+          }}
+        >
+          {atTable ? null : (
+            <Image
+              source={SPRITES.stool.src}
+              style={{
+                position: 'absolute',
+                bottom: 0,
+                left: sw * 0.05,
+                width: sw * 0.9,
+                height: (sw * 0.9 * SPRITES.stool.h) / SPRITES.stool.w,
+              }}
+              resizeMode="contain"
+            />
+          )}
+          <Image
+            source={sitSrc}
+            style={{ width: sw, height: sh, transform: [{ scaleX: -1 }] }}
+            resizeMode="contain"
+          />
+        </Animated.View>
+      ) : null}
       {teaching && !eating ? (
         <Animated.View
           style={[

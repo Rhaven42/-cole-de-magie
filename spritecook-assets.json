@@ -532,6 +532,42 @@
         "coinLecture",
         "citrouillesLumineuses"
       ]
+    },
+    {
+      "asset_id": "64006075-e2bd-4b15-84fa-7c1f60539b28",
+      "label": "déco intérieure 4",
+      "slices": [
+        "vitrailFond",
+        "tableEchecs",
+        "perchoirPhenix",
+        "echelleBibliotheque",
+        "craneDragon",
+        "sacsIngredients",
+        "cageFees",
+        "tableThe",
+        "fontaineInterieure",
+        "meubleApothicaire",
+        "livresVolants",
+        "bannieresMaisons"
+      ]
+    },
+    {
+      "asset_id": "2e39987c-65a6-4904-9d0e-8ebe13705ec0",
+      "label": "déco extérieure 4",
+      "slices": [
+        "puitsSouhaits",
+        "pontPierre",
+        "ruches",
+        "cercleChampignons",
+        "cercleMenhirs",
+        "etalPotions",
+        "statueLicorne",
+        "echiquierGeant",
+        "ratelierBalaisExt",
+        "archeLanternes",
+        "charretteFleurs",
+        "feuDeCamp"
+      ]
     }
   ],
   "notes": "Planches découpées localement dans src/assets/sprites/. Les variantes *-unsorted.png sont des versions désaturées (élèves pas encore répartis). Les sprites teacherDeskM* sont des miroirs (bureau tourné vers les élèves). Ancienne planche tier-3 dorée (54244606…) remplacée. Index régénéré par `npm run assets`.",
@@ -626,5 +662,22 @@
       "role": "Balais volants",
       "note": "source pleine résolution (raw), recadrée avec marge"
     }
-  ]
+  ],
+  "portraits_sit": {
+    "asset_id": "4f2874db-c92e-49eb-94d6-d14852bf9ab8",
+    "source_upload": "49534f5b-49d4-43dd-a9b2-c649b385c210",
+    "files": "portraits/sit/<nom>.png",
+    "order": [
+      "dolohov",
+      "solomon",
+      "morgenvar",
+      "taladon",
+      "alva",
+      "harwen",
+      "rhaven",
+      "delan",
+      "tenarius",
+      "harvald"
+    ]
+  }
 }

@@ -401,6 +401,13 @@ const LANDSCAPE: Placed[] = [
   { name: 'produceCrate', x: SX1 + 4.5, y: SY0 + 21, w: 44 },
   { name: 'willow', x: SX1 + 10, y: SY0 + 46, w: 96 },
   { name: 'swingOak', x: SX1 + 10, y: SY0 + 60, w: 96 },
+  // Ajouts (en fin de liste : les modifications de l'éditeur restent valables).
+  { name: 'ruches', x: SX1 + 21, y: SY0 + 34, w: 74 },
+  { name: 'feuDeCamp', x: SX1 + 18, y: SY0 - 4, w: 80 },
+  { name: 'echiquierGeant', x: SX1 + 19, y: SY0 + 48, w: 110 },
+  { name: 'puitsSouhaits', x: SX0 - 5, y: SY0 + 43, w: 66 },
+  { name: 'cercleChampignons', x: SX0 - 13, y: SY0 + 21, w: 80 },
+  { name: 'cercleMenhirs', x: SX0 + 8, y: SY0 - 11, w: 120 },
 ];
 
 /** Paysage : couche arrière (avant les bâtiments) ou avant (devant la façade). */
@@ -557,6 +564,11 @@ function Ground({ env }: { env: EnvDef }) {
   }
   const fp = fountainPoint();
   yard.push({ name: 'grandFountain', x: fp.x, y: fp.y, w: 96 });
+  // Ajouts (en fin de liste : les modifications de l'éditeur restent valables).
+  yard.push(
+    { name: 'etalPotions', x: Rr(21), y: y1 + 13, w: 66 },
+    { name: 'charretteFleurs', x: L(21), y: y1 + 12, w: 66 },
+  );
   const yardEls = yard
     .map((o, i) => ({ o, i }))
     .filter(({ o }) => isManor || !['oak', 'pine', 'bush', 'pumpkins'].includes(o.name))

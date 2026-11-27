@@ -173,6 +173,8 @@ export const ROOM_DECOR: Record<string, DecorItem[]> = {
     at('planterTree', 0.7, 23.2, 28),
     at('candelabra', 23.4, 17.5, 22),
     at('candelabra', 23.4, 6.5, 22),
+    at('cageFees', 23.4, 12.0, 30),
+    at('fontaineInterieure', 23.0, 21.0, 52),
   ],
   // Accueil : guichets à gauche, coin d'attente, le Chaporacle à droite (zone violette).
   // Accueil : guichets face à l'entrée ; casiers à courrier et archives au fond,
@@ -211,7 +213,9 @@ export const ROOM_DECOR: Record<string, DecorItem[]> = {
     at('bookshelf', 0.6, 6.0, 30),
     at('clock', 9.3, 0.6, 22),
     at('globe', 8.8, 3.6, 26),
-    at('table', 6.5, 6.4, 60),
+    at('tableEchecs', 6.5, 6.4, 56),
+    at('tableThe', 2.8, 6.6, 40),
+    at('perchoirPhenix', 9.2, 6.2, 34),
     at('candelabra', 9.2, 9.1, 22),
     at('coatStand', 0.7, 9.0, 24),
     at('planterTree', 0.7, 0.8, 28),
@@ -229,6 +233,8 @@ export const ROOM_DECOR: Record<string, DecorItem[]> = {
     at('candelabra', 23.2, 4.5, 22),
     at('books', 23.0, 9.1, 26),
     at('chest', 2.0, 9.2, 26),
+    at('craneDragon', 20.5, 9.0, 40),
+    at('livresVolants', 4.5, 0.9, 30),
   ],
   sorting: [
     { sprite: 'candelabra', x: 1.0, y: 1.0, width: 22 },
