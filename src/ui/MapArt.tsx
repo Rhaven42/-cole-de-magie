@@ -126,12 +126,43 @@ function naturalize(name: SpriteName, p: Pt, width: number): [SpriteName, number
 }
 
 /** Sprite de décor avec son ombre. */
-function Decor({ name: raw, p, width: w0 }: { name: SpriteName; p: Pt; width: number }) {
+/** Grandes constructions posées au sol : pas d'ombre portée (elles sembleraient flotter). */
+const NO_SHADOW = new Set<string>([
+  'owlery',
+  'greenhouse',
+  'gazebo',
+  'vegGarden',
+  'pond',
+  'well',
+  'footbridge',
+  'campfire',
+  'haystack',
+  'targets',
+  'picnic',
+  'gate',
+  'porch',
+  'roseArch',
+  'roseArchM',
+  'flowerStrip',
+  'flowerStripM',
+]);
+
+function Decor({
+  name: raw,
+  p,
+  width: w0,
+  mirror = false,
+}: {
+  name: SpriteName;
+  p: Pt;
+  width: number;
+  mirror?: boolean;
+}) {
   const [name, width] = naturalize(raw, p, w0);
   return (
     <G>
-      <Shadow p={p} w={width} />
-      <Sprite name={name} p={p} width={width} lift={3} />
+      {NO_SHADOW.has(name) ? null : <Shadow p={p} w={width} />}
+      <Sprite name={name} p={p} width={width} lift={NO_SHADOW.has(name) ? 0 : 3} mirror={mirror} />
     </G>
   );
 }
@@ -668,9 +699,32 @@ function Garden({ px, py, env }: { px: number; py: number; env: EnvDef }) {
   );
 }
 
-function ConstructionPlot({ id, available }: { id: string; available: boolean }) {
+function ConstructionPlot({
+  id,
+  available,
+  env,
+}: {
+  id: string;
+  available: boolean;
+  env: EnvDef;
+}) {
   const o = roomOrigin(PLOTS[id]);
   const { w: W, h: H } = roomSize(id);
+  if (!PLOTS[id].outdoor)
+    // Salle à construire : murs déjà là, sol de terre battue, rondins et cailloux.
+    return (
+      <G>
+        <Walls id={`plot-${id}`} ox={o.x} oy={o.y} w={W} h={H} env={env} />
+        <Polygon points={floorPoly(o.x, o.y, W, H)} fill="#5E4A36" />
+        <Polygon points={floorPoly(o.x + 0.4, o.y + 0.4, W - 0.8, H - 0.8)} fill="#6B5640" />
+        <WallShadow id={`plot-${id}-shx`} axis="x" ox={o.x} oy={o.y} len={W} />
+        <WallShadow id={`plot-${id}-shy`} axis="y" ox={o.x} oy={o.y} len={H} />
+        <Decor name="rocks" p={iso(o.x + W * 0.3, o.y + H * 0.35)} width={26} />
+        <Decor name="crates" p={iso(o.x + W * 0.65, o.y + H * 0.3)} width={28} />
+        <Decor name="barrel" p={iso(o.x + W * 0.35, o.y + H * 0.7)} width={18} />
+        <FrontLips ox={o.x} oy={o.y} w={W} h={H} door={PLOTS[id].door === 'y' ? 'y' : 'x'} />
+      </G>
+    );
   return (
     <G opacity={available ? 1 : 0.6}>
       <TexFloor
@@ -1188,8 +1242,13 @@ function Room({ r, env, guests = [] }: { r: RoomSnapshot; env: EnvDef; guests?: 
   const wall: ReactElement[] = [];
   const objects: { order: number; el: ReactElement }[] = [];
   const add = (gx: number, gy: number, el: ReactElement) => objects.push({ order: gx + gy, el });
-  const decor = (key: string, name: SpriteName, gx: number, gy: number, width: number) =>
-    add(gx, gy, <Decor key={key} name={name} p={iso(gx, gy)} width={width} />);
+  // Dos au mur : contre le mur de gauche (x minimal), l'objet est retourné pour faire face à la salle.
+  const decor = (key: string, name: SpriteName, gx: number, gy: number, width: number) => {
+    const dx = gx - o.x;
+    const dy = gy - o.y;
+    const mirror = dx < 1.8 && dx < dy && !String(name).startsWith('teacherDesk');
+    add(gx, gy, <Decor key={key} name={name} p={iso(gx, gy)} width={width} mirror={mirror} />);
+  };
 
   /** Tentures aux couleurs des Maisons sur le muret. */
   const tapestries = (axisOf: (i: number) => 'x' | 'y', at: (i: number) => number) =>
@@ -1479,7 +1538,7 @@ function MapArtBase({ rooms, plots, env: envIndex }: Props) {
     if (p)
       items.push({
         order: p.px + p.py,
-        el: <ConstructionPlot key={pl.id} id={pl.id} available={pl.available} />,
+        el: <ConstructionPlot key={pl.id} id={pl.id} available={pl.available} env={env} />,
       });
   }
   GARDENS.forEach((g, i) =>

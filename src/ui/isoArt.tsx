@@ -240,15 +240,21 @@ export function Sprite({
   p,
   width,
   lift = 0,
+  mirror = false,
 }: {
   name: SpriteName;
   p: Pt;
   width: number;
   lift?: number;
+  /** Miroir horizontal (objet tourné vers l'autre mur). */
+  mirror?: boolean;
 }) {
   const d = SPRITES[name];
   const h = (width * d.h) / d.w;
-  return <SvgImage href={d.src} x={p.x - width / 2} y={p.y - h + lift} width={width} height={h} />;
+  const img = (
+    <SvgImage href={d.src} x={p.x - width / 2} y={p.y - h + lift} width={width} height={h} />
+  );
+  return mirror ? <G transform={`translate(${2 * p.x} 0) scale(-1 1)`}>{img}</G> : img;
 }
 
 /** Meuble (sprite) associé à une place, selon le type de lieu / matière. */
