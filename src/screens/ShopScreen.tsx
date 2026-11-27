@@ -1,4 +1,4 @@
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { COURSE_IDS, COURSES } from '../data/courses';
 import { MANAGERS } from '../data/managers';
 import { courseCost, dormCost, dormCount, examCost, managerCost } from '../engine';
@@ -14,6 +14,10 @@ export function ShopScreen() {
   const ownedCourses = COURSE_IDS.filter((id) => game.stations[`course-${id}`]);
   return (
     <ScrollView style={styles.bg} contentContainerStyle={styles.content}>
+      <Pressable style={styles.gemBtn} onPress={() => store.openPanel('gems')}>
+        <Text style={styles.gemBtnText}>💎 Boutique de Diamants</Text>
+        <Text style={styles.gemBtnSub}>Pierre philosophale, Sablier de Chronos, trésors…</Text>
+      </Pressable>
       <Title>{t('shop.rooms')}</Title>
       {COURSE_IDS.map((id) => {
         const def = COURSES[id];
@@ -99,6 +103,17 @@ export function ShopScreen() {
 }
 
 const styles = StyleSheet.create({
+  gemBtn: {
+    backgroundColor: '#4B3A8A',
+    borderRadius: radius.md,
+    borderWidth: 2,
+    borderColor: '#7FD3FF',
+    padding: space.md,
+    alignItems: 'center',
+    marginBottom: space.md,
+  },
+  gemBtnText: { color: '#E8F7FF', fontWeight: '900', fontSize: 17 },
+  gemBtnSub: { color: '#B9B0D9', fontSize: 12 },
   bg: { flex: 1, backgroundColor: colors.parchmentDark },
   content: { padding: space.lg },
   owned: {

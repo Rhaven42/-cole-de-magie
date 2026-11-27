@@ -145,6 +145,8 @@ export function prestige(state: GameState, seed: number, now: number): GameState
   };
   const g = createGame(seed, now, meta);
   g.gems = state.gems + PRESTIGE.gems;
+  // Les améliorations de Diamants sont permanentes.
+  g.gemShop = { ...state.gemShop };
   return g;
 }
 

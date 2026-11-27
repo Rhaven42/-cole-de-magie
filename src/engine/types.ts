@@ -154,6 +154,10 @@ export interface GameState {
   ad?: { nextAt: number; kind: AdKind };
   /** Fin du bonus Éclats ×2 (temps de jeu). */
   boostUntil?: number;
+  /** Horodatage réel (ms) du prochain fruit de l'Arbre enchanté (absent = mûr). */
+  treeReadyAt?: number;
+  /** Achats de la boutique de Diamants (id → niveau). */
+  gemShop?: Partial<Record<string, number>>;
   totals: Totals;
   /** Salles avec un manager (récolte automatique). */
   managers: Record<string, boolean>;

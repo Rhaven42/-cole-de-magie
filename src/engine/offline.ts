@@ -1,13 +1,17 @@
+import { offlineCap } from './gemShop';
 import { tick } from './tick';
 import type { GameState } from './types';
 
-/** Durée max de rattrapage hors-ligne (s). Une amélioration J7 l'étendra. */
+/** Durée max de base du rattrapage hors-ligne (s) ; voir `offlineCap`. */
 export const OFFLINE_MAX_SECONDS = 2 * 3600;
 /** Pas de simulation pendant le rattrapage (plus grossier que le tick temps réel). */
 export const OFFLINE_STEP = 1;
 
 export interface OfflineSummary {
   seconds: number;
+  /** Plafond atteint (absence plus longue que le plafond). */
+  capped?: boolean;
+  cap?: number;
   coins: number;
   courses: number;
   arrived: number;
@@ -18,7 +22,7 @@ export interface OfflineSummary {
 export function elapsedSince(state: GameState, nowMs: number): number {
   const delta = (nowMs - state.lastSavedAt) / 1000;
   if (!Number.isFinite(delta) || delta <= 0) return 0;
-  return Math.min(delta, OFFLINE_MAX_SECONDS);
+  return Math.min(delta, offlineCap(state));
 }
 
 export function catchUp(state: GameState, seconds: number): OfflineSummary {

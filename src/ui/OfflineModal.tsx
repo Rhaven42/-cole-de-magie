@@ -13,7 +13,9 @@ export function OfflineModal() {
         <View style={styles.card}>
           <Text style={styles.title}>🌙 {t('offline.title')}</Text>
           <Text style={styles.line}>
-            {t('offline.duration', { time: formatDuration(summary.seconds) })}
+            {summary.capped
+              ? `Gains cumulés pendant ${formatDuration(summary.seconds)} (plafond atteint).`
+              : t('offline.duration', { time: formatDuration(summary.seconds) })}
           </Text>
           <Text style={[styles.line, styles.big]}>
             {t('offline.coins', { n: formatNumber(summary.coins) })}
@@ -23,6 +25,12 @@ export function OfflineModal() {
           {summary.left > 0 ? (
             <Text style={[styles.line, { color: colors.bad }]}>
               😤 {t('offline.left', { n: summary.left })}
+            </Text>
+          ) : null}
+          {summary.cap ? (
+            <Text style={styles.cap}>
+              ⏳ Plafond hors-ligne : {formatDuration(summary.cap)} · allonge-le avec la Veilleuse
+              du Gardien (boutique 💎)
             </Text>
           ) : null}
           <Pressable style={styles.btn} onPress={close}>
@@ -35,6 +43,7 @@ export function OfflineModal() {
 }
 
 const styles = StyleSheet.create({
+  cap: { color: colors.inkSoft, fontSize: 12, textAlign: 'center', marginTop: 6 },
   backdrop: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.55)',

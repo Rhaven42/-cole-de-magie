@@ -52,6 +52,7 @@ import { stationName } from '../ui/kit';
 import { colors, formatDuration, formatNumber } from '../ui/theme';
 import { Walker } from '../ui/Walker';
 import { Ambient, Explosion } from '../ui/Ambient';
+import { MagicTree, treeScreenPos } from '../ui/MagicTree';
 import { Professor } from '../ui/Professor';
 
 const MIN_SCALE = 0.25;
@@ -339,6 +340,12 @@ export function SchoolScreen() {
     const g = store.game;
     const mx = (sx - tx.value) / scale.value;
     const my = (sy - ty.value) / scale.value;
+    // 0. Arbre enchanté de la cour
+    const tp = treeScreenPos();
+    if (Math.abs(mx - tp.x) < 50 && my < tp.y + 8 && my > tp.y - 150) {
+      store.openPanel('tree');
+      return;
+    }
     // 1. Coffres
     for (const st of Object.values(g.stations)) {
       if (st.kind !== 'course' || st.pending < 1) continue;
@@ -489,6 +496,7 @@ export function SchoolScreen() {
               );
             })}
             <Ambient game={game} />
+            <MagicTree game={game} />
             <SortingHat game={game} />
             <EventMarkers game={game} />
             {game.stationOrder.map((id) => (

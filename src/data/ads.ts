@@ -25,5 +25,5 @@ export const AD_KINDS: AdKind[] = ['double', 'coins', 'gems'];
 export const AD_LABEL: Record<AdKind, { icon: string; title: string }> = {
   double: { icon: '⚡', title: 'Éclats ×2 pendant 5 minutes' },
   coins: { icon: '💰', title: 'Une bourse d’Éclats' },
-  gems: { icon: '💎', title: '2 Gemmes' },
+  gems: { icon: '💎', title: '2 Diamants' },
 };

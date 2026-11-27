@@ -7,7 +7,7 @@ import { HAT_LINES_FR } from '../i18n/fr';
 import { EVENT_RULES } from '../data/events';
 import { handleEvents, isClosed, startEvent } from './events';
 import { deposit } from './meta';
-import { COURSE_PATIENCE, ENROLLMENT, isMealBreak } from '../data/progression';
+import { ENROLLMENT, RULES, isMealBreak } from '../data/progression';
 import { advanceYear, distinctCourses, graduate, handleDonations } from './progression';
 import {
   arrivalInterval,
@@ -128,7 +128,7 @@ function handlePatience(state: GameState, dt: number, events: GameEvent[]): void
     st.queue = st.queue.filter((id) => {
       const s = state.students[id];
       if (!s || s.activity.mode !== 'queue') return false;
-      if (state.time - s.activity.since <= COURSE_PATIENCE) return true;
+      if (state.time - s.activity.since <= RULES.coursePatience) return true;
       st.stats.left++;
       leaveSchool(state, s, events, 'wait');
       return false;

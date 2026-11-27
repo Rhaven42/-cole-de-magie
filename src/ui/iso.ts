@@ -361,6 +361,12 @@ export function fountainPoint(): Pt {
   return { x: pathX + 11, y: schoolFrontY + 7 };
 }
 
+/** Arbre enchanté de la cour d'entrée (grille absolue), en face de la fontaine. */
+export function treePoint(): Pt {
+  const { pathX, schoolFrontY } = courtyard();
+  return { x: pathX - 11, y: schoolFrontY + 6 };
+}
+
 /** File d'attente d'un lieu : le long de l'allée pour l'entrée, sinon dans le couloir. */
 export function queueSpotFor(id: string, k: number): Pt {
   const { w, h } = roomSize(id);

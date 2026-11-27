@@ -15,6 +15,9 @@ import { useGame } from './src/state/store';
 import { useGameLoop } from './src/state/useGameLoop';
 import { Hud } from './src/ui/Hud';
 import { OfflineModal } from './src/ui/OfflineModal';
+import { GemShop } from './src/ui/GemShop';
+import { TreePanel } from './src/ui/TreePanel';
+import { AdminPanel } from './src/screens/AdminPanel';
 import { TabBar, type Tab } from './src/ui/TabBar';
 import { Toasts } from './src/ui/Toasts';
 import { colors } from './src/ui/theme';
@@ -46,6 +49,9 @@ function Game() {
       <StudentSheet />
       <DailyModal />
       <OfflineModal />
+      <TreePanel />
+      <GemShop />
+      <AdminPanel />
     </View>
   );
 }

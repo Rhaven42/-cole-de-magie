@@ -432,6 +432,24 @@
         "grandFountain",
         "kiosk"
       ]
+    },
+    {
+      "asset_id": "07d00794-b42e-4558-b7c5-712cc825bc62",
+      "label": "arbre enchanté, boutique de Diamants, potager",
+      "slices": [
+        "magicTree",
+        "magicTreeBare",
+        "magicFruit",
+        "diamond",
+        "vegPlot",
+        "pumpkinBarrow",
+        "scarecrow",
+        "produceCrate",
+        "hourglass",
+        "goldChest",
+        "greenPotion",
+        "coinStack"
+      ]
     }
   ],
   "notes": "Planches découpées localement dans src/assets/sprites/. Les variantes *-unsorted.png sont des versions désaturées (élèves pas encore répartis). Les sprites teacherDeskM* sont des miroirs (bureau tourné vers les élèves). Ancienne planche tier-3 dorée (54244606…) remplacée. Index régénéré par `npm run assets`.",

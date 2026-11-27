@@ -11,6 +11,7 @@ import { TRAITS } from '../data/traits';
 import { EVENT_RULES } from '../data/events';
 import { RELIC_BONUS, RELIC_SETS, RELICS } from '../data/collection';
 import { PRESTIGE } from '../data/environments';
+import { GEM_BONUS } from '../data/gemShop';
 import type { GameState, Station, Student } from './types';
 
 /** Durée de base du service d'un lieu. */
@@ -94,6 +95,7 @@ export function serviceTime(
     studentTimeMult(st, s),
     stateTimeMult(state, st),
     state && st.courseId ? 1 - PROF_UPGRADE.timePerLevel * (profLevel(state, st.courseId) - 1) : 1,
+    state && st.kind === 'course' ? gemTimeMult(state) : 1,
   ];
   return applyTime(base, mults);
 }
@@ -200,6 +202,17 @@ export function metaMult(state: GameState): number {
   ).length;
   return (
     (1 + relics * RELIC_BONUS.perRelic + sets * RELIC_BONUS.perSet) *
-    (1 + state.meta.prestige * PRESTIGE.coinBonusPerLevel)
+    (1 + state.meta.prestige * PRESTIGE.coinBonusPerLevel) *
+    gemCoinMult(state)
   );
+}
+
+/** Multiplicateur d'Éclats de la Pierre philosophale (boutique de Diamants). */
+export function gemCoinMult(state: GameState): number {
+  return 1 + GEM_BONUS.philosopherCoin * (state.gemShop?.philosopher ?? 0);
+}
+
+/** Multiplicateur de durée des cours du Sablier de Chronos (boutique de Diamants). */
+export function gemTimeMult(state: GameState): number {
+  return Math.max(0.2, 1 - GEM_BONUS.chronoTime * (state.gemShop?.chrono ?? 0));
 }

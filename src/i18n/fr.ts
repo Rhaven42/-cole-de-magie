@@ -2,7 +2,7 @@
 export const fr = {
   'app.title': 'Arcanum Academy',
   'currency.coins': 'Éclats',
-  'currency.gems': 'Gemmes',
+  'currency.gems': 'Diamants',
   'hud.students': 'Élèves',
   'hud.reputation': 'Réputation',
 
@@ -184,7 +184,7 @@ export const fr = {
   'event.banquet': 'Banquet ! Repas 2× plus rapides, humeur + et {v} Éclats',
   'event.shootingStars': 'Nuit des étoiles filantes : Astronomie et Divination rapportent ×2 !',
   'event.ghost': 'Un fantôme farceur effraie une classe…',
-  'event.owl': 'Un hibou messager apporte {v} Gemme !',
+  'event.owl': 'Un hibou messager apporte {v} Diamant !',
   'event.inspection': 'Inspection de l’Académie : réputation {v}',
   'event.explosion': 'BOUM ! Un chaudron a explosé, la salle ferme 10 s',
   'event.broomFall': 'Aïe ! Chute de balai (fatigue +)',
@@ -257,7 +257,7 @@ export const fr = {
 
   'prestige.title': 'Reconstruire la légende',
   'prestige.intro':
-    'Repartez de zéro dans un nouvel environnement. Vous gardez vos Gemmes, vos reliques et gagnez un bonus permanent.',
+    'Repartez de zéro dans un nouvel environnement. Vous gardez vos Diamants (et vos achats 💎), vos reliques et gagnez un bonus permanent.',
   'prestige.current': 'Environnement actuel : {env}',
   'prestige.next': 'Prochain : {env}',
   'prestige.bonus': 'Bonus permanent : +{n} % d’Éclats',

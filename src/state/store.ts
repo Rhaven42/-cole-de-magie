@@ -9,6 +9,9 @@ import {
   upgradeProf,
   upgradeSpeed,
   claimAd,
+  harvestTree,
+  buyGemItem,
+  offlineCap,
   dismissAd,
   catchUp,
   createGame,
@@ -36,8 +39,10 @@ import {
   type Purchase,
 } from '../engine';
 import type { CourseId } from '../data/courses';
+import type { GemItemId } from '../data/gemShop';
 import type { HouseId } from '../data/houses';
-import { clearSave, loadSave, writeSave } from './persistence';
+import { clearSave, loadSave, loadTuning, writeSave } from './persistence';
+import { applyTuning } from '../data/tuning';
 import { seatSpot } from '../ui/iso';
 import { t } from '../i18n';
 import { EVENTS } from '../data/events';
@@ -110,6 +115,16 @@ interface Store {
   upgradeSpeed(id: string): boolean;
   claimAd(): boolean;
   dismissAd(): void;
+  /** Arbre enchanté : cueillir le fruit (avec la pub : +Diamant). */
+  harvestTree(withAd: boolean): boolean;
+  buyGemItem(id: GemItemId): boolean;
+  /** Fenêtres ouvertes : arbre, boutique de Diamants, administration. */
+  panel: 'tree' | 'gems' | 'admin' | null;
+  /** Heure réelle (ms) du dernier tick, pour les minuteurs en temps réel. */
+  clock: number;
+  openPanel(p: 'tree' | 'gems' | 'admin' | null): void;
+  /** Ré-applique les réglages administrateur et redessine. */
+  refresh(): void;
   setBias(h: HouseId | null): boolean;
 }
 
@@ -122,6 +137,13 @@ function throttled(kind: keyof typeof TOAST_GAP_MS, now: number): boolean {
   lastToast[kind] = now;
   return false;
 }
+/** Indique si l'absence a dépassé le plafond hors-ligne (avant de remettre l'horloge). */
+function markCap(summary: OfflineSummary, g: GameState) {
+  const cap = offlineCap(g);
+  summary.cap = cap;
+  summary.capped = (Date.now() - g.lastSavedAt) / 1000 > cap;
+}
+
 const FLOATER_MS = 1200;
 const TOAST_MS = 3500;
 
@@ -308,10 +330,13 @@ export const useGame = create<Store>((set, get) => {
     select: (id) => set({ selected: id }),
 
     async init() {
+      // Réglages de l'administration, avant de charger la partie.
+      applyTuning(await loadTuning());
       const saved = await loadSave();
       if (saved) {
         const seconds = elapsedSince(saved, Date.now());
         const summary = seconds > 0 ? catchUp(saved, seconds) : null;
+        if (summary) markCap(summary, saved);
         saved.lastSavedAt = Date.now();
         set({
           game: saved,
@@ -350,6 +375,7 @@ export const useGame = create<Store>((set, get) => {
       const tt = toasts.filter((x) => now - x.born < TOAST_MS);
       set((s) => ({
         rev: s.rev + 1,
+        clock: now,
         ...(f.length !== floaters.length ? { floaters: f } : {}),
         ...(tt.length !== toasts.length ? { toasts: tt } : {}),
       }));
@@ -364,6 +390,7 @@ export const useGame = create<Store>((set, get) => {
       const seconds = elapsedSince(game, Date.now());
       if (seconds <= 30) return;
       const summary = catchUp(game, seconds);
+      markCap(summary, game);
       game.lastSavedAt = Date.now();
       set({ offline: summary, rev: get().rev + 1 });
     },
@@ -414,6 +441,12 @@ export const useGame = create<Store>((set, get) => {
     upgradeProf: (id) => purchased(upgradeProf(get().game, id)),
     upgradeSpeed: (id) => purchased(upgradeSpeed(get().game, id)),
     claimAd: () => purchased(claimAd(get().game)),
+    harvestTree: (withAd) => purchased(harvestTree(get().game, Date.now(), withAd)),
+    buyGemItem: (id) => purchased(buyGemItem(get().game, id)),
+    panel: null,
+    clock: Date.now(),
+    openPanel: (p) => set({ panel: p }),
+    refresh: () => set((s) => ({ rev: s.rev + 1 })),
     dismissAd: () => {
       dismissAd(get().game);
       set((s) => ({ rev: s.rev + 1 }));

@@ -1,5 +1,5 @@
 import { ADS, AD_KINDS, type AdKind } from '../data/ads';
-import { courseReward, serviceTime } from './modifiers';
+import { incomePerMinute } from './gemShop';
 import { randInt } from './rng';
 import type { GameState } from './types';
 
@@ -16,12 +16,7 @@ export function boostActive(state: GameState): boolean {
 
 /** Éclats d'une bourse : quelques minutes de gains estimés des salles de cours. */
 export function adCoins(state: GameState): number {
-  let perMin = 0;
-  for (const st of Object.values(state.stations)) {
-    if (st.kind !== 'course') continue;
-    const r = courseReward(st, { house: null, mood: 100 }, state);
-    perMin += (r * st.seats.length * 60) / Math.max(1, serviceTime(st, 0, undefined, state));
-  }
+  const perMin = incomePerMinute(state);
   return Math.max(ADS.coinsMin, Math.round(perMin * ADS.coinsMinutes));
 }
 

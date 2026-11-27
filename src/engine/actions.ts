@@ -1,7 +1,7 @@
 import { PROF_UPGRADE } from '../data/professors';
 import { profLevel } from './modifiers';
 import { propDef } from '../data/roomProps';
-import { EXAM_PRICE } from '../data/progression';
+import { RULES } from '../data/progression';
 import { COURSES, type CourseId } from '../data/courses';
 import { ECONOMY } from '../data/economy';
 import { expCost } from '../data/formulas';
@@ -163,7 +163,7 @@ export function upgradeProf(state: GameState, courseId: CourseId): boolean {
 
 /** Prix de la Salle des Examens (null si déjà construite). */
 export function examCost(state: GameState): number | null {
-  return state.stations.exam ? null : EXAM_PRICE;
+  return state.stations.exam ? null : RULES.examPrice;
 }
 
 export function buyExam(state: GameState): boolean {

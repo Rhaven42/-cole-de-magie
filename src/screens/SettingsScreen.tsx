@@ -24,6 +24,12 @@ export function SettingsScreen() {
           <Chip key={n} label={`×${n}`} active={speed === n} onPress={() => store.setSpeed(n)} />
         ))}
       </View>
+      <Pressable
+        style={[styles.btn, { backgroundColor: '#3A2E26' }]}
+        onPress={() => store.openPanel('admin')}
+      >
+        <Text style={styles.btnText}>🛠️ Administration</Text>
+      </Pressable>
       {confirm ? (
         <View style={styles.confirm}>
           <Text style={styles.label}>{t('settings.resetConfirm')}</Text>

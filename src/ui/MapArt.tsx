@@ -32,6 +32,7 @@ import {
   doorOf,
   floorPoly,
   fountainPoint,
+  treePoint,
   GRID_X,
   GRID_Y,
   iso,
@@ -304,6 +305,9 @@ function treeRow(
   return out;
 }
 
+/** Largeur à l'écran de l'Arbre enchanté (le fruit mûr est dessiné par-dessus). */
+export const TREE_W = 104;
+
 /** Bords de l'école (cases) : tout l'extérieur est placé par rapport à eux. */
 const SX0 = PLOT.margin;
 const SY0 = PLOT.margin + PLOT.top;
@@ -324,9 +328,8 @@ const LANDSCAPE: Placed[] = [
   { name: 'lavender', x: SX0 - 13, y: SY0 - 3, w: 32 },
   { name: 'lavender', x: SX0 - 5, y: SY0 - 3, w: 32 },
   { name: 'greenhouse', x: SX0 - 9, y: SY0 + 10, w: 230 },
-  { name: 'vegGarden', x: SX0 - 9, y: SY0 + 25, w: 170 },
-  { name: 'gazebo', x: SX0 - 9, y: SY0 + 40, w: 200 },
-  { name: 'pond', x: SX0 - 9, y: SY0 + 55, w: 140 },
+  { name: 'gazebo', x: SX0 - 9, y: SY0 + 30, w: 200 },
+  { name: 'pond', x: SX0 - 9, y: SY0 + 52, w: 150 },
   ...[SY0 + 17.5, SY0 + 32.5, SY0 + 47.5].map((y, i): Placed => ({
     name: i % 2 ? 'hydrangea' : 'roseBush',
     x: SX0 - 4,
@@ -335,9 +338,14 @@ const LANDSCAPE: Placed[] = [
   })),
   { name: 'targets', x: SX1 + 9, y: SY0 - 14, w: 76 },
   { name: 'haystack', x: SX1 + 9, y: SY0 - 5, w: 70 },
-  { name: 'picnic', x: SX1 + 9, y: SY0 + 20, w: 60 },
-  { name: 'willow', x: SX1 + 10, y: SY0 + 40, w: 96 },
-  { name: 'swingOak', x: SX1 + 10, y: SY0 + 58, w: 96 },
+  { name: 'picnic', x: SX1 + 9, y: SY0 + 8, w: 60 },
+  // Grand potager à droite de l'école
+  { name: 'vegPlot', x: SX1 + 12, y: SY0 + 28, w: 380 },
+  { name: 'scarecrow', x: SX1 + 20, y: SY0 + 20, w: 52 },
+  { name: 'pumpkinBarrow', x: SX1 + 4.5, y: SY0 + 37, w: 60 },
+  { name: 'produceCrate', x: SX1 + 4.5, y: SY0 + 21, w: 44 },
+  { name: 'willow', x: SX1 + 10, y: SY0 + 46, w: 96 },
+  { name: 'swingOak', x: SX1 + 10, y: SY0 + 60, w: 96 },
 ];
 
 /** Paysage : couche arrière (avant les bâtiments) ou avant (devant la façade). */
@@ -361,6 +369,10 @@ function Landscape({ env, front }: { env: EnvDef; front: boolean }) {
           'swingOak',
           'wildGrass',
           'vegGarden',
+          'vegPlot',
+          'scarecrow',
+          'pumpkinBarrow',
+          'produceCrate',
           'haystack',
         ].includes(o.name) ? (
           <Decor key={i} name={o.name} p={iso(o.x, o.y)} width={o.w} mirror={o.mirror} />
@@ -442,8 +454,9 @@ function Ground({ env }: { env: EnvDef }) {
   yard.push(
     { name: 'wizardStatue', x: L(6.5), y: y1 + 3, w: 62 },
     { name: 'wizardStatue', x: Rr(6.5), y: y1 + 3, w: 62 },
-    { name: 'sundialBed', x: L(11), y: y1 + 7, w: 70 },
-    { name: 'kiosk', x: L(17), y: y1 + 3.5, w: 64 },
+    { name: 'magicTreeBare', x: treePoint().x, y: treePoint().y, w: TREE_W },
+    { name: 'sundialBed', x: Rr(17), y: y1 + 3.5, w: 62 },
+    { name: 'kiosk', x: L(19), y: y1 + 2.5, w: 64 },
     { name: 'wisteriaBench', x: L(14), y: y1 + 11, w: 64 },
     { name: 'wisteriaBench', x: Rr(14), y: y1 + 11, w: 64 },
     { name: 'topiaryOwl', x: L(7), y: y1 + 12, w: 52 },
