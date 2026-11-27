@@ -300,70 +300,59 @@ function forestEdge(): Placed[] {
     }
   };
   // bords du fond (haut gauche et haut droit), bord droit et bord avant
-  line(30, GRID_X - 2, (t, j) => [t, 1.4 + j * 0.6]);
+  line(2, GRID_X - 2, (t, j) => [t, 1.2 + j * 0.4], (t) => (t > 28 && t < 48));
   line(24, GRID_Y - 2, (t, j) => [1.4 + j * 0.5, t]);
-  line(24, GRID_Y - 4, (t, j) => [GRID_X - 1.8 + j * 0.5, t]);
+  line(82, GRID_Y - 4, (t, j) => [GRID_X - 1.8 + j * 0.5, t]);
   line(
     2,
     GRID_X - 6,
     (t, j) => [t, GRID_Y - 1.6 + j * 0.4],
-    (t) => Math.abs(t - 34) < 8,
+    (t) => Math.abs(t - courtyard().gateX) < 9,
   );
   return out;
 }
 
+/*
+ * Plan de l'extérieur (cases) : école x 3→73, y 21→91 ; au fond, Examens (x 5→29) et
+ * terrain de Balais (x 47→71) sur y 3→13 ; à droite une bande libre x 75→87 ;
+ * devant, la cour (allée x≈38, portail y≈103).
+ */
 const LANDSCAPE: Placed[] = [
-  // Prairie du fond : volière, feu de camp, meule et charrette, cibles d'entraînement
-  { name: 'flowerBed', x: 10, y: 2.5, w: 46 },
-  { name: 'oak', x: 14.5, y: 2.2, w: 70 },
-  { name: 'bush', x: 20, y: 2.8, w: 32 },
-  { name: 'grove', x: 25, y: 2.2, w: 110 },
-  { name: 'grove', x: 2.6, y: 18.5, w: 104 },
-  { name: 'owlery', x: 33, y: 10, w: 80 },
-  { name: 'wildGrass', x: 36.5, y: 14.5, w: 40 },
-  { name: 'swingOak', x: 72.5, y: 17.5, w: 100 },
-  // Côté droit : serre et potager, kiosque, bordures fleuries le long du mur
-  { name: 'flowerBorder', x: 65.9, y: 30, w: 66 },
-  { name: 'greenhouse', x: 71.5, y: 28, w: 104 },
-  { name: 'flowerBorder', x: 65.9, y: 42, w: 66 },
-  { name: 'vegGarden', x: 71, y: 39.5, w: 110 },
-  { name: 'flowerBorder', x: 65.9, y: 55, w: 66 },
-  { name: 'gazebo', x: 71, y: 55, w: 96 },
-  { name: 'roseArch', x: 67.5, y: 61, w: 54 },
-  { name: 'flowerBorder', x: 65.9, y: 68, w: 66 },
-  { name: 'willow', x: 72.5, y: 68, w: 96 },
-  // Pelouse avant droite : l'étang, sa passerelle et son saule
-  { name: 'pond', x: 58, y: 89.5, w: 130 },
-  { name: 'footbridge', x: 51.5, y: 88.5, w: 64 },
-  { name: 'willow', x: 63.5, y: 86.5, w: 100 },
-  { name: 'wildGrass', x: 53.5, y: 92.5, w: 40 },
-  { name: 'swingOak', x: 70.5, y: 88, w: 96 },
-  // Avant : bordures fleuries le long de la façade, arche de roses sur l'allée
-  { name: 'flowerBorderM', x: 8, y: 83.8, w: 66 },
-  { name: 'flowerBorderM', x: 15, y: 83.8, w: 66 },
-  { name: 'flowerBorderM', x: 22, y: 83.8, w: 66 },
-  { name: 'flowerBorderM', x: 28.5, y: 83.8, w: 66 },
-  { name: 'flowerBorderM', x: 40.5, y: 83.8, w: 66 },
-  { name: 'flowerBorderM', x: 47.5, y: 83.8, w: 66 },
-  { name: 'flowerBorderM', x: 54.5, y: 83.8, w: 66 },
-  { name: 'flowerBorderM', x: 61, y: 83.8, w: 66 },
-  { name: 'roseArch', x: 34 - PATH_HALF - 1.6, y: 85.4, w: 54 },
-  { name: 'roseArch', x: 34 + PATH_HALF + 1.6, y: 85.4, w: 54 },
-  // Pelouse avant gauche : un coin de verger, un feu de veillée
-  { name: 'grove', x: 9, y: 90, w: 116 },
-  { name: 'oak', x: 18.5, y: 88.5, w: 70 },
-  { name: 'wildGrass', x: 14, y: 93, w: 40 },
-  { name: 'flowerBed', x: 24.5, y: 92, w: 46 },
-  // touches de fleurs autour des lieux
-  { name: 'flowerBed', x: 53.5, y: 86.5, w: 42 },
-  { name: 'bush', x: 61, y: 93.5, w: 30 },
-  { name: 'flowerBed', x: 66.5, y: 93, w: 40 },
-  { name: 'flowerBed', x: 75.5, y: 59.5, w: 42 },
-  { name: 'bush', x: 67.5, y: 51, w: 30 },
-  { name: 'flowerBed', x: 76, y: 33.5, w: 40 },
-  { name: 'bush', x: 29, y: 15.5, w: 30 },
-  { name: 'flowerBed', x: 12.5, y: 94, w: 42 },
-  { name: 'pumpkins', x: 67.5, y: 44.5, w: 36 },
+  // Au fond, entre les Examens et le terrain : la prairie de la volière
+  { name: 'owlery', x: 38, y: 7.5, w: 84 },
+  { name: 'campfire', x: 34, y: 14.5, w: 80 },
+  { name: 'wildGrass', x: 42.5, y: 15.5, w: 40 },
+  { name: 'lavender', x: 31.5, y: 9.5, w: 36 },
+  { name: 'foxgloves', x: 44, y: 9, w: 30 },
+  // Près du terrain de Balais : meule, cibles
+  { name: 'haystack', x: 74, y: 6, w: 70 },
+  { name: 'targets', x: 76, y: 14, w: 70 },
+  // Côté droit, le long de l'aile des dortoirs : jardin botanique
+  { name: 'greenhouse', x: 80.5, y: 27, w: 104 },
+  { name: 'vegGarden', x: 80, y: 38, w: 108 },
+  { name: 'pumpkins', x: 85.5, y: 44, w: 36 },
+  { name: 'wheelbarrow', x: 76, y: 44.5, w: 34 },
+  { name: 'gazebo', x: 80.5, y: 53, w: 96 },
+  { name: 'roseBush', x: 76.5, y: 50, w: 34 },
+  { name: 'hydrangea', x: 85.5, y: 57.5, w: 34 },
+  { name: 'parkBench', x: 76.5, y: 58.5, w: 34 },
+  // L'étang, sa passerelle et le saule
+  { name: 'pond', x: 81, y: 70, w: 130 },
+  { name: 'footbridge', x: 76.5, y: 66.5, w: 60 },
+  { name: 'willow', x: 86, y: 64.5, w: 96 },
+  { name: 'tulips', x: 76, y: 75.5, w: 32 },
+  { name: 'poppies', x: 85.5, y: 77, w: 32 },
+  // Avant droit : verger et coin pique-nique
+  { name: 'oak', x: 58, y: 97.5, w: 70 },
+  { name: 'grove', x: 68, y: 99, w: 110 },
+  { name: 'picnic', x: 78, y: 88.5, w: 56 },
+  { name: 'swingOak', x: 83, y: 96, w: 96 },
+  { name: 'whiteShrub', x: 52.5, y: 102, w: 36 },
+  // Avant gauche : le puits, un bosquet, des fleurs
+  { name: 'well', x: 22, y: 97, w: 46 },
+  { name: 'grove', x: 10, y: 98.5, w: 110 },
+  { name: 'lavender', x: 26.5, y: 101.5, w: 34 },
+  { name: 'roseBush', x: 17, y: 103, w: 32 },
   ...forestEdge(),
 ];
 
