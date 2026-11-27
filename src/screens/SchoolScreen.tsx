@@ -178,7 +178,7 @@ function cofferPos(id: string): Pt {
   return { x: p.x, y: p.y - 22 };
 }
 
-function RoomLabel({ st, managed }: { st: Station; managed: boolean }) {
+function RoomLabel({ st, managed, meal }: { st: Station; managed: boolean; meal: boolean }) {
   const def = PLOTS[st.id];
   const o = roomOrigin(def);
   // Panneau posé devant le coin avant de la salle (dans le couloir).
@@ -192,7 +192,9 @@ function RoomLabel({ st, managed }: { st: Station; managed: boolean }) {
         {stationName(st)} <Text style={styles.labelLvl}>· {st.level}</Text>
       </Text>
       <Text style={styles.labelSub}>
-        👥 {st.queue.length} · ⏳ {formatDuration(estimatedWait(st))}
+        {meal && st.kind === 'course'
+          ? `🍽️ Pause repas · 👥 ${st.queue.length}`
+          : `👥 ${st.queue.length} · ⏳ ${formatDuration(estimatedWait(st))}`}
       </Text>
       {crowded ? <View style={styles.badge} /> : null}
     </View>
@@ -490,7 +492,12 @@ export function SchoolScreen() {
             <SortingHat game={game} />
             <EventMarkers game={game} />
             {game.stationOrder.map((id) => (
-              <RoomLabel key={id} st={game.stations[id]} managed={!!game.managers[id]} />
+              <RoomLabel
+                key={id}
+                st={game.stations[id]}
+                managed={!!game.managers[id]}
+                meal={isMealBreak(game.time)}
+              />
             ))}
             {game.stationOrder.map((id) => {
               const st = game.stations[id];

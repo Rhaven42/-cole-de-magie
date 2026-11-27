@@ -280,7 +280,7 @@ const SEAT_SPRITES: Record<string, { name: SpriteName; width: number; lift: numb
   defense: { name: 'dummy', width: 30, lift: 6 },
   duel: { name: 'duelCircle', width: 54, lift: 12 },
   dorm: { name: 'bed', width: 46, lift: 12 },
-  reception: { name: 'counter', width: 44, lift: 10 },
+  reception: { name: 'recDesk', width: 62, lift: 8 },
   sorting: { name: 'stool', width: 18, lift: 4 },
   exam: { name: 'desk', width: 40, lift: 8 },
 };
@@ -303,6 +303,6 @@ export function Furniture({
   // Le comptoir de l'Accueil est entre l'élève et le personnel, façade tournée vers l'entrée
   // (alignée sur le mur d'entrée).
   const p = kind === 'reception' ? iso(gx, gy - 1.1) : kind === 'dorm' ? iso(gx, gy) : at;
-  const skew = kind === 'reception' ? (Math.atan(0.5) * 180) / Math.PI : 0;
+  const skew = 0;
   return <Sprite name={tiered(sp.name, tier)} p={p} width={sp.width} lift={sp.lift} skew={skew} />;
 }

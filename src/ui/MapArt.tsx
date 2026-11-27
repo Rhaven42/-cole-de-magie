@@ -92,11 +92,6 @@ function tier(level: number): number {
 const lift = (p: Pt, h: number): Pt => ({ x: p.x, y: p.y - h });
 const drop = (p: Pt, h: number): Pt => ({ x: p.x, y: p.y + h });
 
-/** Ombre douce sous un objet. */
-function Shadow({ p, w }: { p: Pt; w: number }) {
-  return <Ellipse cx={p.x} cy={p.y + 1} rx={w * 0.42} ry={w * 0.2} fill="#000" opacity={0.22} />;
-}
-
 const FLOWER_CLUMPS: SpriteName[] = [
   'lavender',
   'poppies',
@@ -132,7 +127,7 @@ function naturalize(name: SpriteName, p: Pt, width: number): [SpriteName, number
 const WALL_SKEW = (Math.atan(0.5) * 180) / Math.PI;
 /** Meubles qui se posent contre un mur (armoires, horloges, cheminées, tableaux…). */
 const WALL_FURNITURE =
-  /^(bookshelf|jarShelf|clock|fireplace|noticeBoard|coatStand|wandRack|herbRack|broomRack|worldMap|creatureJars|duelBanner|starChart|mistMirror|toolRack|easel|counter)/;
+  /^(bookshelf|jarShelf|clock|fireplace|noticeBoard|coatStand|wandRack|herbRack|broomRack|worldMap|creatureJars|duelBanner|starChart|mistMirror|toolRack|easel|counter|letterRack|recordShelf)/;
 
 /** Grandes constructions posées au sol : pas d'ombre portée (elles sembleraient flotter). */
 const NO_SHADOW = new Set<string>([
@@ -171,12 +166,11 @@ function Decor({
   const [name, width] = naturalize(raw, p, w0);
   return (
     <G>
-      {NO_SHADOW.has(name) ? null : <Shadow p={p} w={width} />}
       <Sprite
         name={name}
         p={p}
         width={width}
-        lift={NO_SHADOW.has(name) ? 0 : 3}
+        lift={NO_SHADOW.has(name) ? 0 : 2}
         mirror={mirror}
         skew={skew}
       />
@@ -251,37 +245,35 @@ function BackCorridor({ id, env }: { id: string; env: EnvDef }) {
   const c = backCorridor(id);
   if (!c) return null;
   const tinted = env.id !== 'manor';
-  const lamps: ReactElement[] = [];
-  for (let y = c.y0 + 1.2; y < c.y1 - 0.8; y += 2.6) {
-    lamps.push(
-      <Decor key={`a${y}`} name="candelabra" p={iso(c.x - 1.5, y)} width={20} />,
-      <Decor key={`b${y}`} name="candelabra" p={iso(c.x + 1.5, y + 1.3)} width={20} />,
+  // Allée extérieure : pavés, bordures de pierre, lampadaires et fleurs.
+  const posts: ReactElement[] = [];
+  for (let y = c.y0 + 1.5; y < c.y1 - 1; y += 3.2) {
+    posts.push(
+      <Decor key={`a${y}`} name="lamp" p={iso(c.x - 1.9, y)} width={22} />,
+      <Decor
+        key={`b${y}`}
+        name={y % 2 > 1 ? 'lavender' : 'tulips'}
+        p={iso(c.x + 1.9, y + 1.6)}
+        width={24}
+      />,
     );
   }
   return (
     <G>
-      <Polygon
-        points={poly([
-          iso(c.x + 1.3, c.y0),
-          iso(c.x + 1.3, c.y1),
-          drop(iso(c.x + 1.3, c.y1), 8),
-          drop(iso(c.x + 1.3, c.y0), 8),
-        ])}
-        fill="#585046"
-      />
       <TexFloor
-        id={`${id}-corridor`}
+        id={`${id}-path`}
         gx={c.x - 1.3}
         gy={c.y0}
         w={2.6}
         h={c.y1 - c.y0}
-        tex="wood"
-        tile={2.5}
-        tint={tinted ? env.corridor : '#2B1A0E'}
-        tintOpacity={tinted ? 0.45 : 0.18}
+        tex="stone"
+        tile={2}
+        tint={env.path}
+        tintOpacity={tinted ? 0.4 : 0}
       />
-      <Polygon points={floorPoly(c.x - 0.5, c.y0, 1, c.y1 - c.y0)} fill="#6B1F2A" opacity={0.7} />
-      {lamps}
+      <Polygon points={floorPoly(c.x - 1.55, c.y0, 0.25, c.y1 - c.y0)} fill="#7C7262" />
+      <Polygon points={floorPoly(c.x + 1.3, c.y0, 0.25, c.y1 - c.y0)} fill="#7C7262" />
+      {posts}
     </G>
   );
 }
@@ -293,21 +285,6 @@ interface Placed {
   w: number;
   /** Retourné pour faire face à l'école. */
   mirror?: boolean;
-}
-
-/** Fontaine de la cour d'entrée. */
-function Fountain({ p }: { p: Pt }) {
-  return (
-    <G>
-      <Ellipse cx={p.x} cy={p.y + 4} rx={46} ry={23} fill="#000" opacity={0.2} />
-      <Ellipse cx={p.x} cy={p.y} rx={42} ry={21} fill="#8F9A9D" />
-      <Ellipse cx={p.x} cy={p.y - 2} rx={35} ry={16} fill="#5FA9CF" />
-      <Ellipse cx={p.x - 8} cy={p.y - 5} rx={12} ry={4} fill="#BFE6FF" opacity={0.6} />
-      <Line x1={p.x} y1={p.y - 4} x2={p.x} y2={p.y - 24} stroke="#8A9497" strokeWidth={6} />
-      <Ellipse cx={p.x} cy={p.y - 24} rx={10} ry={4.5} fill="#9AA5A8" />
-      <Ellipse cx={p.x} cy={p.y - 27} rx={5} ry={2.5} fill="#BFE6FF" />
-    </G>
-  );
 }
 
 /** Rangée régulière d'arbres (lisière ordonnée, pas de semis au hasard). */
@@ -327,43 +304,40 @@ function treeRow(
   return out;
 }
 
+/** Bords de l'école (cases) : tout l'extérieur est placé par rapport à eux. */
+const SX0 = PLOT.margin;
+const SY0 = PLOT.margin + PLOT.top;
+const SX1 = PLOT.margin + PLOT.cols * (PLOT.size + PLOT.gap) - PLOT.gap;
+const SY1 = SY0 + PLOT.rows * (PLOT.size + PLOT.gap) - PLOT.gap;
+
 /*
- * Extérieur composé (cases) : école x 3→73, y 21→91 ; au fond, Examens (x 19→43) et
- * terrain de Balais (x 47→71) sur y 3→13 ; à droite une bande x 74→88 avec son allée ;
- * devant, la cour symétrique autour de la grande allée (x = 38).
+ * Extérieur composé : à gauche, le jardin botanique (bâtiments tournés vers l'école,
+ * le long d'une allée) ; au fond, verger et volière ; à droite, le pré des sports ;
+ * devant, la grande cour d'honneur symétrique (dessinée dans Ground).
  */
 const LANDSCAPE: Placed[] = [
-  // Lisières : pins réguliers au fond et à droite, chênes à gauche
-  ...treeRow('pine', 50, 2, 86, 5, (t) => [t, 1.0]),
-  ...treeRow('pine', 50, 24, 90, 6, (t) => [87.2, t]),
-  ...treeRow('oak', 64, 26, 88, 8, (t) => [1.3, t]),
-  // Au fond à gauche : la volière, entourée de lavande
-  { name: 'owlery', x: 10, y: 12, w: 190 },
-  { name: 'lavender', x: 5.5, y: 17.5, w: 34 },
-  { name: 'lavender', x: 14.5, y: 17.5, w: 34 },
-  // Au fond à droite, près du terrain : cibles et meule
-  { name: 'targets', x: 79, y: 8, w: 76 },
-  { name: 'haystack', x: 80, y: 16, w: 70 },
-  // Bande de droite : jardin botanique le long de son allée (bâtiments tournés vers l'école)
-  { name: 'greenhouse', x: 81.5, y: 31, w: 230, mirror: true },
-  { name: 'vegGarden', x: 81.5, y: 45, w: 170 },
-  { name: 'gazebo', x: 81.5, y: 60, w: 200, mirror: true },
-  { name: 'pond', x: 81.5, y: 76, w: 130 },
-  { name: 'willow', x: 85.5, y: 84, w: 96 },
-  ...[38, 52, 68, 84].map((y, i): Placed => ({
+  ...treeRow('pine', 50, 3, GRID_X - 3, 5, (t) => [t, 1.2]),
+  ...treeRow('pine', 50, SY0, GRID_Y - 8, 6, (t) => [GRID_X - 1.6, t]),
+  ...treeRow('oak', 64, SY0 + 4, SY1, 9, (t) => [1.6, t]),
+  ...treeRow('oak', 62, 8, SX0 + 2, 8, (t) => [t, 9]),
+  { name: 'owlery', x: SX0 - 9, y: SY0 - 8, w: 190 },
+  { name: 'lavender', x: SX0 - 13, y: SY0 - 3, w: 32 },
+  { name: 'lavender', x: SX0 - 5, y: SY0 - 3, w: 32 },
+  { name: 'greenhouse', x: SX0 - 9, y: SY0 + 10, w: 230 },
+  { name: 'vegGarden', x: SX0 - 9, y: SY0 + 25, w: 170 },
+  { name: 'gazebo', x: SX0 - 9, y: SY0 + 40, w: 200 },
+  { name: 'pond', x: SX0 - 9, y: SY0 + 55, w: 140 },
+  ...[SY0 + 17.5, SY0 + 32.5, SY0 + 47.5].map((y, i): Placed => ({
     name: i % 2 ? 'hydrangea' : 'roseBush',
-    x: 76.6,
+    x: SX0 - 4,
     y,
     w: 32,
   })),
-  // Devant, de part et d'autre de la cour (symétrique autour de l'allée)
-  { name: 'well', x: 27, y: 98, w: 46 },
-  { name: 'oak', x: 24, y: 103, w: 68 },
-  { name: 'oak', x: 52, y: 103, w: 68 },
-  { name: 'grove', x: 12, y: 100, w: 110 },
-  { name: 'grove', x: 64, y: 100, w: 110 },
-  { name: 'tulips', x: 18, y: 95, w: 30 },
-  { name: 'tulips', x: 58, y: 95, w: 30 },
+  { name: 'targets', x: SX1 + 9, y: SY0 - 14, w: 76 },
+  { name: 'haystack', x: SX1 + 9, y: SY0 - 5, w: 70 },
+  { name: 'picnic', x: SX1 + 9, y: SY0 + 20, w: 60 },
+  { name: 'willow', x: SX1 + 10, y: SY0 + 40, w: 96 },
+  { name: 'swingOak', x: SX1 + 10, y: SY0 + 58, w: 96 },
 ];
 
 /** Paysage : couche arrière (avant les bâtiments) ou avant (devant la façade). */
@@ -461,19 +435,36 @@ function Ground({ env }: { env: EnvDef }) {
   // Cour d'entrée : allée bordée de lampadaires et de haies, jardin d'accueil.
   const yard: Outdoor[] = [];
   for (const l of courtyardLamps()) yard.push({ name: 'lamp', x: l.x, y: l.y, w: 22 });
+  // Cour d'honneur symétrique : statues de mages, cadran solaire et fontaine, topiaires,
+  // bannières le long de l'allée, obélisques au portail, calèche et bagages des nouveaux.
+  const L = (dx: number) => pathX - dx;
+  const Rr = (dx: number) => pathX + dx;
   yard.push(
-    { name: 'statue', x: pathX - PATH_HALF - 4, y: y1 + 3.4, w: 44 },
-    { name: 'statue', x: pathX + PATH_HALF + 4, y: y1 + 3.4, w: 44 },
-    { name: 'parkBench', x: pathX - PATH_HALF - 2.4, y: y1 + 7.5, w: 34 },
-    { name: 'parkBench', x: pathX + PATH_HALF + 2.4, y: y1 + 7.5, w: 34 },
-    { name: 'flowerBed', x: pathX - PATH_HALF - 3, y: gateY - 3.5, w: 40 },
-    { name: 'flowerBed', x: pathX + PATH_HALF + 3, y: gateY - 3.5, w: 40 },
-    { name: 'owlPost', x: pathX + PATH_HALF + 2.2, y: gateY - 0.8, w: 22 },
-    { name: 'signpost', x: pathX - PATH_HALF - 2.2, y: gateY - 1.2, w: 28 },
-    { name: 'hedge', x: pathX - PATH_HALF - 5, y: gateY - 0.5, w: 46 },
-    { name: 'hedge', x: pathX + PATH_HALF + 5, y: gateY - 0.5, w: 46 },
+    { name: 'wizardStatue', x: L(6.5), y: y1 + 3, w: 62 },
+    { name: 'wizardStatue', x: Rr(6.5), y: y1 + 3, w: 62 },
+    { name: 'sundialBed', x: L(11), y: y1 + 7, w: 70 },
+    { name: 'kiosk', x: L(17), y: y1 + 3.5, w: 64 },
+    { name: 'wisteriaBench', x: L(14), y: y1 + 11, w: 64 },
+    { name: 'wisteriaBench', x: Rr(14), y: y1 + 11, w: 64 },
+    { name: 'topiaryOwl', x: L(7), y: y1 + 12, w: 52 },
+    { name: 'topiaryStag', x: Rr(7), y: y1 + 12, w: 52 },
+    { name: 'skyLanterns', x: L(9), y: gateY - 5, w: 54 },
+    { name: 'luggagePile', x: Rr(6), y: gateY - 3, w: 46 },
+    { name: 'carriage', x: Rr(11), y: gateY - 3.5, w: 92 },
+    { name: 'obelisk', x: L(5), y: gateY - 1, w: 40 },
+    { name: 'obelisk', x: Rr(5), y: gateY - 1, w: 40 },
+    { name: 'owlPost', x: Rr(3.2), y: gateY - 0.8, w: 22 },
+    { name: 'tulips', x: L(16), y: y1 + 15, w: 30 },
+    { name: 'tulips', x: Rr(16), y: y1 + 15, w: 30 },
+    { name: 'roseBush', x: L(19), y: y1 + 8, w: 30 },
+    { name: 'roseBush', x: Rr(19), y: y1 + 8, w: 30 },
   );
-  // bordures fleuries le long de la grande allée
+  for (let y = y1 + 4.2; y < gateY - 6; y += 6.8) {
+    yard.push(
+      { name: 'flagBanner', x: L(PATH_HALF + 0.8), y, w: 40 },
+      { name: 'flagBanner', x: Rr(PATH_HALF + 0.8), y: y + 0.4, w: 40 },
+    );
+  }
   for (let y = y1 + 2.5; y < gateY - 5; y += 3.4) {
     yard.push(
       { name: 'flowerBorder', x: pathX - PATH_HALF - 0.9, y, w: 52 },
@@ -519,13 +510,25 @@ function Ground({ env }: { env: EnvDef }) {
         tintOpacity={tinted ? 0.45 : 0.18}
       />
       <CorridorRunners x0={x0} y0={y0} x1={x1} y1={y1} />
-      {/* Allée du jardin botanique, le long de l'aile droite */}
+      {/* Allée du jardin botanique, le long de l'aile gauche */}
       <TexFloor
         id="gardenPath"
-        gx={74.4}
-        gy={22}
-        w={1.6}
-        h={70}
+        gx={SX0 - 4.2}
+        gy={SY0 + 2}
+        w={1.8}
+        h={SY1 - SY0 - 4}
+        tex="stone"
+        tile={2}
+        tint={env.path}
+        tintOpacity={tinted ? 0.4 : 0}
+      />
+      {/* Cour d'honneur pavée devant l'Accueil */}
+      <TexFloor
+        id="plaza"
+        gx={pathX - 13}
+        gy={y1 + 1}
+        w={26}
+        h={7}
         tex="stone"
         tile={2}
         tint={env.path}
@@ -553,7 +556,7 @@ function Ground({ env }: { env: EnvDef }) {
       <BackCorridor id="course-flying" env={env} />
       <Landscape env={env} front={false} />
       {yardEls}
-      <Fountain p={iso(fountainPoint().x, fountainPoint().y)} />
+      <Decor name="grandFountain" p={iso(fountainPoint().x, fountainPoint().y)} width={96} />
       <Sprite name="gate" p={iso(gateX, gateY + 1.2)} width={190} lift={14} />
     </G>
   );
@@ -589,10 +592,10 @@ function BigGarden({ px, py, span, env }: { px: number; py: number; span: number
     { name: 'flowerBorder', x: cx - 2.4, y: S - 2.4, w: 60 },
     { name: 'flowerBorder', x: cx + 2.4, y: S - 2.4, w: 60 },
     // parterres de chaque côté de l'allée transversale
-    { name: 'flowerBed', x: 6, y: cy - o.y - 2.2, w: 46 },
-    { name: 'flowerBed', x: W - 6, y: cy - o.y - 2.2, w: 46 },
-    { name: 'parkBench', x: 6.2, y: cy - o.y + 2.2, w: 34 },
-    { name: 'parkBench', x: W - 6.2, y: cy - o.y + 2.2, w: 34 },
+    { name: 'flowerBed', x: 6, y: cy - o.y + 2.4, w: 46 },
+    { name: 'flowerBed', x: W - 6, y: cy - o.y + 2.4, w: 46 },
+    { name: 'parkBench', x: 6.2, y: cy - o.y - 1.8, w: 34 },
+    { name: 'parkBench', x: W - 6.2, y: cy - o.y - 1.8, w: 34 },
     { name: 'wildGrass', x: 3.6, y: cy - o.y + 2.6, w: 36 },
     { name: 'wildGrass', x: W - 3.6, y: cy - o.y + 2.6, w: 36 },
     // arches de roses à l'entrée de l'allée transversale
@@ -625,13 +628,13 @@ function BigGarden({ px, py, span, env }: { px: number; py: number; span: number
         tile={2}
       />
       <TexFloor id={`gpathT-${k}`} gx={o.x} gy={cy - 0.6} w={W} h={1.2} tex="stone" tile={2} />
-      {/* rond-point central avec vasque */}
-      <Ellipse cx={c.x} cy={c.y} rx={46} ry={23} fill="#B8AE9C" />
-      <Ellipse cx={c.x} cy={c.y} rx={38} ry={19} fill="#7DA35C" />
+      {/* rond-point pavé autour de la fontaine */}
+      <Ellipse cx={c.x} cy={c.y} rx={58} ry={29} fill="#9C9384" />
+      <Ellipse cx={c.x} cy={c.y} rx={54} ry={27} fill="#B8AE9C" />
       {placed.map((d, i) => (
         <Decor key={i} name={d.name} p={at(d.x, d.y)} width={d.w} />
       ))}
-      <Decor name="birdbath" p={c} width={28} />
+      <Decor name="grandFountain" p={{ x: c.x, y: c.y + 14 }} width={92} />
     </G>
   );
 }
@@ -982,16 +985,28 @@ function LongTable({
     for (const side of [0.28, 0.92]) {
       const p = along === 'x' ? top(gx + t, gy + side * d) : top(gx + side * w, gy + t);
       items.push(
-        <Ellipse
-          key={`p${t}-${side}`}
-          cx={p.x}
-          cy={p.y}
-          rx={3.2}
-          ry={1.6}
-          fill="#EDE6D6"
-          stroke="#B8AE9C"
-          strokeWidth={0.5}
-        />,
+        <G key={`p${t}-${side}`}>
+          <Ellipse
+            cx={p.x}
+            cy={p.y}
+            rx={3.2}
+            ry={1.6}
+            fill="#EDE6D6"
+            stroke="#B8AE9C"
+            strokeWidth={0.5}
+          />
+          {/* gobelet doré à côté de chaque assiette */}
+          <Path d={`M${p.x + 3.4} ${p.y - 0.6} l1.6 0 l-0.3 -3 l-1 0 z`} fill="#D9A23A" />
+          <Ellipse
+            cx={p.x + 4.2}
+            cy={p.y - 3.6}
+            rx={1.5}
+            ry={0.7}
+            fill="#7A1F2A"
+            stroke="#C9A25A"
+            strokeWidth={0.4}
+          />
+        </G>,
       );
     }
   }
@@ -1365,7 +1380,11 @@ function Room({ r, env, guests = [] }: { r: RoomSnapshot; env: EnvDef; guests?: 
       );
     }
     // Grande cheminée au centre du mur du fond, bougies flottantes au-dessus des tables.
-    decor('bigFire', 'fireplace', o.x + 12.5, o.y + 0.9, 118);
+    add(
+      o.x + 12.5,
+      o.y + 0.9,
+      <Decor key="bigFire" name="grandFire" p={iso(o.x + 12.5, o.y + 1.4)} width={150} />,
+    );
     [7, 12, 17].forEach((y) =>
       [9, 15].forEach((x) => decor(`fc-${x}-${y}`, 'floatCandles', o.x + x, o.y + y, 24)),
     );
@@ -1405,7 +1424,6 @@ function Room({ r, env, guests = [] }: { r: RoomSnapshot; env: EnvDef; guests?: 
         gx,
         gy,
         <G key={`gseat-${gst.id}-${i}`}>
-          <Shadow p={iso(gx, gy)} w={20} />
           <Furniture kind="sorting" at={iso(gx, gy)} gx={gx} gy={gy} tier={gst.seatTiers[i] ?? 0} />
         </G>,
       );
@@ -1432,7 +1450,6 @@ function Room({ r, env, guests = [] }: { r: RoomSnapshot; env: EnvDef; guests?: 
         gx,
         gy,
         <G key={`seat-${i}`}>
-          <Shadow p={iso(gx, gy)} w={26} />
           <Furniture kind={kind} at={iso(gx, gy)} gx={gx} gy={gy} tier={r.seatTiers[i] ?? 0} />
         </G>,
       );
@@ -1480,14 +1497,7 @@ function Room({ r, env, guests = [] }: { r: RoomSnapshot; env: EnvDef; guests?: 
               stroke="#B89A5A"
               strokeWidth={1.5}
             />
-            <Box
-              gx={go.x + S / 2 - 0.4}
-              gy={go.y + S / 2 - 0.4}
-              w={0.8}
-              d={0.8}
-              h={12}
-              color="#6B4A30"
-            />
+            <Sprite name="hatPedestal" p={iso(go.x + S / 2, go.y + S / 2)} width={40} />
           </G>
         );
       })}

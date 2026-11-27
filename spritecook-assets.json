@@ -389,6 +389,49 @@
         "foodFlowers",
         "foodCandles"
       ]
+    },
+    {
+      "asset_id": "9939a0a9-7765-4a26-8989-563afed98e45",
+      "label": "mobilier de l'Accueil et du Chaporacle",
+      "slices": [
+        "recDesk",
+        "letterRack",
+        "waitBench",
+        "luggageCart",
+        "palm",
+        "(welcomeSign non utilisé : texte anglais)",
+        "caneStand",
+        "sideTable",
+        "hatPedestal",
+        "bannerStand",
+        "violetCandelabra",
+        "recordShelf"
+      ]
+    },
+    {
+      "asset_id": "54d96604-4bd4-4a56-8852-1f05e1b88865",
+      "label": "grande cheminée murale",
+      "slices": [
+        "grandFire"
+      ]
+    },
+    {
+      "asset_id": "bb7a9cf3-bd1d-47fc-bac4-63f1de30f434",
+      "label": "décors de la cour d'entrée",
+      "slices": [
+        "obelisk",
+        "topiaryOwl",
+        "topiaryStag",
+        "flagBanner",
+        "carriage",
+        "luggagePile",
+        "wizardStatue",
+        "skyLanterns",
+        "wisteriaBench",
+        "sundialBed",
+        "grandFountain",
+        "kiosk"
+      ]
     }
   ],
   "notes": "Planches découpées localement dans src/assets/sprites/. Les variantes *-unsorted.png sont des versions désaturées (élèves pas encore répartis). Les sprites teacherDeskM* sont des miroirs (bureau tourné vers les élèves). Ancienne planche tier-3 dorée (54244606…) remplacée. Index régénéré par `npm run assets`.",

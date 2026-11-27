@@ -17,7 +17,7 @@ export const ISO = {
 
 /** front : profondeur de la cour d'entrée devant l'école (portail, allée, jardin). */
 /** gap : largeur des couloirs (larges, avec tapis). */
-export const PLOT = { size: 10, gap: 4, cols: 5, rows: 5, margin: 5, front: 13, top: 18 };
+export const PLOT = { size: 10, gap: 4, cols: 5, rows: 5, margin: 20, front: 22, top: 18 };
 
 /** Échelle des aménagements intérieurs (conçus pour une salle de 8 cases). */
 export const ROOM_SCALE = PLOT.size / 8;
@@ -175,27 +175,30 @@ export const ROOM_DECOR: Record<string, DecorItem[]> = {
     at('candelabra', 23.4, 6.5, 22),
   ],
   // Accueil : guichets à gauche, coin d'attente, le Chaporacle à droite (zone violette).
+  // Accueil : guichets face à l'entrée ; casiers à courrier et archives au fond,
+  // coin d'attente à gauche, bagages près de la porte ; le Chaporacle à droite.
   reception: [
-    at('bookshelf', 0.8, 0.6, 30),
-    at('jarShelf', 3.2, 0.5, 30),
-    at('bookshelf', 6.0, 0.6, 30),
-    at('clock', 8.6, 0.6, 22),
-    at('noticeBoard', 11.2, 0.6, 30),
-    at('bookshelf', 14.0, 0.6, 30),
-    at('planterTree', 17.0, 0.8, 30),
-    at('coatStand', 20.0, 0.8, 24),
-    at('bookshelf', 23.0, 0.6, 30),
-    at('candelabra', 26.0, 0.7, 22),
-    at('globe', 0.8, 3.0, 26),
-    at('planterTree', 0.8, 9.1, 28),
-    at('armchair', 0.9, 6.2, 32),
-    at('armchair', 0.9, 8.4, 32),
-    at('books', 7.6, 9.2, 24),
-    at('planterTree', 13.0, 9.1, 28),
-    at('planterTree', 25.0, 9.1, 28),
-    at('statue', 37.0, 1.2, 36),
-    at('candelabra', 37.2, 8.9, 22),
-    at('candelabra', 28.6, 8.9, 22),
+    at('letterRack', 4.0, 0.6, 34),
+    at('recordShelf', 7.2, 0.6, 34),
+    at('palm', 10.0, 0.9, 32),
+    at('clock', 12.4, 0.6, 22),
+    at('letterRack', 15.0, 0.6, 34),
+    at('recordShelf', 18.2, 0.6, 34),
+    at('palm', 21.2, 0.9, 32),
+    at('bannerStand', 24.5, 1.0, 36),
+    at('waitBench', 1.2, 4.0, 52),
+    at('sideTable', 1.0, 6.6, 26),
+    at('waitBench', 1.2, 8.6, 52),
+    at('caneStand', 6.4, 9.3, 18),
+    at('luggageCart', 13.0, 9.0, 38),
+    at('palm', 25.6, 9.1, 30),
+    // le coin du Chaporacle
+    at('violetCandelabra', 29.0, 1.0, 26),
+    at('recordShelf', 33.0, 0.6, 34),
+    at('violetCandelabra', 37.2, 1.0, 26),
+    at('bannerStand', 37.3, 5.0, 36),
+    at('violetCandelabra', 29.0, 8.8, 26),
+    at('violetCandelabra', 37.2, 8.8, 26),
   ],
   // Salle des professeurs : coin cheminée, fauteuils, bibliothèques.
   staff: [
