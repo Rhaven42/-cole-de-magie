@@ -98,7 +98,12 @@ export function hitPlot(g: Pt): string | null {
 export function seatSpot(kind: string, i: number): Pt {
   // Grand Accueil (2 parcelles) : guichets alignés au centre, face à l'entrée.
   // Accueil : guichets alignés dans la partie gauche, face à l'entrée.
-  if (kind === 'reception') return { x: 4.5 + i * 2.2, y: 4.6 };
+  if (kind === 'reception') {
+    // Guichets côte à côte face à la porte d'entrée (dans l'axe de la porte).
+    const door = roomSize('reception').w / 2;
+    const order = [0, 1, -1, 2, -2, 3][i] ?? i;
+    return { x: door + order * 2.3, y: 5.4 };
+  }
   // Cantine : places réparties le long des 4 tables des Maisons (voir hallSeat pour l'affichage).
   if (kind === 'hall') return { x: 4 + (i % 10) * 1.4, y: 1.9 + Math.floor(i / 10) * 2.1 };
   // Grande Salle des Examens : tables en 2 rangées de 6, face à l'examinateur.

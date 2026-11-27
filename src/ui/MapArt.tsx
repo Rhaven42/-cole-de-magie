@@ -7,6 +7,8 @@ import {
   FLOOR_TEXTURE,
   GARDENS,
   HALL_PROF_X,
+  PROF_SEAT_GAP,
+  PROF_TABLE_Y,
   HALL_ROWS,
   HALL_TABLE_LEN,
   HALL_X0,
@@ -699,15 +701,7 @@ function Garden({ px, py, env }: { px: number; py: number; env: EnvDef }) {
   );
 }
 
-function ConstructionPlot({
-  id,
-  available,
-  env,
-}: {
-  id: string;
-  available: boolean;
-  env: EnvDef;
-}) {
+function ConstructionPlot({ id, available, env }: { id: string; available: boolean; env: EnvDef }) {
   const o = roomOrigin(PLOTS[id]);
   const { w: W, h: H } = roomSize(id);
   if (!PLOTS[id].outdoor)
@@ -964,6 +958,21 @@ function BackDoorway({ ox, oy }: { ox: number; oy: number }) {
   );
 }
 
+const FOODS: SpriteName[] = [
+  'foodChicken',
+  'foodBread',
+  'foodJug',
+  'foodFruit',
+  'foodCandles',
+  'foodPie',
+  'foodGoblets',
+  'foodStew',
+  'foodCheese',
+  'foodSausage',
+  'foodFlowers',
+  'foodCake',
+];
+
 /** Longue table « à plat » (boîte isométrique) avec chemin de table, assiettes et bougies. */
 function LongTable({
   gx,
@@ -1000,14 +1009,12 @@ function LongTable({
       );
     }
   }
-  for (let t = 2.5; t < len - 1; t += 4) {
+  // Plats, cruches et bougies au milieu de la table.
+  let k = Math.round(gx * 3 + gy * 7);
+  for (let t = 1.1; t < len - 0.6; t += 1.55) {
     const p = along === 'x' ? top(gx + t, gy + d / 2) : top(gx + w / 2, gy + t);
-    items.push(
-      <G key={`c${t}`}>
-        <Line x1={p.x} y1={p.y} x2={p.x} y2={p.y - 6} stroke="#F4EBD0" strokeWidth={1.6} />
-        <Circle cx={p.x} cy={p.y - 7} r={1.4} fill="#FFC24A" />
-      </G>,
-    );
+    const food = FOODS[k++ % FOODS.length];
+    items.push(<Sprite key={`f${t}`} name={food} p={{ x: p.x, y: p.y + 3 }} width={15} />);
   }
   const r0 =
     along === 'x' ? [gx, gy + d * 0.38, len, d * 0.24] : [gx + w * 0.38, gy, w * 0.24, len];
@@ -1041,11 +1048,6 @@ function HallRugs({ ox, oy }: { ox: number; oy: number }) {
           opacity={0.28}
         />
       ))}
-      <Polygon
-        points={floorPoly(ox + HALL_PROF_X - 1.4, oy + 1.8, 3.2, 20.4)}
-        fill="#C9A25A"
-        opacity={0.25}
-      />
     </G>
   );
 }
@@ -1230,7 +1232,17 @@ function DimRoom({
   );
 }
 
-function Room({ r, env, guests = [] }: { r: RoomSnapshot; env: EnvDef; guests?: RoomSnapshot[] }) {
+function Room({
+  r,
+  env,
+  guests = [],
+  profCount = 0,
+}: {
+  r: RoomSnapshot;
+  env: EnvDef;
+  guests?: RoomSnapshot[];
+  profCount?: number;
+}) {
   const def = PLOTS[r.id];
   const o = roomOrigin(def);
   const { w: RW, h: RH } = roomSize(r.id);
@@ -1321,33 +1333,41 @@ function Room({ r, env, guests = [] }: { r: RoomSnapshot; env: EnvDef; guests?: 
         />,
       );
     });
-    // Table des professeurs, en travers au bout de la salle.
+    // Table des professeurs, en travers au bout de la salle : une chaise par prof.
+    const n = Math.max(1, profCount);
+    const len = n * PROF_SEAT_GAP + 0.6;
     add(
       o.x + HALL_PROF_X - 0.7,
-      o.y + 2.5,
+      o.y + PROF_TABLE_Y,
       <LongTable
         key="prof"
         gx={o.x + HALL_PROF_X - 0.7}
-        gy={o.y + 2.5}
-        len={19}
+        gy={o.y + PROF_TABLE_Y}
+        len={len}
         along="y"
         runner="#C9A25A"
       />,
     );
-    add(
-      o.x + HALL_PROF_X + 1.0,
-      o.y + 2.5,
-      <Box
-        key="profbench"
-        gx={o.x + HALL_PROF_X + 1.0}
-        gy={o.y + 2.5}
-        w={0.45}
-        d={19}
-        h={6}
-        color="#5E3A20"
-      />,
-    );
+    for (let k = 0; k < n; k++) {
+      const cy = o.y + PROF_TABLE_Y + 0.3 + PROF_SEAT_GAP * (k + 0.5) - 0.35;
+      add(
+        o.x + HALL_PROF_X + 1.0,
+        cy,
+        <G key={`chair${k}`}>
+          <Box gx={o.x + HALL_PROF_X + 1.0} gy={cy} w={0.7} d={0.7} h={5} color="#6B3E22" />
+          <Box gx={o.x + HALL_PROF_X + 1.55} gy={cy} w={0.15} d={0.7} h={14} color="#5A3420" />
+        </G>,
+      );
+    }
   }
+
+  // Accueil : le personnel derrière chaque guichet, face à l'entrée.
+  if (r.kind === 'reception')
+    r.seats.forEach((sp, i) => {
+      const gx = o.x + sp.x;
+      const gy = o.y + sp.y - 2.3;
+      decor(`staff-${i}`, `staff${i % 4}` as SpriteName, gx, gy, 24);
+    });
 
   // Lieux situés dans cette salle (le Chaporacle dans l'Accueil) : tentures, places.
   for (const gst of guests) {
@@ -1531,7 +1551,11 @@ function MapArtBase({ rooms, plots, env: envIndex }: Props) {
     const p = PLOTS[r.id];
     if (!p || p.hostedIn) continue;
     const guests = all.filter((g) => PLOTS[g.id]?.hostedIn === r.id);
-    items.push({ order: p.px + p.py, el: <Room key={r.id} r={r} env={env} guests={guests} /> });
+    const profCount = rooms.filter((x) => x.kind === 'course').length;
+    items.push({
+      order: p.px + p.py,
+      el: <Room key={r.id} r={r} env={env} guests={guests} profCount={profCount} />,
+    });
   }
   for (const pl of plots) {
     const p = PLOTS[pl.id];

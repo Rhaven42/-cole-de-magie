@@ -104,14 +104,16 @@ function placeStudents(game: GameState): Placed[] {
       }
       const sp = seatPos(st.kind, i, seat.pos);
       const course = st.kind === 'course' || st.kind === 'exam';
-      const dx = st.kind === 'dorm' ? -0.2 : course ? 0.6 : 0.35;
-      const dy = course ? 0.15 : 0.1;
+      const atDesk = st.kind === 'reception';
+      const dx = st.kind === 'dorm' ? -0.2 : course ? 0.6 : atDesk ? 0 : 0.35;
+      const dy = course ? 0.15 : atDesk ? 0.2 : 0.1;
       out.push({
         id: seat.occupant,
         anchor: { g: { x: o.x + sp.x + dx, y: o.y + sp.y + dy }, room: st.id },
         sleeping: st.kind === 'dorm',
         // Devant son poste, tourné vers lui et vers le professeur (en haut à gauche).
-        back: course,
+        // Au guichet : de dos, face au comptoir et au personnel.
+        back: course || atDesk,
         flip: course,
         prio: 0,
       });
@@ -451,19 +453,21 @@ export function SchoolScreen() {
               .map((p) => (
                 <BuildSign key={p.id} id={p.id} game={game} />
               ))}
-            {game.stationOrder.map((id) => {
-              const st = game.stations[id];
-              if (st.kind !== 'course' || !st.courseId || !PLOTS[id]) return null;
-              return (
-                <Professor
-                  key={`prof-${id}`}
-                  stationId={id}
-                  courseId={st.courseId}
-                  teaching={st.seats.some((x) => x.occupant !== null)}
-                  eating={isMealBreak(game.time)}
-                />
-              );
-            })}
+            {game.stationOrder
+              .filter((id) => game.stations[id].kind === 'course' && !!PLOTS[id])
+              .map((id, k) => {
+                const st = game.stations[id];
+                return (
+                  <Professor
+                    key={`prof-${id}`}
+                    stationId={id}
+                    courseId={st.courseId!}
+                    seat={k}
+                    teaching={st.seats.some((x) => x.occupant !== null)}
+                    eating={isMealBreak(game.time)}
+                  />
+                );
+              })}
             {ordered.map((p) => {
               const s = game.students[p.id];
               if (!s) return null;

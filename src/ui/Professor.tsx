@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Animated, Easing, Image, StyleSheet, Text, View } from 'react-native';
 import { PORTRAITS } from '../assets/portraits';
 import { COURSE_IDS, COURSES, type CourseId } from '../data/courses';
-import { HALL_PROF_X, PLOTS, ROOM_SCALE } from '../data/layout';
+import { HALL_PROF_X, PLOTS, PROF_SEAT_GAP, PROF_TABLE_Y, ROOM_SCALE } from '../data/layout';
 import { PROF_LINES } from '../data/professors';
 import { iso, roomOrigin, route, type Pt } from './iso';
 
@@ -23,11 +23,14 @@ export function Professor({
   courseId,
   teaching,
   eating,
+  seat = 0,
 }: {
   stationId: string;
   courseId: CourseId;
   teaching: boolean;
   eating: boolean;
+  /** Place à la table des profs (ordre des salles construites). */
+  seat?: number;
 }) {
   const src = PORTRAITS[courseId];
   const o = roomOrigin(PLOTS[stationId]);
@@ -65,9 +68,11 @@ export function Professor({
   // Déplacements : cent pas en cours, aller-retour à la cantine pendant la pause.
   useEffect(() => {
     const hall = PLOTS.hall ? roomOrigin(PLOTS.hall) : null;
-    const seat = Math.max(0, COURSE_IDS.indexOf(courseId));
     const tableG: Pt | null = hall
-      ? { x: hall.x + HALL_PROF_X + 1.2, y: hall.y + 3.2 + seat * 1.9 }
+      ? {
+          x: hall.x + HALL_PROF_X + 1.35,
+          y: hall.y + PROF_TABLE_Y + 0.3 + PROF_SEAT_GAP * (seat + 0.5),
+        }
       : null;
     let anim: Animated.CompositeAnimation | null = null;
     const along = (pts: Pt[], from: Pt) => {

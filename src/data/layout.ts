@@ -97,6 +97,9 @@ export const HALL_X0 = 2.2;
 /** Longueur des tables des Maisons (cases). */
 export const HALL_TABLE_LEN = 15;
 export const HALL_PROF_X = 20.2;
+/** Table des profs : début (y) et espace par prof. */
+export const PROF_TABLE_Y = 3;
+export const PROF_SEAT_GAP = 1.9;
 
 /** Parcelles de jardin (décor). */
 /** Jardins : petits jardins de chaque côté de l'Accueil, grand jardin au fond (2 parcelles). */
