@@ -72,39 +72,56 @@ interface Placed {
   flip?: boolean;
   /** Priorité d'affichage (places d'abord, puis tête de file). */
   prio: number;
+  /** Assis à table (cantine). */
+  sit?: boolean;
+  /** Assis derrière la table : bas du corps caché. */
+  clip?: boolean;
 }
 
 /** Ancrage (grille absolue + salle) de chaque élève visible. */
 function placeStudents(game: GameState): Placed[] {
   const out: Placed[] = [];
+  const meal = isMealBreak(game.time);
+  const hall = game.stations.hall;
+  const hallO = PLOTS.hall ? roomOrigin(PLOTS.hall) : null;
+  // Cantine : chacun à la table de sa Maison, assis face à la table (des deux côtés).
+  const perHouse: Record<number, number> = {};
+  const atTable = (id: number, prio: number) => {
+    if (!hallO || !hall) return;
+    const s = game.students[id];
+    const hi = Math.max(0, HOUSE_IDS.indexOf(s?.house ?? 'pyrraxe'));
+    const k = (perHouse[hi] = (perHouse[hi] ?? -1) + 1);
+    if (k >= 20) return; // table pleine (10 places de chaque côté)
+    const side = k % 2 === 0 ? -1 : 1;
+    out.push({
+      id,
+      anchor: {
+        g: {
+          x: hallO.x + HALL_X0 + 0.8 + Math.floor(k / 2) * 1.45,
+          y: hallO.y + HALL_ROWS[hi] + side * 1.15,
+        },
+        room: hall.id,
+      },
+      sleeping: false,
+      back: side > 0,
+      sit: true,
+      clip: side < 0,
+      prio,
+    });
+  };
+  if (hall) for (const seat of hall.seats) if (seat.occupant !== null) atTable(seat.occupant, 0);
   for (const st of Object.values(game.stations)) {
     const def = PLOTS[st.id];
-    if (!def) continue;
+    if (!def || st.kind === 'hall') continue;
+    // Grand repas : toute la classe (et sa file) part manger.
+    if (meal && st.kind === 'course') {
+      for (const seat of st.seats) if (seat.occupant !== null) atTable(seat.occupant, 0);
+      for (const id of st.queue) atTable(id, 1);
+      continue;
+    }
     const o = roomOrigin(def);
-    const perHouse: Record<number, number> = {};
     st.seats.forEach((seat, i) => {
       if (seat.occupant === null) return;
-      if (st.kind === 'hall') {
-        // Cantine : chacun à la table de sa Maison, face à la table.
-        const s = game.students[seat.occupant];
-        const hi = Math.max(0, HOUSE_IDS.indexOf(s?.house ?? 'pyrraxe'));
-        const k = (perHouse[hi] = (perHouse[hi] ?? -1) + 1);
-        const side = k % 2 === 0 ? -1 : 1;
-        out.push({
-          id: seat.occupant,
-          anchor: {
-            g: {
-              x: o.x + HALL_X0 + 0.8 + (Math.floor(k / 2) % 10) * 1.45,
-              y: o.y + HALL_ROWS[hi] + side * 1.15,
-            },
-            room: st.id,
-          },
-          sleeping: false,
-          back: side > 0,
-          prio: 0,
-        });
-        return;
-      }
       const sp = seatPos(st.kind, i, seat.pos);
       const course = st.kind === 'course' || st.kind === 'exam';
       const atDesk = st.kind === 'reception';
@@ -504,6 +521,8 @@ export function SchoolScreen() {
                   sleeping={p.sleeping}
                   back={p.back}
                   flip={p.flip}
+                  sit={p.sit}
+                  clip={p.clip}
                   from={fresh ? gate : undefined}
                 />
               );

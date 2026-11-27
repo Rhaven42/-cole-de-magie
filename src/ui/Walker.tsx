@@ -23,6 +23,8 @@ export function Walker({
   from,
   back = false,
   flip = false,
+  sit = false,
+  clip = false,
 }: {
   student: Student;
   anchor: Anchor;
@@ -30,6 +32,10 @@ export function Walker({
   from?: Anchor;
   back?: boolean;
   flip?: boolean;
+  /** S'assoit une fois arrivé (repas). */
+  sit?: boolean;
+  /** Assis derrière une table : le bas du corps est caché par la table. */
+  clip?: boolean;
 }) {
   const [init] = useState<Anchor>(() => from ?? anchor);
   const [start] = useState(() => iso(init.g.x, init.g.y));
@@ -39,14 +45,18 @@ export function Walker({
   /** Orientation pendant la marche : miroir horizontal et face/dos (sans re-rendu). */
   const [flipV] = useState(() => new Animated.Value(flip ? -1 : 1));
   const [showBack] = useState(() => new Animated.Value(back ? 1 : 0));
+  /** 1 une fois assis (arrivé à table), 0 pendant la marche. */
+  const [seated] = useState(() => new Animated.Value(sit && !from ? 1 : 0));
   const last = useRef<Anchor>(init);
   const here = useRef(start);
   const key = `${anchor.room}|${anchor.g.x.toFixed(2)}|${anchor.g.y.toFixed(2)}`;
 
+  const sitRef = useRef(sit);
   useEffect(() => {
+    sitRef.current = sit;
     showBack.setValue(back ? 1 : 0);
     flipV.setValue(flip ? -1 : 1);
-  }, [back, flip, showBack, flipV]);
+  }, [back, flip, sit, showBack, flipV]);
 
   useEffect(() => {
     const target: Anchor = { g: { ...anchor.g }, room: anchor.room };
@@ -55,10 +65,11 @@ export function Walker({
     last.current = target;
     let cancelled = false;
     let current: Animated.CompositeAnimation | null = null;
+    seated.setValue(0);
     const half = (to: number) =>
       Animated.timing(stride, {
         toValue: to,
-        duration: 150,
+        duration: 170,
         easing: Easing.inOut(Easing.sin),
         useNativeDriver: true,
       });
@@ -71,6 +82,7 @@ export function Walker({
         stride.setValue(0);
         flipV.setValue(flip ? -1 : 1);
         showBack.setValue(back ? 1 : 0);
+        seated.setValue(sitRef.current ? 1 : 0);
         return;
       }
       const p = pts[i];
@@ -104,28 +116,64 @@ export function Walker({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key]);
 
-  const bob = stride.interpolate({ inputRange: [-1, 0, 1], outputRange: [-2.5, 0, -2.5] });
-  const sway = stride.interpolate({ inputRange: [-1, 1], outputRange: ['-4deg', '4deg'] });
-  const showFront = showBack.interpolate({ inputRange: [0, 1], outputRange: [1, 0] });
+  // Pas : petit rebond et léger balancement ; image « pas en avant » à chaque pas.
+  const bob = stride.interpolate({ inputRange: [-1, 0, 1], outputRange: [-2, 0, -2] });
+  const sway = stride.interpolate({ inputRange: [-1, 1], outputRange: ['-1.5deg', '1.5deg'] });
+  const stepFrame = stride.interpolate({
+    inputRange: [-1, -0.45, -0.35, 0.35, 0.45, 1],
+    outputRange: [1, 1, 0, 0, 1, 1],
+  });
+  const standing = seated.interpolate({ inputRange: [0, 1], outputRange: [1, 0] });
+  const front = Animated.multiply(
+    standing,
+    showBack.interpolate({ inputRange: [0, 1], outputRange: [1, 0] }),
+  );
+  const backO = Animated.multiply(standing, showBack);
+  const noStep = stepFrame.interpolate({ inputRange: [0, 1], outputRange: [1, 0] });
 
   return (
     <Animated.View
       pointerEvents="none"
       style={[styles.wrap, { transform: [{ translateX: pos.x }, { translateY: pos.y }] }]}
     >
-      <View style={styles.shadow} />
+      <Animated.View style={[styles.shadow, { opacity: standing }]} />
       <Animated.View
         style={{ transform: [{ translateY: bob }, { rotate: sway }, { scaleX: flipV }] }}
       >
-        <Animated.View style={{ opacity: showFront }}>
+        <Animated.View style={{ opacity: Animated.multiply(front, noStep) }}>
           <Chibi student={student} size={SIZE} sleeping={sleeping} />
         </Animated.View>
         {sleeping ? null : (
-          <Animated.View style={[StyleSheet.absoluteFill, { opacity: showBack }]}>
-            <Chibi student={student} size={SIZE} back />
-          </Animated.View>
+          <>
+            <Animated.View
+              style={[StyleSheet.absoluteFill, { opacity: Animated.multiply(front, stepFrame) }]}
+            >
+              <Chibi student={student} size={SIZE} pose="walk" />
+            </Animated.View>
+            <Animated.View
+              style={[StyleSheet.absoluteFill, { opacity: Animated.multiply(backO, noStep) }]}
+            >
+              <Chibi student={student} size={SIZE} back />
+            </Animated.View>
+            <Animated.View
+              style={[StyleSheet.absoluteFill, { opacity: Animated.multiply(backO, stepFrame) }]}
+            >
+              <Chibi student={student} size={SIZE} back pose="walk" />
+            </Animated.View>
+          </>
         )}
       </Animated.View>
+      {sit ? (
+        <Animated.View
+          style={[
+            StyleSheet.absoluteFill,
+            { opacity: seated, transform: [{ scaleX: flip ? -1 : 1 }] },
+            clip ? { height: SIZE * 0.72, overflow: 'hidden' } : null,
+          ]}
+        >
+          <Chibi student={student} size={SIZE} back={back} pose="sit" />
+        </Animated.View>
+      ) : null}
       {sleeping ? <Text style={styles.zzz}>z</Text> : null}
     </Animated.View>
   );

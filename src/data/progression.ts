@@ -25,7 +25,8 @@ export const GRADES = [
 ] as const;
 
 /** Pause repas des professeur·es : toutes les 20 min de jeu, les cours s'arrêtent un moment. */
-export const MEAL_BREAK = { every: 20 * 60, duration: 90 };
+/** Grand repas : toutes les 45 min de jeu, toute l'école (élèves et profs) va manger. */
+export const MEAL_BREAK = { every: 45 * 60, duration: 120 };
 
 /** Vrai pendant la pause repas (les profs mangent à la cantine). */
 export function isMealBreak(time: number): boolean {

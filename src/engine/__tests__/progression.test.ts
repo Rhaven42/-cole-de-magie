@@ -137,3 +137,27 @@ describe('années, diplômes et métiers', () => {
     expect(g.coins).toBeGreaterThan(before);
   });
 });
+
+describe('grand repas', () => {
+  it('toutes les 45 min, les élèves des cours mangent (faim remise à zéro)', () => {
+    const { createGame } = jest.requireActual('../state');
+    const { tick } = jest.requireActual('../tick');
+    const { buyCourse } = jest.requireActual('../actions');
+    const { MEAL_BREAK, isMealBreak } = jest.requireActual('../../data/progression');
+    expect(MEAL_BREAK.every).toBe(45 * 60);
+    const g = createGame(3, 0);
+    g.coins = 1e6;
+    buyCourse(g, 'botany');
+    // Joue jusqu'à juste avant le repas, puis pendant le repas.
+    while (!isMealBreak(g.time + 1)) tick(g, 1);
+    const inCourses = () =>
+      Object.values(g.stations)
+        .filter((st: any) => st.kind === 'course')
+        .flatMap((st: any) => [...st.queue, ...st.seats.map((x: any) => x.occupant)])
+        .filter((id: any) => id !== null);
+    expect(inCourses().length).toBeGreaterThan(0);
+    for (const id of inCourses()) g.students[id].hunger = 80;
+    tick(g, 2);
+    for (const id of inCourses()) expect(g.students[id].hunger).toBe(0);
+  });
+});

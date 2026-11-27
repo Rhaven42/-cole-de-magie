@@ -7,7 +7,7 @@ import { HAT_LINES_FR } from '../i18n/fr';
 import { EVENT_RULES } from '../data/events';
 import { handleEvents, isClosed, startEvent } from './events';
 import { deposit } from './meta';
-import { ENROLLMENT, RULES, isMealBreak } from '../data/progression';
+import { ENROLLMENT, MEAL_BREAK, RULES, isMealBreak } from '../data/progression';
 import { advanceYear, distinctCourses, graduate, handleDonations } from './progression';
 import {
   arrivalInterval,
@@ -121,6 +121,22 @@ function handlePatience(state: GameState, dt: number, events: GameEvent[]): void
     }
     return true;
   });
+
+  // Grand repas : tous les élèves des salles de cours (en cours ou en file) vont manger.
+  if (isMealBreak(state.time)) {
+    const meal = Math.floor(state.time / MEAL_BREAK.every);
+    for (const st of Object.values(state.stations)) {
+      if (st.kind !== 'course') continue;
+      const ids = [...st.queue, ...st.seats.map((x) => x.occupant)];
+      for (const id of ids) {
+        const s = id === null ? undefined : state.students[id];
+        if (!s || s.ateMeal === meal) continue;
+        s.ateMeal = meal;
+        s.hunger = 0;
+        s.mood = clamp(s.mood + NEEDS.moodOnMeal);
+      }
+    }
+  }
 
   // Attente trop longue devant une salle de cours : l'élève quitte l'école.
   for (const st of Object.values(state.stations)) {

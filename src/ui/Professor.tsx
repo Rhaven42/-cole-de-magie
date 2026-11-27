@@ -40,6 +40,10 @@ export function Professor({
   const [pos] = useState(() => new Animated.ValueXY(a));
   const [breath] = useState(() => new Animated.Value(0));
   const [spark] = useState(() => new Animated.Value(0));
+  /** Pas de marche (-1 → 1), sens du regard (1 = gauche, -1 = droite), assis à table. */
+  const [stride] = useState(() => new Animated.Value(0));
+  const [face] = useState(() => new Animated.Value(-1));
+  const [seated] = useState(() => new Animated.Value(0));
   const [line, setLine] = useState<string | null>(null);
   const atHall = useRef(false);
 
@@ -75,49 +79,95 @@ export function Professor({
         }
       : null;
     let anim: Animated.CompositeAnimation | null = null;
-    const along = (pts: Pt[], from: Pt) => {
+    let cancelled = false;
+    const half = (to: number) =>
+      Animated.timing(stride, {
+        toValue: to,
+        duration: 210,
+        easing: Easing.inOut(Easing.sin),
+        useNativeDriver: true,
+      });
+    const steps = Animated.loop(Animated.sequence([half(1), half(0), half(-1), half(0)]));
+    /** Marche segment par segment : se tourne dans le sens de la marche, pas réguliers. */
+    const walkPath = (pts: Pt[], from: Pt, done?: () => void) => {
+      seated.setValue(0);
+      steps.start();
       let prev = iso(from.x, from.y);
-      const steps = pts.map((p) => {
-        const q = iso(p.x, p.y);
-        const d = Math.hypot(q.x - prev.x, q.y - prev.y);
+      const go = (i: number) => {
+        if (cancelled) return;
+        if (i >= pts.length) {
+          steps.stop();
+          stride.setValue(0);
+          done?.();
+          return;
+        }
+        const q = iso(pts[i].x, pts[i].y);
+        const dx = q.x - prev.x;
+        const d = Math.hypot(dx, q.y - prev.y);
+        if (Math.abs(dx) > 0.5) face.setValue(dx > 0 ? -1 : 1);
         prev = q;
-        return Animated.timing(pos, {
+        anim = Animated.timing(pos, {
           toValue: q,
           duration: Math.max(40, (d / SPEED) * 1000),
           easing: Easing.linear,
           useNativeDriver: true,
         });
-      });
-      return Animated.sequence(steps);
+        anim.start(({ finished }) => finished && go(i + 1));
+      };
+      go(0);
+    };
+    const stopAll = () => {
+      cancelled = true;
+      anim?.stop();
+      steps.stop();
     };
     if (eating && tableG) {
       if (!atHall.current) {
         atHall.current = true;
-        anim = along(route({ g: homeG, room: stationId }, { g: tableG, room: 'hall' }), homeG);
-        anim.start();
+        walkPath(route({ g: homeG, room: stationId }, { g: tableG, room: 'hall' }), homeG, () => {
+          // Assis à la table des profs, tourné vers la salle.
+          face.setValue(-1);
+          seated.setValue(1);
+        });
       }
-      return () => anim?.stop();
+      return stopAll;
     }
     if (atHall.current && tableG) {
       atHall.current = false;
-      anim = along(route({ g: tableG, room: 'hall' }, { g: homeG, room: stationId }), tableG);
-      anim.start();
-      return () => anim?.stop();
+      walkPath(route({ g: tableG, room: 'hall' }, { g: homeG, room: stationId }), tableG, () =>
+        face.setValue(-1),
+      );
+      return stopAll;
     }
+    seated.setValue(0);
     if (!teaching) {
       pos.setValue(a);
+      face.setValue(-1);
       spark.setValue(0);
-      return undefined;
+      return stopAll;
     }
-    const walk = (to: { x: number; y: number }) =>
-      Animated.timing(pos, {
-        toValue: to,
-        duration: 2200,
-        easing: Easing.inOut(Easing.quad),
-        useNativeDriver: true,
-      });
+    // En cours : fait les cent pas devant le tableau, en se retournant à chaque bout.
+    const walk = (to: { x: number; y: number }, dir: number) =>
+      Animated.sequence([
+        Animated.timing(face, { toValue: dir, duration: 0, useNativeDriver: true }),
+        Animated.parallel([
+          Animated.timing(pos, {
+            toValue: to,
+            duration: 2200,
+            easing: Easing.inOut(Easing.quad),
+            useNativeDriver: true,
+          }),
+          Animated.sequence([half(1), half(0), half(-1), half(0), half(1), half(0)]),
+        ]),
+      ]);
     const pace = Animated.loop(
-      Animated.sequence([walk(b), Animated.delay(1600), walk(a), Animated.delay(1600)]),
+      Animated.sequence([
+        walk(b, b.x > a.x ? -1 : 1),
+        Animated.delay(1600),
+        walk(a, a.x > b.x ? -1 : 1),
+        Animated.timing(face, { toValue: -1, duration: 0, useNativeDriver: true }),
+        Animated.delay(1600),
+      ]),
     );
     const sparkle = Animated.loop(
       Animated.sequence([
@@ -129,6 +179,7 @@ export function Professor({
     pace.start();
     sparkle.start();
     return () => {
+      stopAll();
       pace.stop();
       sparkle.stop();
     };
@@ -161,6 +212,11 @@ export function Professor({
   // Portraits ≈ 1:2 ; « contain » garde les proportions exactes.
   const w = Math.round(HEIGHT * 0.6);
   const scaleY = breath.interpolate({ inputRange: [0, 1], outputRange: [1, 1.025] });
+  const bob = stride.interpolate({ inputRange: [-1, 0, 1], outputRange: [-2.5, 0, -2.5] });
+  const sway = stride.interpolate({ inputRange: [-1, 1], outputRange: ['-2deg', '2deg'] });
+  // Assis : il descend un peu, et la table cache le bas de son corps.
+  const sitDrop = seated.interpolate({ inputRange: [0, 1], outputRange: [0, HEIGHT * 0.22] });
+  const standO = seated.interpolate({ inputRange: [0, 1], outputRange: [1, 0] });
 
   return (
     <Animated.View
@@ -171,15 +227,38 @@ export function Professor({
         { transform: [{ translateX: pos.x }, { translateY: pos.y }] },
       ]}
     >
-      <View style={[styles.shadow, { width: w * 0.7, left: w * 0.15 }]} />
+      <Animated.View style={[styles.shadow, { width: w * 0.7, left: w * 0.15, opacity: standO }]} />
+      {/* Debout (marche, cours) */}
       <Animated.View
         style={{
+          position: 'absolute',
           width: w,
           height: HEIGHT,
-          transform: [{ translateY: HEIGHT / 2 }, { scaleY }, { translateY: -HEIGHT / 2 }],
+          opacity: standO,
+          transform: [
+            { translateY: bob },
+            { rotate: sway },
+            { translateY: HEIGHT / 2 },
+            { scaleY },
+            { translateY: -HEIGHT / 2 },
+            { scaleX: face },
+          ],
         }}
       >
-        {/* Les portraits regardent vers la gauche : miroir pour faire face aux élèves. */}
+        {/* Les portraits regardent vers la gauche : miroir (face = -1) pour regarder à droite. */}
+        <Image source={src} style={{ width: w, height: HEIGHT }} resizeMode="contain" />
+      </Animated.View>
+      {/* Assis à la table des profs : seul le haut du corps dépasse de la table. */}
+      <Animated.View
+        style={{
+          position: 'absolute',
+          width: w,
+          height: HEIGHT * 0.6,
+          overflow: 'hidden',
+          opacity: seated,
+          transform: [{ translateY: sitDrop }],
+        }}
+      >
         <Image
           source={src}
           style={{ width: w, height: HEIGHT, transform: [{ scaleX: -1 }] }}

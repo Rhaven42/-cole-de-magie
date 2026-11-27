@@ -486,6 +486,52 @@
         "banquetteFond",
         "planteMagiqueFond"
       ]
+    },
+    {
+      "asset_id": "44e80d41-dcc3-412f-8b21-568dd6fccbd0",
+      "label": "élèves assis (repas) de face",
+      "slices": [
+        "<maison>-<0|1>-sit"
+      ]
+    },
+    {
+      "asset_id": "9508366e-3e7c-48cc-b1d8-623828bdbf68",
+      "label": "élèves assis (repas) de dos",
+      "slices": [
+        "<maison>-<0|1>-sit-back"
+      ]
+    },
+    {
+      "asset_id": "c6353510-906f-41d1-8d49-5faf1d63b8b5",
+      "label": "élèves en marche de face (version raw)",
+      "slices": [
+        "<maison>-<0|1>-walk"
+      ]
+    },
+    {
+      "asset_id": "b8ee143f-639a-481e-9c01-3bce65257fab",
+      "label": "élèves en marche de dos",
+      "slices": [
+        "<maison>-<0|1>-walk-back"
+      ]
+    },
+    {
+      "asset_id": "b00edea0-bdd9-46e3-86a8-371061fbdc6b",
+      "label": "objets magiques 3",
+      "slices": [
+        "lustreCristal",
+        "tapisPentacle",
+        "etabliAlchimie",
+        "globeEtoiles",
+        "pileMalles",
+        "placardBalais",
+        "tonneauPotion",
+        "gargouille",
+        "panneauSalles",
+        "brasero",
+        "coinLecture",
+        "citrouillesLumineuses"
+      ]
     }
   ],
   "notes": "Planches découpées localement dans src/assets/sprites/. Les variantes *-unsorted.png sont des versions désaturées (élèves pas encore répartis). Les sprites teacherDeskM* sont des miroirs (bureau tourné vers les élèves). Ancienne planche tier-3 dorée (54244606…) remplacée. Index régénéré par `npm run assets`.",

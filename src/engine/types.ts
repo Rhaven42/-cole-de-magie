@@ -81,6 +81,8 @@ export interface Student {
   mood: number;
   trait: TraitId;
   arrivedAt: number;
+  /** Numéro du dernier grand repas pris (voir MEAL_BREAK). */
+  ateMeal?: number;
   /** 7e année terminée : doit passer l'examen final avant le diplôme. */
   graduating?: boolean;
   activity: Activity;
