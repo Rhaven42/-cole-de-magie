@@ -83,11 +83,8 @@ function pay(state: GameState, cost: number | null): boolean {
 export function levelUp(state: GameState, stationId: string): boolean {
   const st = state.stations[stationId];
   if (!st || !pay(state, levelUpCost(st))) return false;
+  // Le niveau améliore la salle (durée, gains) ; les places s'achètent à part.
   st.level++;
-  // +1 place tous les N niveaux (dans la limite du maximum)
-  if (st.level % ECONOMY.level.seatEveryLevels === 1 && st.seats.length < maxSeats(st)) {
-    st.seats.push(makeSeat());
-  }
   return true;
 }
 
@@ -104,6 +101,27 @@ export function upgradeSeat(state: GameState, stationId: string, seatIndex: numb
   if (!st || !pay(state, seatUpgradeCost(st, seatIndex))) return false;
   st.seats[seatIndex].level++;
   return true;
+}
+
+/** Place la plus lente (la moins améliorée) : cible du chrono. */
+export function slowestSeat(st: Station): number {
+  let slow = 0;
+  st.seats.forEach((s, i) => {
+    if (s.level < st.seats[slow].level) slow = i;
+  });
+  return slow;
+}
+
+/** Prix du chrono : améliorer la place la plus lente. */
+export function speedUpgradeCost(st: Station): number | null {
+  return st.seats.length ? seatUpgradeCost(st, slowestSeat(st)) : null;
+}
+
+/** Chrono : la place visée est choisie au moment de l'achat (pas d'index périmé). */
+export function upgradeSpeed(state: GameState, stationId: string): boolean {
+  const st = state.stations[stationId];
+  if (!st || !st.seats.length) return false;
+  return upgradeSeat(state, stationId, slowestSeat(st));
 }
 
 export function upgradeTrack(state: GameState, stationId: string, trackId: string): boolean {

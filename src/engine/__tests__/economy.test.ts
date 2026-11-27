@@ -32,18 +32,18 @@ describe('économie et achats', () => {
     expect(levelUp(g, 'inexistant')).toBe(false);
   });
 
-  it('améliorer une salle coûte base × 1.55^niveau et ajoute une place tous les 2 niveaux', () => {
+  it('améliorer une salle coûte base × 1.55^niveau, sans ajouter de place', () => {
     const g = createGame();
     g.coins = 1e6;
     const st = g.stations['course-potions'];
     expect(levelUpCost(st)).toBe(Math.round(40 * 1.55));
-    // Une salle qui ouvre n'a qu'une place ; +1 place aux niveaux 3, 5, 7…
+    // Une salle qui ouvre n'a qu'une place ; le niveau n'en ajoute pas.
     expect(st.seats.length).toBe(1);
     levelUp(g, st.id);
     expect(st.seats.length).toBe(1);
     levelUp(g, st.id);
     expect(st.level).toBe(3);
-    expect(st.seats.length).toBe(2);
+    expect(st.seats.length).toBe(1);
     for (let i = 0; i < 20; i++) levelUp(g, st.id);
     expect(st.level).toBe(10);
     expect(levelUpCost(st)).toBeNull();

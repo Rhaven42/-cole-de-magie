@@ -1,3 +1,4 @@
+import { useRef } from 'react';
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SPRITES, type SpriteName } from '../assets';
 import { PORTRAITS } from '../assets/portraits';
@@ -13,7 +14,7 @@ import {
   maxSeats,
   profLevel,
   propCost,
-  seatUpgradeCost,
+  speedUpgradeCost,
   serviceTime,
   type GameState,
   type Station,
@@ -54,10 +55,18 @@ export function UpgradeButton({
   label?: string;
 }) {
   const ok = cost !== null && coins >= cost;
+  // Anti double appui : un achat à la fois, même en tapotant très vite.
+  const last = useRef(0);
+  const press = () => {
+    const now = Date.now();
+    if (now - last.current < 180) return;
+    last.current = now;
+    onPress();
+  };
   return (
     <Pressable
       accessibilityRole="button"
-      onPress={ok ? onPress : undefined}
+      onPress={ok ? press : undefined}
       style={({ pressed }) => [
         styles.btn,
         !ok && styles.btnOff,
@@ -83,10 +92,6 @@ export function RoomTop({ st, game }: { st: Station; game: GameState }) {
   const duration = serviceTime(st, 0, undefined, game);
   const max = maxSeats(st);
   // Chrono : améliore la place la plus lente (la moins améliorée).
-  let slow = 0;
-  st.seats.forEach((s, i) => {
-    if (s.level < st.seats[slow].level) slow = i;
-  });
   const prof = isCourse ? NAMED_PROFESSORS[st.courseId!] : undefined;
   const props = isCourse ? (COURSE_PROPS[st.courseId!] ?? []) : [];
   const desc = isCourse
@@ -171,9 +176,9 @@ export function RoomTop({ st, game }: { st: Station; game: GameState }) {
             <Text style={styles.clockText}>{duration.toFixed(1)} s</Text>
           </View>
           <UpgradeButton
-            cost={st.seats.length ? seatUpgradeCost(st, slow) : null}
+            cost={speedUpgradeCost(st)}
             coins={coins}
-            onPress={() => store.upgradeSeat(st.id, slow)}
+            onPress={() => store.upgradeSpeed(st.id)}
           />
         </View>
       </View>

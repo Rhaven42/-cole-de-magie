@@ -7,6 +7,7 @@ import {
   buyDorm,
   buyExam,
   upgradeProf,
+  upgradeSpeed,
   claimAd,
   dismissAd,
   catchUp,
@@ -106,6 +107,7 @@ interface Store {
   buyDorm(): boolean;
   buyExam(): boolean;
   upgradeProf(id: CourseId): boolean;
+  upgradeSpeed(id: string): boolean;
   claimAd(): boolean;
   dismissAd(): void;
   setBias(h: HouseId | null): boolean;
@@ -410,6 +412,7 @@ export const useGame = create<Store>((set, get) => {
     buyDorm: () => purchased(buyDorm(get().game)),
     buyExam: () => purchased(buyExam(get().game)),
     upgradeProf: (id) => purchased(upgradeProf(get().game, id)),
+    upgradeSpeed: (id) => purchased(upgradeSpeed(get().game, id)),
     claimAd: () => purchased(claimAd(get().game)),
     dismissAd: () => {
       dismissAd(get().game);

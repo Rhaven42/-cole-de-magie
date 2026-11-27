@@ -361,6 +361,34 @@
         "haystack",
         "footbridge"
       ]
+    },
+    {
+      "asset_id": "a020852d-5934-441c-bd7f-1075048b210a",
+      "label": "personnel de l'Accueil",
+      "slices": [
+        "staff0",
+        "staff1",
+        "staff2",
+        "staff3"
+      ]
+    },
+    {
+      "asset_id": "1891e347-02cf-4328-be93-bab0db31952e",
+      "label": "nourriture de la cantine",
+      "slices": [
+        "foodChicken",
+        "foodBread",
+        "foodFruit",
+        "foodPie",
+        "foodJug",
+        "foodGoblets",
+        "foodCheese",
+        "foodCake",
+        "foodStew",
+        "foodSausage",
+        "foodFlowers",
+        "foodCandles"
+      ]
     }
   ],
   "notes": "Planches découpées localement dans src/assets/sprites/. Les variantes *-unsorted.png sont des versions désaturées (élèves pas encore répartis). Les sprites teacherDeskM* sont des miroirs (bureau tourné vers les élèves). Ancienne planche tier-3 dorée (54244606…) remplacée. Index régénéré par `npm run assets`.",

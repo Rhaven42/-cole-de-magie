@@ -40,7 +40,7 @@ export const EXAM_PRICE = 2_500_000;
 export const COURSE_PATIENCE = 150;
 
 /** Inscription : frais payés à l'Accueil par chaque nouvel élève. */
-export const ENROLLMENT = { fee: 20, feePerLevel: 0.12, arrivalPerLevel: 0.12 };
+export const ENROLLMENT = { fee: 6, feePerLevel: 0.1, arrivalPerLevel: 0.12 };
 
 export const GRADUATION = {
   coins: 600,

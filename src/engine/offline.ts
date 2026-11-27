@@ -2,7 +2,7 @@ import { tick } from './tick';
 import type { GameState } from './types';
 
 /** Durée max de rattrapage hors-ligne (s). Une amélioration J7 l'étendra. */
-export const OFFLINE_MAX_SECONDS = 8 * 3600;
+export const OFFLINE_MAX_SECONDS = 2 * 3600;
 /** Pas de simulation pendant le rattrapage (plus grossier que le tick temps réel). */
 export const OFFLINE_STEP = 1;
 
