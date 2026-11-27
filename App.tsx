@@ -26,6 +26,9 @@ function Game() {
   useGameLoop();
   const ready = useGame((s) => s.ready);
   const [tab, setTab] = useState<Tab>('school');
+  const editing = useGame((s) => s.editor.on);
+  // L'éditeur de décor s'ouvre sur la carte.
+  const shown: Tab = editing ? 'school' : tab;
   if (!ready) {
     return (
       <View style={styles.loading}>
@@ -37,13 +40,13 @@ function Game() {
     <View style={{ flex: 1 }}>
       <Hud />
       <View style={{ flex: 1 }}>
-        {tab === 'school' && <SchoolScreen />}
-        {tab === 'shop' && <ShopScreen />}
-        {tab === 'students' && <StudentsScreen />}
-        {tab === 'houses' && <HousesScreen />}
-        {tab === 'more' && <MoreScreen />}
+        {shown === 'school' && <SchoolScreen />}
+        {shown === 'shop' && <ShopScreen />}
+        {shown === 'students' && <StudentsScreen />}
+        {shown === 'houses' && <HousesScreen />}
+        {shown === 'more' && <MoreScreen />}
       </View>
-      <TabBar tab={tab} onChange={setTab} />
+      {editing ? null : <TabBar tab={shown} onChange={setTab} />}
       <Toasts />
       <RoomSheet />
       <StudentSheet />

@@ -53,6 +53,7 @@ import { colors, formatDuration, formatNumber } from '../ui/theme';
 import { Walker } from '../ui/Walker';
 import { Ambient, Explosion } from '../ui/Ambient';
 import { MagicTree, treeScreenPos } from '../ui/MagicTree';
+import { DecorEditorBar, EditorMarker, editorTap } from '../ui/DecorEditor';
 import { Professor } from '../ui/Professor';
 
 const MIN_SCALE = 0.25;
@@ -340,6 +341,11 @@ export function SchoolScreen() {
     const g = store.game;
     const mx = (sx - tx.value) / scale.value;
     const my = (sy - ty.value) / scale.value;
+    // Éditeur de décor (administration) : les touchers servent à l'édition.
+    if (store.editor.on) {
+      editorTap(mx, my);
+      return;
+    }
     // 0. Arbre enchanté de la cour
     const tp = treeScreenPos();
     if (Math.abs(mx - tp.x) < 50 && my < tp.y + 8 && my > tp.y - 150) {
@@ -439,6 +445,8 @@ export function SchoolScreen() {
     transform: [{ translateX: tx.value }, { translateY: ty.value }, { scale: scale.value }],
   }));
 
+  const decorRev = useGame((s) => s.decorRev);
+  const editing = useGame((s) => s.editor.on);
   const snap = snapshot(game);
   const snapKey = JSON.stringify(snap);
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -458,7 +466,12 @@ export function SchoolScreen() {
         {/* touchAction « none » : sur le web/mobile, le navigateur ne vole plus le glissé à un doigt. */}
         <View style={[StyleSheet.absoluteFill, styles.noTouchScroll]}>
           <Animated.View style={[styles.map, mapStyle]}>
-            <MapArt env={stableSnap.env} rooms={stableSnap.rooms} plots={stableSnap.plots} />
+            <MapArt
+              env={stableSnap.env}
+              rooms={stableSnap.rooms}
+              plots={stableSnap.plots}
+              rev={decorRev}
+            />
             {stableSnap.plots
               .filter((p) => p.available)
               .map((p) => (
@@ -497,6 +510,7 @@ export function SchoolScreen() {
             })}
             <Ambient game={game} />
             <MagicTree game={game} />
+            <EditorMarker />
             <SortingHat game={game} />
             <EventMarkers game={game} />
             {game.stationOrder.map((id) => (
@@ -549,7 +563,8 @@ export function SchoolScreen() {
           <Text style={styles.mealText}>🍽️ Pause repas : les profs sont à la cantine</Text>
         </View>
       ) : null}
-      <AdOffer />
+      {editing ? null : <AdOffer />}
+      <DecorEditorBar />
     </View>
   );
 }

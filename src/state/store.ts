@@ -41,7 +41,8 @@ import {
 import type { CourseId } from '../data/courses';
 import type { GemItemId } from '../data/gemShop';
 import type { HouseId } from '../data/houses';
-import { clearSave, loadSave, loadTuning, writeSave } from './persistence';
+import { clearSave, loadDecor, loadSave, loadTuning, writeDecor, writeSave } from './persistence';
+import { getDecorEdits, setDecorEdits } from '../data/decorEdits';
 import { applyTuning } from '../data/tuning';
 import { seatSpot } from '../ui/iso';
 import { t } from '../i18n';
@@ -63,6 +64,14 @@ export interface Toast {
   title: string;
   line?: number;
   born: number;
+}
+
+export interface EditorState {
+  on: boolean;
+  /** Objet sélectionné (« zone|clé » de DECOR_INDEX). */
+  sel: string | null;
+  /** Prochain toucher sur la carte : déplacer l'objet, ou poser un nouvel objet. */
+  placing: null | { mode: 'move' } | { mode: 'add'; sprite: string };
 }
 
 interface Store {
@@ -125,6 +134,13 @@ interface Store {
   openPanel(p: 'tree' | 'gems' | 'admin' | null): void;
   /** Ré-applique les réglages administrateur et redessine. */
   refresh(): void;
+  /** Éditeur de décor (administration). */
+  editor: EditorState;
+  setEditor(patch: Partial<EditorState>): void;
+  /** Version du décor : incrémentée à chaque modification (redessine la carte). */
+  decorRev: number;
+  /** À appeler après une modification du décor : redessine et enregistre. */
+  decorChanged(): void;
   setBias(h: HouseId | null): boolean;
 }
 
@@ -332,6 +348,7 @@ export const useGame = create<Store>((set, get) => {
     async init() {
       // Réglages de l'administration, avant de charger la partie.
       applyTuning(await loadTuning());
+      setDecorEdits(await loadDecor());
       const saved = await loadSave();
       if (saved) {
         const seconds = elapsedSince(saved, Date.now());
@@ -447,6 +464,13 @@ export const useGame = create<Store>((set, get) => {
     clock: Date.now(),
     openPanel: (p) => set({ panel: p }),
     refresh: () => set((s) => ({ rev: s.rev + 1 })),
+    editor: { on: false, sel: null, placing: null },
+    setEditor: (patch) => set((s) => ({ editor: { ...s.editor, ...patch } })),
+    decorRev: 0,
+    decorChanged: () => {
+      writeDecor(getDecorEdits());
+      set((s) => ({ decorRev: s.decorRev + 1 }));
+    },
     dismissAd: () => {
       dismissAd(get().game);
       set((s) => ({ rev: s.rev + 1 }));

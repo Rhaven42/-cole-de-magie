@@ -19,6 +19,7 @@ import {
   ROOM_SCALE,
 } from '../data/layout';
 import { COURSE_PROPS } from '../data/roomProps';
+import { addedItems, AREA_ORIGINS, DECOR_INDEX, itemEdit, OUTDOOR } from '../data/decorEdits';
 import type { CourseId } from '../data/courses';
 import type { Station } from '../engine';
 import {
@@ -177,6 +178,44 @@ function Decor({
       />
     </G>
   );
+}
+
+/** Objet de décor après les modifications de l'éditeur (null = masqué), et indexé. */
+function edited(
+  area: string,
+  key: string,
+  name: string,
+  gx: number,
+  gy: number,
+  w: number,
+  origin: { x: number; y: number } = { x: 0, y: 0 },
+): { name: SpriteName; gx: number; gy: number; w: number; flip: boolean } | null {
+  const e = itemEdit(area, key);
+  if (e?.hidden) return null;
+  const r = {
+    name: name as SpriteName,
+    gx: e?.x !== undefined ? origin.x + e.x : gx,
+    gy: e?.y !== undefined ? origin.y + e.y : gy,
+    w: e?.w ?? w,
+    flip: !!e?.flip,
+  };
+  DECOR_INDEX.set(`${area}|${key}`, {
+    area,
+    key,
+    sprite: name,
+    gx: r.gx,
+    gy: r.gy,
+    w: r.w,
+    ox: origin.x,
+    oy: origin.y,
+  });
+  return r;
+}
+
+/** Objet extérieur modifiable (positions absolues). */
+function outdoorItem(key: string, name: string, gx: number, gy: number, w: number, mirror = false) {
+  const r = edited(OUTDOOR, key, name, gx, gy, w);
+  return r ? { ...r, mirror: r.flip ? !mirror : mirror } : null;
 }
 
 /** Élément de décor extérieur selon l'environnement. */
@@ -353,13 +392,29 @@ function Landscape({ env, front }: { env: EnvDef; front: boolean }) {
   const school0 = plotOrigin(0, 0);
   const x1 = school0.x + PLOT.cols * (S + PLOT.gap) - PLOT.gap / 2;
   const y1 = school0.y + PLOT.rows * (S + PLOT.gap) - PLOT.gap / 2;
-  const items = LANDSCAPE.filter((o) => (o.x > x1 || o.y > y1) === front).sort(
-    (a, b) => a.x + a.y - (b.x + b.y),
-  );
+  const all = [
+    ...LANDSCAPE.map((o, i) => ({ ...o, key: `ls-${i}` })),
+    ...addedItems(OUTDOOR).map((a) => ({
+      name: a.sprite as SpriteName,
+      x: a.x,
+      y: a.y,
+      w: a.w,
+      mirror: false,
+      key: `add-${a.id}`,
+    })),
+  ];
+  const items = all
+    .map((o) => {
+      const r = outdoorItem(o.key, o.name, o.x, o.y, o.w, o.mirror);
+      return r ? { ...o, name: r.name, x: r.gx, y: r.gy, w: r.w, mirror: r.mirror } : null;
+    })
+    .filter((o): o is NonNullable<typeof o> => !!o)
+    .filter((o) => (o.x > x1 || o.y > y1) === front)
+    .sort((a, b) => a.x + a.y - (b.x + b.y));
   const natural = env.deco === 'tree';
   return (
     <G>
-      {items.map((o, i) =>
+      {items.map((o) =>
         natural ||
         ![
           'oak',
@@ -375,9 +430,9 @@ function Landscape({ env, front }: { env: EnvDef; front: boolean }) {
           'produceCrate',
           'haystack',
         ].includes(o.name) ? (
-          <Decor key={i} name={o.name} p={iso(o.x, o.y)} width={o.w} mirror={o.mirror} />
+          <Decor key={o.key} name={o.name} p={iso(o.x, o.y)} width={o.w} mirror={o.mirror} />
         ) : (
-          <Deco key={i} p={iso(o.x, o.y)} s={1.2} env={env} />
+          <Deco key={o.key} p={iso(o.x, o.y)} s={1.2} env={env} />
         ),
       )}
     </G>
@@ -484,10 +539,25 @@ function Ground({ env }: { env: EnvDef }) {
       { name: 'flowerBorder', x: pathX + PATH_HALF + 0.9, y: y + 1.7, w: 52 },
     );
   }
+  const fp = fountainPoint();
+  yard.push({ name: 'grandFountain', x: fp.x, y: fp.y, w: 96 });
   const yardEls = yard
-    .filter((o) => isManor || !['oak', 'pine', 'bush', 'pumpkins'].includes(o.name))
+    .map((o, i) => ({ o, i }))
+    .filter(({ o }) => isManor || !['oak', 'pine', 'bush', 'pumpkins'].includes(o.name))
+    // L'Arbre enchanté reste à sa place (on le touche pour cueillir).
+    .map(({ o, i }) =>
+      o.name === 'magicTreeBare'
+        ? { ...o, mirror: false, k: `y${i}` }
+        : (() => {
+            const r = outdoorItem(`yard-${i}`, o.name, o.x, o.y, o.w);
+            return r
+              ? { name: r.name, x: r.gx, y: r.gy, w: r.w, mirror: r.mirror, k: `y${i}` }
+              : null;
+          })(),
+    )
+    .filter((o): o is NonNullable<typeof o> => !!o)
     .sort((a, b) => a.x + a.y - (b.x + b.y))
-    .map((o, i) => <Decor key={`y${i}`} name={o.name} p={iso(o.x, o.y)} width={o.w} />);
+    .map((o) => <Decor key={o.k} name={o.name} p={iso(o.x, o.y)} width={o.w} mirror={o.mirror} />);
 
   return (
     <G>
@@ -569,7 +639,6 @@ function Ground({ env }: { env: EnvDef }) {
       <BackCorridor id="course-flying" env={env} />
       <Landscape env={env} front={false} />
       {yardEls}
-      <Decor name="grandFountain" p={iso(fountainPoint().x, fountainPoint().y)} width={96} />
       <Sprite name="gate" p={iso(gateX, gateY + 1.2)} width={190} lift={14} />
     </G>
   );
@@ -644,10 +713,15 @@ function BigGarden({ px, py, span, env }: { px: number; py: number; span: number
       {/* rond-point pavé autour de la fontaine */}
       <Ellipse cx={c.x} cy={c.y} rx={58} ry={29} fill="#9C9384" />
       <Ellipse cx={c.x} cy={c.y} rx={54} ry={27} fill="#B8AE9C" />
-      {placed.map((d, i) => (
-        <Decor key={i} name={d.name} p={at(d.x, d.y)} width={d.w} />
-      ))}
-      <Decor name="grandFountain" p={{ x: c.x, y: c.y + 14 }} width={92} />
+      {[
+        ...placed,
+        { name: 'grandFountain' as SpriteName, x: cx - o.x + 0.7, y: cy - o.y + 0.7, w: 92 },
+      ].map((d, i) => {
+        const r = outdoorItem(`${k}-${i}`, d.name, o.x + d.x, o.y + d.y, d.w);
+        return r ? (
+          <Decor key={i} name={r.name} p={iso(r.gx, r.gy)} width={r.w} mirror={r.mirror} />
+        ) : null;
+      })}
     </G>
   );
 }
@@ -657,6 +731,12 @@ function Garden({ px, py, env }: { px: number; py: number; env: EnvDef }) {
   const k = `${px}-${py}`;
   const at = (x: number, y: number) => iso(o.x + x, o.y + y);
   const trees = env.deco === 'tree';
+  let n = 0;
+  /** Objet du jardin, modifiable dans l'éditeur. */
+  const gd = (name: SpriteName, x: number, y: number, width: number) => {
+    const r = outdoorItem(`garden-${k}-${n++}`, name, o.x + x, o.y + y, width);
+    return r ? <Decor name={r.name} p={iso(r.gx, r.gy)} width={r.w} mirror={r.mirror} /> : null;
+  };
   return (
     <G>
       <TexFloor
@@ -688,17 +768,13 @@ function Garden({ px, py, env }: { px: number; py: number; env: EnvDef }) {
         tex="stone"
         tile={2}
       />
-      {trees ? (
-        <Decor name="oak" p={at(2.2, 2.2)} width={60} />
-      ) : (
-        <Deco p={at(2.2, 2.2)} env={env} />
-      )}
-      <Decor name="flowerBed" p={at(7.6, 2.4)} width={40} />
-      <Decor name="hedge" p={at(2.4, 7.6)} width={40} />
-      <Decor name="birdbath" p={at(S / 2, S / 2)} width={22} />
-      <Decor name="parkBench" p={at(6.2, 4.0)} width={32} />
-      <Decor name="flowerBed" p={at(7.6, 7.6)} width={40} />
-      {trees ? <Decor name="bush" p={at(3.8, 4.0)} width={26} /> : null}
+      {trees ? gd('oak', 2.2, 2.2, 60) : <Deco p={at(2.2, 2.2)} env={env} />}
+      {gd('flowerBed', 7.6, 2.4, 40)}
+      {gd('hedge', 2.4, 7.6, 40)}
+      {gd('birdbath', S / 2, S / 2, 22)}
+      {gd('parkBench', 6.2, 4.0, 32)}
+      {gd('flowerBed', 7.6, 7.6, 40)}
+      {trees ? gd('bush', 3.8, 4.0, 26) : null}
     </G>
   );
 }
@@ -1279,7 +1355,11 @@ function Room({ r, env, guests = [] }: { r: RoomSnapshot; env: EnvDef; guests?: 
   const add = (gx: number, gy: number, el: ReactElement) => objects.push({ order: gx + gy, el });
   // Dos au mur : les meubles muraux sont plaqués contre le mur le plus proche (façade
   // inclinée comme le mur) ; contre le mur de gauche, ils sont aussi retournés.
-  const decor = (key: string, name: SpriteName, gx: number, gy: number, width: number) => {
+  AREA_ORIGINS.set(r.id, o);
+  const decor = (key: string, name0: SpriteName, gx0: number, gy0: number, width0: number) => {
+    const ed = edited(r.id, key, name0, gx0, gy0, width0, o);
+    if (!ed) return;
+    const { name, gx, gy, w: width } = ed;
     const dx = gx - o.x;
     const dy = gy - o.y;
     const wallish = WALL_FURNITURE.test(String(name));
@@ -1289,7 +1369,14 @@ function Room({ r, env, guests = [] }: { r: RoomSnapshot; env: EnvDef; guests?: 
     add(
       gx,
       gy,
-      <Decor key={key} name={name} p={iso(gx, gy)} width={width} mirror={left} skew={skew} />,
+      <Decor
+        key={key}
+        name={name}
+        p={iso(gx, gy)}
+        width={width}
+        mirror={left !== ed.flip}
+        skew={skew}
+      />,
     );
   };
 
@@ -1393,11 +1480,7 @@ function Room({ r, env, guests = [] }: { r: RoomSnapshot; env: EnvDef; guests?: 
       );
     }
     // Grande cheminée au centre du mur du fond, bougies flottantes au-dessus des tables.
-    add(
-      o.x + 12.5,
-      o.y + 0.9,
-      <Decor key="bigFire" name="grandFire" p={iso(o.x + 12.5, o.y + 1.4)} width={150} />,
-    );
+    decor('bigFire', 'grandFire', o.x + 12.5, o.y + 1.4, 150);
     [7, 12, 17].forEach((y) =>
       [9, 15].forEach((x) => decor(`fc-${x}-${y}`, 'floatCandles', o.x + x, o.y + y, 24)),
     );
@@ -1451,6 +1534,9 @@ function Room({ r, env, guests = [] }: { r: RoomSnapshot; env: EnvDef; guests?: 
       o.y + d.y * R,
       d.width,
     );
+  // Objets ajoutés dans l'éditeur.
+  for (const a of addedItems(r.id))
+    decor(`add-${a.id}`, a.sprite as SpriteName, o.x + a.x, o.y + a.y, a.w);
   if (r.courseId)
     for (const p of COURSE_PROPS[r.courseId as CourseId] ?? [])
       if (!p.cost || r.props.includes(p.id))
@@ -1574,9 +1660,13 @@ interface Props {
   rooms: RoomSnapshot[];
   /** Parcelles de construction proposées (id → achetable maintenant). */
   plots: { id: string; available: boolean }[];
+  /** Version du décor modifié (éditeur) : redessine quand elle change. */
+  rev?: number;
 }
 
 function MapArtBase({ rooms, plots, env: envIndex }: Props) {
+  DECOR_INDEX.clear();
+  AREA_ORIGINS.clear();
   const env = ENVIRONMENTS[envIndex] ?? ENVIRONMENTS[0];
   const items: { order: number; el: ReactElement }[] = [];
   const all = [...rooms, STAFF_ROOM];

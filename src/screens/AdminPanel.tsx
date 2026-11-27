@@ -5,9 +5,16 @@ import { ADMIN_CODE, applyTuning, DEFAULTS, PARAMS, paramValue } from '../data/t
 import { buyCourse, buyExam, catchUp, courseCost, examCost } from '../engine';
 import { loadTuning, writeTuning } from '../state/persistence';
 import { useGame } from '../state/store';
+import {
+  countEdits,
+  getDecorEdits,
+  resetArea,
+  setDecorEdits,
+  type DecorEdits,
+} from '../data/decorEdits';
 import { formatNumber, radius, space } from '../ui/theme';
 
-type Tab = 'cheats' | 'tuning' | 'export';
+type Tab = 'cheats' | 'decor' | 'tuning' | 'export';
 let unlocked = false;
 
 /**
@@ -78,6 +85,7 @@ export function AdminPanel() {
               {(
                 [
                   ['cheats', '🎮 Triche'],
+                  ['decor', '🏰 Décor'],
                   ['tuning', '⚙️ Réglages'],
                   ['export', '📤 Export'],
                 ] as [Tab, string][]
@@ -92,6 +100,7 @@ export function AdminPanel() {
               ))}
             </View>
             {tab === 'cheats' ? <Cheats flash={flash} /> : null}
+            {tab === 'decor' ? <DecorTab flash={flash} /> : null}
             {tab === 'tuning' ? <Tuning over={over} save={save} /> : null}
             {tab === 'export' ? <Export over={over} save={save} flash={flash} /> : null}
           </>
@@ -208,6 +217,42 @@ function Cheats({ flash }: { flash: (m: string) => void }) {
           g.gemShop = {};
         })}
       />
+    </ScrollView>
+  );
+}
+
+function DecorTab({ flash }: { flash: (m: string) => void }) {
+  const store = useGame.getState();
+  useGame((s) => s.decorRev);
+  const n = countEdits();
+  return (
+    <ScrollView contentContainerStyle={styles.body}>
+      <Text style={styles.note}>
+        Modifie toi-même les salles et l’extérieur : touche un objet pour le déplacer, l’agrandir,
+        le retourner ou le supprimer ; ajoute n’importe quel objet du jeu depuis la liste. Les
+        meubles où s’installent les élèves se déplacent avec « Réaménager » dans chaque salle.
+      </Text>
+      <Btn
+        label="✏️ Ouvrir l’éditeur de décor"
+        onPress={() => {
+          store.openPanel(null);
+          store.setEditor({ on: true, sel: null, placing: null });
+        }}
+      />
+      <Text style={styles.note}>
+        {n} modification{n > 1 ? 's' : ''} du décor enregistrée{n > 1 ? 's' : ''} sur cet appareil.
+      </Text>
+      {n ? (
+        <Btn
+          color="#C0392B"
+          label="Remettre tout le décor d’origine"
+          onPress={() => {
+            resetArea();
+            store.decorChanged();
+            flash('Décor d’origine rétabli');
+          }}
+        />
+      ) : null}
     </ScrollView>
   );
 }
@@ -334,13 +379,13 @@ function Export({
   save: (o: Record<string, number>) => void;
   flash: (m: string) => void;
 }) {
-  const json = JSON.stringify(over, null, 1);
+  const json = JSON.stringify({ reglages: over, decor: getDecorEdits() });
   const [imp, setImp] = useState('');
   return (
     <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
       <Text style={styles.note}>
-        Copie ce texte pour garder tes réglages, les mettre sur un autre appareil, ou me les envoyer
-        pour qu’ils deviennent les valeurs officielles du jeu.
+        Copie ce texte (réglages + décor) pour le garder, le mettre sur un autre appareil, ou me
+        l’envoyer pour qu’il devienne la version officielle du jeu.
       </Text>
       <TextInput value={json} multiline editable={false} selectTextOnFocus style={styles.code} />
       <Text style={styles.h}>Importer</Text>
@@ -348,7 +393,7 @@ function Export({
         value={imp}
         onChangeText={setImp}
         multiline
-        placeholder='{"eco.startCoins": 100}'
+        placeholder='{"reglages": {"eco.startCoins": 100}}'
         placeholderTextColor="#998"
         style={styles.code}
       />
@@ -356,12 +401,17 @@ function Export({
         label="Appliquer"
         onPress={() => {
           try {
-            const o = JSON.parse(imp);
+            const raw = JSON.parse(imp);
+            const o = raw.reglages ?? (raw.decor ? {} : raw);
             const clean: Record<string, number> = {};
             for (const [k, v] of Object.entries(o))
               if (k in DEFAULTS && typeof v === 'number') clean[k] = v;
             save(clean);
-            flash(`${Object.keys(clean).length} réglages importés`);
+            if (raw.decor && typeof raw.decor === 'object') {
+              setDecorEdits(raw.decor as DecorEdits);
+              useGame.getState().decorChanged();
+            }
+            flash(`${Object.keys(clean).length} réglages importés${raw.decor ? ' + décor' : ''}`);
           } catch {
             flash('Texte invalide');
           }
