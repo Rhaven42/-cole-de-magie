@@ -73,6 +73,8 @@ export interface EditorState {
   sel: string | null;
   /** Prochain toucher sur la carte : déplacer l'objet, ou poser un nouvel objet. */
   placing: null | { mode: 'move' } | { mode: 'add'; sprite: string };
+  /** Un objet est en train d'être glissé au doigt. */
+  dragging?: boolean;
 }
 
 interface Store {

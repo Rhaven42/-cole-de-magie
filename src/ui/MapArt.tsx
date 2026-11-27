@@ -179,13 +179,19 @@ function Decor({
         name={name}
         p={p}
         width={width}
-        lift={NO_SHADOW.has(name) ? 0 : 2}
+        lift={WALL_HUNG.test(String(name)) ? -22 : NO_SHADOW.has(name) ? 0 : 2}
         mirror={mirror}
         skew={skew}
       />
     </G>
   );
 }
+
+/** Objets accrochés au mur (tableaux, torches…) : dessinés en hauteur. */
+const WALL_HUNG =
+  /^(torche|applique|rosace|tableau|grandeCarte|horlogeLune|bouclierEpees|etagerePotions)/;
+/** Tapis : toujours dessinés sous les meubles. */
+const RUG = /^tapis/;
 
 /** Objet de décor après les modifications de l'éditeur (null = masqué), et indexé. */
 function edited(
@@ -1408,7 +1414,7 @@ function Room({ r, env, guests = [] }: { r: RoomSnapshot; env: EnvDef; guests?: 
       skew = preRotated ? 0 : WALL_SKEW;
     }
     add(
-      gx,
+      RUG.test(String(name)) ? gx - 1000 : gx,
       gy,
       <Decor
         key={key}

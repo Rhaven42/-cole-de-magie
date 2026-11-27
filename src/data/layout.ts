@@ -161,6 +161,18 @@ export const ROOM_DECOR: Record<string, DecorItem[]> = {
     { sprite: 'candelabra', x: 0.6, y: 0.7, width: 20 },
     { sprite: 'armchair', x: 4.0, y: 0.75, width: 28 },
     { sprite: 'books', x: 0.7, y: 4.0, width: 22 },
+    // Chambre douillette : tapis, chevets, coiffeuse, tableau, torches, coussins, bureau.
+    at('tapisRouge', 5.6, 4.6, 74),
+    at('tableChevet', 2.7, 2.2, 20),
+    at('tableChevet', 2.7, 5.7, 20),
+    at('coiffeuse', 7.3, 0.7, 28),
+    at('tableauChateauFond', 5.0, 0.15, 34),
+    at('torcheFond', 2.8, 0.15, 16),
+    at('torcheFond', 8.2, 0.15, 16),
+    at('torcheGauche', 0.15, 7.5, 16),
+    at('coussinsHibou', 7.6, 6.4, 34),
+    at('bureauDevoirs', 6.4, 8.6, 34),
+    at('lampadaire', 8.6, 8.5, 14),
   ],
   // Positions en cases réelles converties (÷ ROOM_SCALE) : voir `at`.
   hall: [
@@ -174,6 +186,11 @@ export const ROOM_DECOR: Record<string, DecorItem[]> = {
     at('candelabra', 23.4, 17.5, 22),
     at('candelabra', 23.4, 6.5, 22),
     at('cageFees', 23.4, 12.0, 30),
+    at('torcheFond', 7.5, 0.15, 22),
+    at('torcheFond', 17.5, 0.15, 22),
+    at('torcheGauche', 0.15, 8.0, 22),
+    at('torcheGauche', 0.15, 16.0, 22),
+    at('tableauMageFond', 21.5, 0.15, 40),
     at('fontaineInterieure', 23.0, 21.0, 52),
   ],
   // Accueil : guichets à gauche, coin d'attente, le Chaporacle à droite (zone violette).
@@ -214,6 +231,7 @@ export const ROOM_DECOR: Record<string, DecorItem[]> = {
     at('clock', 9.3, 0.6, 22),
     at('globe', 8.8, 3.6, 26),
     at('tableEchecs', 6.5, 6.4, 56),
+    at('tableauMageFond', 2.6, 0.15, 30),
     at('tableThe', 2.8, 6.6, 40),
     at('perchoirPhenix', 9.2, 6.2, 34),
     at('candelabra', 9.2, 9.1, 22),
@@ -234,6 +252,9 @@ export const ROOM_DECOR: Record<string, DecorItem[]> = {
     at('books', 23.0, 9.1, 26),
     at('chest', 2.0, 9.2, 26),
     at('craneDragon', 20.5, 9.0, 40),
+    at('tableauDragonFond', 14.0, 0.15, 36),
+    at('torcheFond', 3.5, 0.15, 20),
+    at('torcheFond', 21.5, 0.15, 20),
     at('livresVolants', 4.5, 0.9, 30),
   ],
   sorting: [

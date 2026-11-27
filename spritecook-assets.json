@@ -568,6 +568,52 @@
         "charretteFleurs",
         "feuDeCamp"
       ]
+    },
+    {
+      "asset_id": "1a9f9053-1420-439e-8279-e1669888fdba",
+      "label": "chambres : tapis et meubles",
+      "slices": [
+        "tapisRouge",
+        "tapisVert",
+        "tapisBleu",
+        "tapisJaune",
+        "tableChevet",
+        "malleLit",
+        "coiffeuse",
+        "panierLinge",
+        "coussinsHibou",
+        "bureauDevoirs",
+        "lampadaire",
+        "tabouretPantoufles"
+      ]
+    },
+    {
+      "asset_id": "95af302f-91d3-4211-9ed3-4ea65874fe42",
+      "label": "objets muraux (tableaux, torches…) ; *Gauche = miroir",
+      "slices": [
+        "torcheFond",
+        "torcheBleueFond",
+        "appliqueFond",
+        "rosaceFond",
+        "tableauMageFond",
+        "tableauChateauFond",
+        "tableauDragonFond",
+        "tableauChatFond",
+        "grandeCarteFond",
+        "horlogeLuneFond",
+        "bouclierEpeesFond",
+        "etagerePotionsFond"
+      ]
+    },
+    {
+      "asset_id": "7f42fc2e-6ce1-4c39-882f-7f237c6e49b4",
+      "label": "fantômes (version raw)",
+      "slices": [
+        "ghostMonk",
+        "ghostLady",
+        "ghostMonk-back",
+        "ghostLady-back"
+      ]
     }
   ],
   "notes": "Planches découpées localement dans src/assets/sprites/. Les variantes *-unsorted.png sont des versions désaturées (élèves pas encore répartis). Les sprites teacherDeskM* sont des miroirs (bureau tourné vers les élèves). Ancienne planche tier-3 dorée (54244606…) remplacée. Index régénéré par `npm run assets`.",

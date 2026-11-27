@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/immutability -- les valeurs partagées Reanimated (zoom, position) sont faites pour être modifiées. */
 import { COURSE_IDS } from '../data/courses';
 import { AdOffer } from '../ui/AdOffer';
 import { isMealBreak } from '../data/progression';
@@ -53,7 +54,16 @@ import { colors, formatDuration, formatNumber } from '../ui/theme';
 import { Walker } from '../ui/Walker';
 import { Ambient, Explosion } from '../ui/Ambient';
 import { MagicTree, treeScreenPos } from '../ui/MagicTree';
-import { DecorEditorBar, EditorMarker, editorTap } from '../ui/DecorEditor';
+import { Ghosts } from '../ui/Ghosts';
+import {
+  DecorEditorBar,
+  editorDragEnd,
+  editorDragMove,
+  editorDragStart,
+  EditorMarker,
+  editorTap,
+  MAP_VIEW,
+} from '../ui/DecorEditor';
 import { Professor } from '../ui/Professor';
 
 const MIN_SCALE = 0.25;
@@ -79,6 +89,17 @@ interface Placed {
 }
 
 /** Ancrage (grille absolue + salle) de chaque élève visible. */
+type Shared = { value: number };
+/** Glisser d'un objet en cours (éditeur de décor). */
+const dragState = { on: false, dx: 0, dy: 0 };
+/** Relie l'éditeur de décor à la vue de la carte (zoom, centre, blocage du glisser). */
+function bindMapView(v: { scale: Shared; tx: Shared; ty: Shared }, W: number, H: number) {
+  MAP_VIEW.center = () => ({
+    x: (W / 2 - v.tx.value) / v.scale.value,
+    y: (H / 2 - v.ty.value) / v.scale.value,
+  });
+}
+
 function placeStudents(game: GameState): Placed[] {
   const out: Placed[] = [];
   const meal = isMealBreak(game.time);
@@ -345,6 +366,8 @@ export function SchoolScreen() {
 
   const W = size.w;
   const H = size.h;
+  // L'éditeur de décor lit le zoom et le centre de l'écran, et bloque le glisser de la carte.
+  useEffect(() => bindMapView({ scale, tx, ty }, W, H));
   const clampT = (s: number) => {
     'worklet';
     tx.value = Math.min(W * 0.25, Math.max(W * 0.75 - MAP_W * s, tx.value));
@@ -408,17 +431,53 @@ export function SchoolScreen() {
   useEffect(() => {
     tapRef.current = onTap;
   });
+  const editing = useGame((s) => s.editor.on);
   const panConfig = useMemo(
-    () => ({
-      onUpdate: (e: { changeX: number; changeY: number }) => {
-        'worklet';
-        tx.value += e.changeX;
-        ty.value += e.changeY;
-        clampT(scale.value);
-      },
-    }),
+    () =>
+      editing
+        ? // Éditeur de décor : un glisser qui part de l'objet sélectionné le déplace,
+          // sinon il fait défiler la carte (exécuté côté JS).
+          {
+            runOnJS: true,
+            onBegin: (e: { x: number; y: number }) => {
+              dragState.on = editorDragStart(
+                (e.x - tx.value) / scale.value,
+                (e.y - ty.value) / scale.value,
+              );
+              dragState.dx = 0;
+              dragState.dy = 0;
+            },
+            onUpdate: (e: {
+              changeX: number;
+              changeY: number;
+              translationX: number;
+              translationY: number;
+            }) => {
+              if (dragState.on) {
+                dragState.dx = e.translationX / scale.value;
+                dragState.dy = e.translationY / scale.value;
+                editorDragMove(dragState.dx, dragState.dy);
+                return;
+              }
+              tx.value += e.changeX;
+              ty.value += e.changeY;
+              clampT(scale.value);
+            },
+            onFinalize: () => {
+              if (dragState.on) editorDragEnd(dragState.dx, dragState.dy);
+              dragState.on = false;
+            },
+          }
+        : {
+            onUpdate: (e: { changeX: number; changeY: number }) => {
+              'worklet';
+              tx.value += e.changeX;
+              ty.value += e.changeY;
+              clampT(scale.value);
+            },
+          },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [W, H],
+    [W, H, editing],
   );
   const pinchConfig = useMemo(
     () => ({
@@ -463,7 +522,6 @@ export function SchoolScreen() {
   }));
 
   const decorRev = useGame((s) => s.decorRev);
-  const editing = useGame((s) => s.editor.on);
   const snap = snapshot(game);
   const snapKey = JSON.stringify(snap);
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -529,6 +587,7 @@ export function SchoolScreen() {
             })}
             <Ambient game={game} />
             <MagicTree game={game} />
+            <Ghosts />
             <EditorMarker />
             <SortingHat game={game} />
             <EventMarkers game={game} />

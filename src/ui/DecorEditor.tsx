@@ -1,5 +1,15 @@
 import { useMemo, useState } from 'react';
-import { FlatList, Image, Modal, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import {
+  Animated,
+  FlatList,
+  Image,
+  Modal,
+  Pressable,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from 'react-native';
 import { SPRITES, type SpriteName } from '../assets';
 import {
   addedItems,
@@ -49,19 +59,34 @@ function spriteH(name: string, w: number): number {
   return d ? (w * d.h) / d.w : w;
 }
 
+/**
+ * Accès à la vue de la carte (zoom, centre de l'écran, blocage du glisser de la carte),
+ * fourni par l'écran École.
+ */
+export const MAP_VIEW = {
+  center: () => ({ x: 0, y: 0 }),
+};
+
+/** Pose un nouvel objet au point (coordonnées carte) et le sélectionne. */
+export function addAt(mx: number, my: number, sprite: string): void {
+  const store = useGame.getState();
+  const g = unIso(mx, my);
+  const area = areaAt(g);
+  const o = area === OUTDOOR ? { x: 0, y: 0 } : AREA_ORIGINS.get(area)!;
+  const d = SPRITES[sprite as SpriteName];
+  const w = Math.round(Math.min(110, Math.max(40, (d?.w ?? 120) / 3)));
+  const key = addItem(area, sprite, round(g.x - o.x), round(g.y - o.y), w);
+  store.setEditor({ placing: null, sel: `${area}|${key}` });
+  store.decorChanged();
+}
+
 /** Toucher sur la carte en mode éditeur (coordonnées carte). */
 export function editorTap(mx: number, my: number): void {
   const store = useGame.getState();
   const ed = store.editor;
   const g = unIso(mx, my);
   if (ed.placing?.mode === 'add') {
-    const area = areaAt(g);
-    const o = area === OUTDOOR ? { x: 0, y: 0 } : AREA_ORIGINS.get(area)!;
-    const d = SPRITES[ed.placing.sprite as SpriteName];
-    const w = Math.round(Math.min(90, Math.max(area === OUTDOOR ? 22 : 40, (d?.w ?? 120) / 5)));
-    const key = addItem(area, ed.placing.sprite, round(g.x - o.x), round(g.y - o.y), w);
-    store.setEditor({ placing: null, sel: `${area}|${key}` });
-    store.decorChanged();
+    addAt(mx, my, ed.placing.sprite);
     return;
   }
   if (ed.placing?.mode === 'move' && ed.sel) {
@@ -97,25 +122,98 @@ function round(v: number): number {
   return Math.round(v * 100) / 100;
 }
 
-/** Cadre autour de l'objet sélectionné (dans le calque de la carte). */
-export function EditorMarker() {
-  const sel = useGame((s) => (s.editor.on ? s.editor.sel : null));
-  useGame((s) => s.decorRev);
-  if (!sel) return null;
-  const it = DECOR_INDEX.get(sel);
+/** Décalage (px de carte) de l'objet pendant qu'on le fait glisser. */
+const DRAG = new Animated.ValueXY({ x: 0, y: 0 });
+let dragKey: string | null = null;
+
+/** Rectangle de prise de l'objet sélectionné (px de carte). */
+function grabBox(sel: string | null) {
+  const it = sel ? DECOR_INDEX.get(sel) : undefined;
   if (!it) return null;
   const p = iso(it.gx, it.gy);
   const h = spriteH(it.sprite, it.w);
+  const bw = Math.max(it.w + 6, 44);
+  const bh = Math.max(h + 6, 44);
+  return { it, p, h, bw, bh, x0: p.x - bw / 2, y0: p.y - bh + 3 };
+}
+
+/** Début d'un glisser sur la carte : true si le doigt est sur l'objet sélectionné. */
+export function editorDragStart(mx: number, my: number): boolean {
+  const ed = useGame.getState().editor;
+  const b = grabBox(ed.on ? ed.sel : null);
+  if (!b) return false;
+  const pad = 10;
+  if (mx < b.x0 - pad || mx > b.x0 + b.bw + pad || my < b.y0 - pad || my > b.y0 + b.bh + pad)
+    return false;
+  dragKey = ed.sel;
+  DRAG.setValue({ x: 0, y: 0 });
+  useGame.getState().setEditor({ dragging: true });
+  return true;
+}
+
+export function editorDragMove(dx: number, dy: number): void {
+  if (dragKey) DRAG.setValue({ x: dx, y: dy });
+}
+
+/** Fin du glisser : l'objet est posé à sa nouvelle place. */
+export function editorDragEnd(dx: number, dy: number): void {
+  const key = dragKey;
+  dragKey = null;
+  DRAG.setValue({ x: 0, y: 0 });
+  const store = useGame.getState();
+  store.setEditor({ dragging: false });
+  const it = key ? DECOR_INDEX.get(key) : undefined;
+  if (!it || Math.hypot(dx, dy) < 2) return;
+  const p = iso(it.gx, it.gy);
+  const to = unIso(p.x + dx, p.y + dy);
+  patchItem(it.area, it.key, { x: round(to.x - it.ox), y: round(to.y - it.oy) });
+  store.decorChanged();
+}
+
+/**
+ * Cadre autour de l'objet sélectionné (dans le calque de la carte).
+ * On le fait glisser au doigt : l'objet suit, puis se pose au lâcher.
+ */
+export function EditorMarker() {
+  const sel = useGame((s) => (s.editor.on ? s.editor.sel : null));
+  const dragging = useGame((s) => !!s.editor.dragging);
+  useGame((s) => s.decorRev);
+  const b = grabBox(sel);
+  if (!b) return null;
+  const { it, h, bw, bh } = b;
+  const src = SPRITES[it.sprite as SpriteName]?.src;
   return (
-    <View
+    <Animated.View
       pointerEvents="none"
       style={[
         styles.marker,
-        { left: p.x - it.w / 2 - 3, top: p.y - h - 3, width: it.w + 6, height: h + 6 },
+        dragging && styles.markerDrag,
+        {
+          left: b.x0,
+          top: b.y0,
+          width: bw,
+          height: bh,
+          transform: [{ translateX: DRAG.x }, { translateY: DRAG.y }],
+        },
       ]}
     >
-      <View style={[styles.foot, { left: it.w / 2 - 1, top: h }]} />
-    </View>
+      {dragging && src ? (
+        <Image
+          source={src}
+          style={{
+            position: 'absolute',
+            left: (bw - it.w) / 2,
+            bottom: 3,
+            width: it.w,
+            height: h,
+            opacity: 0.85,
+          }}
+          resizeMode="contain"
+        />
+      ) : null}
+      <View style={[styles.foot, { left: bw / 2 - 1, top: bh - 3 }]} />
+      {dragging ? null : <Text style={styles.grip}>✥</Text>}
+    </Animated.View>
   );
 }
 
@@ -167,7 +265,8 @@ export function DecorEditorBar() {
       ) : !it ? (
         <View style={styles.hint} pointerEvents="none">
           <Text style={styles.hintText}>
-            👆 Touche un objet pour le modifier, ou « ＋ Objet » pour en ajouter un.
+            👆 Touche un objet puis fais-le glisser avec le doigt. « ＋ Objet » en ajoute un au
+            centre.
           </Text>
         </View>
       ) : null}
@@ -207,12 +306,32 @@ export function DecorEditorBar() {
           </View>
           <View style={styles.row}>
             <Tool
-              label="📍 Déplacer"
+              label="⧉ Copier"
+              wide
+              color="#3A9FD9"
+              onPress={() => {
+                const key = addItem(
+                  it.area,
+                  it.sprite,
+                  round(it.gx - it.ox + 0.8),
+                  round(it.gy - it.oy + 0.8),
+                  it.w,
+                );
+                patchItem(it.area, key, {
+                  flip: currentFlip(it.area, it.key),
+                  wall: it.wall ?? 'auto',
+                });
+                store.setEditor({ sel: `${it.area}|${key}` });
+                store.decorChanged();
+              }}
+            />
+            <Tool
+              label="📍 Placer"
               wide
               onPress={() => store.setEditor({ placing: { mode: 'move' } })}
             />
             <Tool
-              label="⇋ Retourner"
+              label="⇋ Miroir"
               wide
               onPress={change(() =>
                 patchItem(it.area, it.key, { flip: !currentFlip(it.area, it.key) }),
@@ -270,7 +389,9 @@ export function DecorEditorBar() {
         onClose={() => setCatalog(false)}
         onPick={(sprite) => {
           setCatalog(false);
-          store.setEditor({ placing: { mode: 'add', sprite }, sel: null });
+          // Posé au centre de l'écran et sélectionné : il n'y a plus qu'à le faire glisser.
+          const c = MAP_VIEW.center();
+          addAt(c.x, c.y + 20, sprite);
         }}
       />
     </>
@@ -383,6 +504,17 @@ const styles = StyleSheet.create({
     borderStyle: 'dashed',
     borderRadius: 6,
     backgroundColor: 'rgba(255,210,63,0.12)',
+  },
+  markerDrag: { borderColor: '#5FE07A', backgroundColor: 'rgba(95,224,122,0.12)' },
+  grip: {
+    position: 'absolute',
+    top: -16,
+    alignSelf: 'center',
+    color: '#FFD23F',
+    fontSize: 14,
+    fontWeight: '900',
+    textShadowColor: '#000',
+    textShadowRadius: 3,
   },
   foot: {
     position: 'absolute',
