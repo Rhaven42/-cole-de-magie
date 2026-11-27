@@ -152,6 +152,147 @@ function Steam({ p, delay }: { p: Pt; delay: number }) {
   );
 }
 
+/** Bulle qui monte à la surface du chaudron puis éclate. */
+function Bubble({ p, delay, dx, size }: { p: Pt; delay: number; dx: number; size: number }) {
+  const v = useLoop(1300, delay, Easing.out(Easing.quad));
+  return (
+    <Animated.View
+      pointerEvents="none"
+      style={{
+        position: 'absolute',
+        left: p.x + dx - size / 2,
+        top: p.y - 22,
+        width: size,
+        height: size,
+        borderRadius: size / 2,
+        borderWidth: 1,
+        borderColor: '#D8FFB0',
+        backgroundColor: 'rgba(140,255,110,0.55)',
+        opacity: v.interpolate({ inputRange: [0, 0.15, 0.85, 1], outputRange: [0, 1, 1, 0] }),
+        transform: [
+          { translateY: v.interpolate({ inputRange: [0, 1], outputRange: [2, -9] }) },
+          { scale: v.interpolate({ inputRange: [0, 0.85, 1], outputRange: [0.5, 1, 1.8] }) },
+        ],
+      }}
+    />
+  );
+}
+
+/** Remous à la surface du chaudron : reflet qui tourne lentement. */
+function Swirl({ p }: { p: Pt }) {
+  const v = useLoop(2600);
+  return (
+    <Animated.View
+      pointerEvents="none"
+      style={{
+        position: 'absolute',
+        left: p.x - 9,
+        top: p.y - 24,
+        width: 18,
+        height: 7,
+        borderRadius: 9,
+        borderTopWidth: 2,
+        borderColor: 'rgba(230,255,200,0.75)',
+        transform: [
+          { scaleY: 0.5 },
+          { rotate: v.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '360deg'] }) },
+        ],
+      }}
+    />
+  );
+}
+
+/** Chaudron qui bouillonne : remous et bulles. */
+function Brew({ p, seed }: { p: Pt; seed: number }) {
+  return (
+    <>
+      <Swirl p={p} />
+      <Bubble p={p} delay={seed * 230} dx={-5} size={4} />
+      <Bubble p={p} delay={seed * 230 + 450} dx={3} size={5} />
+      <Bubble p={p} delay={seed * 230 + 900} dx={-1} size={3} />
+    </>
+  );
+}
+
+/** Explosion de chaudron : éclair, étincelles vertes, fumée qui s'élève (en boucle tant que la salle est fermée). */
+export function Explosion({ p }: { p: Pt }) {
+  const flash = useLoop(1400, 0, Easing.out(Easing.cubic));
+  const smoke = useLoop(2400, 200, Easing.out(Easing.quad));
+  const sparks = Array.from({ length: 10 }, (_, i) => (i / 10) * Math.PI * 2);
+  return (
+    <View pointerEvents="none" style={{ position: 'absolute', left: p.x, top: p.y - 30 }}>
+      <Animated.View
+        style={{
+          position: 'absolute',
+          left: -40,
+          top: -40,
+          width: 80,
+          height: 80,
+          borderRadius: 40,
+          backgroundColor: '#FFF2A8',
+          opacity: flash.interpolate({ inputRange: [0, 0.15, 0.6], outputRange: [0.9, 0.7, 0] }),
+          transform: [
+            { scale: flash.interpolate({ inputRange: [0, 1], outputRange: [0.2, 2.2] }) },
+          ],
+        }}
+      />
+      {sparks.map((a, i) => (
+        <Animated.View
+          key={i}
+          style={{
+            position: 'absolute',
+            left: -3,
+            top: -3,
+            width: 6,
+            height: 6,
+            borderRadius: 3,
+            backgroundColor: i % 2 ? '#7CFF6A' : '#FFD86B',
+            opacity: flash.interpolate({ inputRange: [0, 0.7, 1], outputRange: [1, 0.8, 0] }),
+            transform: [
+              {
+                translateX: flash.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [0, Math.cos(a) * 58],
+                }),
+              },
+              {
+                translateY: flash.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [0, Math.sin(a) * 34 - 10],
+                }),
+              },
+            ],
+          }}
+        />
+      ))}
+      {[-22, -6, 10, 24].map((dx, i) => (
+        <Animated.View
+          key={`s${i}`}
+          style={{
+            position: 'absolute',
+            left: dx - 14,
+            top: -14,
+            width: 28,
+            height: 28,
+            borderRadius: 14,
+            backgroundColor: i % 2 ? '#5E6B55' : '#7D8A70',
+            opacity: smoke.interpolate({ inputRange: [0, 0.2, 1], outputRange: [0, 0.75, 0] }),
+            transform: [
+              {
+                translateY: smoke.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [0, -50 - i * 6],
+                }),
+              },
+              { scale: smoke.interpolate({ inputRange: [0, 1], outputRange: [0.6, 1.9] }) },
+            ],
+          }}
+        />
+      ))}
+    </View>
+  );
+}
+
 /** Lueur qui vacille (cheminée, bougies). */
 function Flicker({ p, size, color }: { p: Pt; size: number; color: string }) {
   const v = useLoop(900, 0, Easing.inOut(Easing.sin));
@@ -201,7 +342,13 @@ export function Ambient({ game }: { game: GameState }) {
       {potions && po
         ? potions.seats.slice(0, 6).map((seat, i) => {
             const sp = seatPos('course', i, seat.pos);
-            return <Steam key={`st${i}`} p={iso(po.x + sp.x, po.y + sp.y)} delay={i * 450} />;
+            const cp = iso(po.x + sp.x, po.y + sp.y);
+            return (
+              <View key={`st${i}`} pointerEvents="none" style={StyleSheet.absoluteFill}>
+                <Steam p={cp} delay={i * 450} />
+                <Brew p={cp} seed={i} />
+              </View>
+            );
           })
         : null}
       {hall ? (

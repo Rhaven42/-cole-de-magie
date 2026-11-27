@@ -49,7 +49,7 @@ import { MapArt, type RoomSnapshot } from '../ui/MapArt';
 import { stationName } from '../ui/kit';
 import { colors, formatDuration, formatNumber } from '../ui/theme';
 import { Walker } from '../ui/Walker';
-import { Ambient } from '../ui/Ambient';
+import { Ambient, Explosion } from '../ui/Ambient';
 import { Professor } from '../ui/Professor';
 
 const MIN_SCALE = 0.25;
@@ -271,6 +271,7 @@ function EventMarkers({ game }: { game: GameState }) {
     <>
       {marks.map((m) => {
         const c = roomCenter(m.id);
+        if (m.key.startsWith('x-')) return <Explosion key={m.key} p={c} />;
         if (m.key.startsWith('g-')) {
           return (
             <Image
