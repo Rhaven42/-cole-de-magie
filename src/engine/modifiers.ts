@@ -1,5 +1,7 @@
+import { PROF_UPGRADE } from '../data/professors';
+import type { CourseId } from '../data/courses';
 import { propDef } from '../data/roomProps';
-import { ENROLLMENT , YEARS } from '../data/progression';
+import { ENROLLMENT, YEARS } from '../data/progression';
 import { COURSES } from '../data/courses';
 import { ECONOMY, NEEDS, POPULATION } from '../data/economy';
 import { applyTime, comfortReduction } from '../data/formulas';
@@ -71,6 +73,11 @@ function stateTimeMult(state: GameState | undefined, st: Station): number {
  * Temps de traitement réel :
  * base × niveauSalle × place × confort × aménagements × élève, plancher 25 %.
  */
+/** Niveau d'un·e professeur·e. */
+export function profLevel(state: GameState, courseId: CourseId): number {
+  return state.profLevels?.[courseId] ?? 1;
+}
+
 export function serviceTime(
   st: Station,
   seatIndex: number,
@@ -86,6 +93,7 @@ export function serviceTime(
     Math.max(1 - trackSum(st, 'time'), 0),
     studentTimeMult(st, s),
     stateTimeMult(state, st),
+    state && st.courseId ? 1 - PROF_UPGRADE.timePerLevel * (profLevel(state, st.courseId) - 1) : 1,
   ];
   return applyTime(base, mults);
 }
@@ -122,6 +130,8 @@ export function courseReward(
   let r = def.reward * levelCoinMult(st.level);
   if (seatIndex !== undefined && st.seats[seatIndex]) r *= seatCoinMult(st.seats[seatIndex].level);
   r *= propCoinMult(st);
+  if (state && st.courseId)
+    r *= 1 + PROF_UPGRADE.coinPerLevel * (profLevel(state, st.courseId) - 1);
   if ((s.year ?? 1) >= YEARS.max) r *= YEARS.advanced.rewardMult;
   if (state) {
     r *= metaMult(state);

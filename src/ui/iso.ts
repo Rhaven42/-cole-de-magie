@@ -78,7 +78,11 @@ export function floorPoly(gx: number, gy: number, w: number, h: number): string 
 
 /** Lieu (id) situé sous un point de la grille, ou null. */
 export function hitPlot(g: Pt): string | null {
-  for (const [id, p] of Object.entries(PLOTS)) {
+  // Les lieux intérieurs (le Chaporacle) passent avant la salle qui les contient.
+  const entries = Object.entries(PLOTS).sort(
+    (a, b) => (b[1].hostedIn ? 1 : 0) - (a[1].hostedIn ? 1 : 0),
+  );
+  for (const [id, p] of entries) {
     const o = roomOrigin(p);
     const { w, h } = roomSize(id);
     if (g.x >= o.x && g.x <= o.x + w && g.y >= o.y && g.y <= o.y + h) return id;
@@ -89,7 +93,10 @@ export function hitPlot(g: Pt): string | null {
 /** Position (grille, relative à la salle) de chaque place selon le type de lieu. */
 export function seatSpot(kind: string, i: number): Pt {
   // Grand Accueil (2 parcelles) : guichets alignés au centre, face à l'entrée.
-  if (kind === 'reception') return { x: roomSize('reception').w / 2 - 3.5 + i * 1.4, y: 5.6 };
+  // Accueil : guichets alignés dans la partie gauche, face à l'entrée.
+  if (kind === 'reception') return { x: 4.5 + i * 2.2, y: 4.6 };
+  // Cantine : places réparties le long des 4 tables des Maisons (voir hallSeat pour l'affichage).
+  if (kind === 'hall') return { x: 4 + (i % 10) * 1.4, y: 1.9 + Math.floor(i / 10) * 2.1 };
   // Grande Salle des Examens : tables en 2 rangées de 6, face à l'examinateur.
   if (kind === 'exam') return { x: 3.4 + (i % 6) * 3.0, y: 2.6 + Math.floor(i / 6) * 2.8 };
   const p = baseSeatSpot(kind, i);
@@ -152,6 +159,11 @@ export function doorOf(id: string): { inside: Pt; outside: Pt; axis: 'x' | 'y' }
   const o = stationOrigin(id);
   if (!o) return null;
   const { w, h } = roomSize(id);
+  if (PLOTS[id].door === 'back') {
+    // Porte au fond (mur du côté y minimal), vers le couloir de derrière.
+    const x = o.x + w / 2;
+    return { inside: { x, y: o.y + 0.7 }, outside: { x, y: o.y - HALF_GAP }, axis: 'y' };
+  }
   if (PLOTS[id].door === 'y') {
     const x = o.x + w / 2;
     return { inside: { x, y: o.y + h - 0.7 }, outside: { x, y: o.y + h + HALF_GAP }, axis: 'y' };
@@ -171,18 +183,37 @@ function freeCorridorX(): number[] {
   );
 }
 
-/**
- * Passage direct entre le fond de l'Accueil et l'avant du Salon des Destinées
- * (même axe x) : les nouveaux élèves vont tout droit au Chaporacle.
- */
-export function sortingPassage(): { x: number; yRec: number; ySort: number } | null {
-  const r = stationOrigin('reception');
-  const s = stationOrigin('sorting');
-  if (!r || !s) return null;
-  const x = s.x + roomSize('sorting').w / 2;
-  const rw = roomSize('reception').w;
-  if (x < r.x + 1 || x > r.x + rw - 1) return null;
-  return { x, yRec: r.y, ySort: s.y + roomSize('sorting').h };
+/** Salle qui contient physiquement un lieu (le Chaporacle est dans l'Accueil). */
+export function hostOf(id: string): string {
+  return PLOTS[id]?.hostedIn ?? id;
+}
+
+function rooms(): { x0: number; y0: number; x1: number; y1: number }[] {
+  return Object.keys(PLOTS)
+    .filter((id) => !PLOTS[id].hostedIn)
+    .map((id) => {
+      const o = roomOrigin(PLOTS[id]);
+      const { w, h } = roomSize(id);
+      return { x0: o.x, y0: o.y, x1: o.x + w, y1: o.y + h };
+    });
+}
+
+/** Segment vertical (x fixe) libre de toute salle ? */
+export function clearV(x: number, ya: number, yb: number): boolean {
+  const lo = Math.min(ya, yb);
+  const hi = Math.max(ya, yb);
+  return rooms().every(
+    (r) => !(x > r.x0 + 0.1 && x < r.x1 - 0.1 && hi > r.y0 + 0.1 && lo < r.y1 - 0.1),
+  );
+}
+
+/** Segment horizontal (y fixe) libre de toute salle ? */
+export function clearH(y: number, xa: number, xb: number): boolean {
+  const lo = Math.min(xa, xb);
+  const hi = Math.max(xa, xb);
+  return rooms().every(
+    (r) => !(y > r.y0 + 0.1 && y < r.y1 - 0.1 && hi > r.x0 + 0.1 && lo < r.x1 - 0.1),
+  );
 }
 
 /** Grille d'entrée de l'école. */
@@ -217,22 +248,8 @@ export function route(from: Anchor, to: Anchor): Pt[] {
     pts.filter((p, i) => i === 0 || Math.hypot(p.x - pts[i - 1].x, p.y - pts[i - 1].y) > 0.01);
   const fromDoor = from.room ? doorOf(from.room) : null;
   const toDoor = to.room ? doorOf(to.room) : null;
-  // Même salle : déplacement direct à l'intérieur.
-  if (from.room && from.room === to.room) return [to.g];
-  // Passage direct de l'Accueil vers le Chaporacle (porte au fond de l'Accueil).
-  const sp = sortingPassage();
-  if (sp && from.room === 'reception' && to.room === 'sorting')
-    return clean([
-      { x: sp.x, y: sp.yRec + 0.7 },
-      { x: sp.x, y: sp.yRec - 1 },
-      { x: sp.x, y: sp.ySort - 0.7 },
-      to.g,
-    ]);
-  // Deux points de couloir alignés (allée, file d'attente) : ligne droite.
-  if (!from.room && !to.room && (near(from.g.x, to.g.x) || near(from.g.y, to.g.y))) return [to.g];
-  // Sur l'allée qui mène à une porte « y » (l'entrée) : tout droit jusqu'à la porte.
-  if (!from.room && toDoor?.axis === 'y' && near(from.g.x, toDoor.outside.x))
-    return clean([toDoor.outside, toDoor.inside, to.g]);
+  // Même salle (ou lieu situé dans la même salle) : déplacement direct à l'intérieur.
+  if (from.room && to.room && hostOf(from.room) === hostOf(to.room)) return [to.g];
   if (!to.room && fromDoor?.axis === 'y' && near(to.g.x, fromDoor.outside.x))
     return clean([fromDoor.inside, fromDoor.outside, to.g]);
 
@@ -260,12 +277,13 @@ export function route(from: Anchor, to: Anchor): Pt[] {
   } else {
     c2 = { x: nearest(CORRIDOR_X, to.g.x), y: to.g.y };
   }
-  if (Math.abs(c1.x - c2.x) > 0.01) {
-    const yLine = CORRIDOR_Y.reduce((best, y) =>
-      Math.abs(c1.y - y) + Math.abs(c2.y - y) < Math.abs(c1.y - best) + Math.abs(c2.y - best)
-        ? y
-        : best,
-    );
+  if (Math.abs(c1.x - c2.x) > 0.01 || !clearV(c1.x, c1.y, c2.y)) {
+    // Ligne de couloir horizontale la plus courte… qui ne fait traverser aucune salle.
+    const cost = (y: number) => Math.abs(c1.y - y) + Math.abs(c2.y - y);
+    const ok = (y: number) =>
+      clearV(c1.x, c1.y, y) && clearV(c2.x, y, c2.y) && clearH(y, c1.x, c2.x);
+    const lines = [...CORRIDOR_Y].sort((a, b) => cost(a) - cost(b));
+    const yLine = lines.find(ok) ?? lines[0];
     pts.push({ x: c1.x, y: yLine }, { x: c2.x, y: yLine });
   }
   pts.push(c2, ...tail, to.g);
@@ -294,9 +312,12 @@ export function fountainPoint(): Pt {
 
 /** File d'attente d'un lieu : le long de l'allée pour l'entrée, sinon dans le couloir. */
 export function queueSpotFor(id: string, k: number): Pt {
-  if (PLOTS[id]?.door === 'y') {
-    const { w, h } = roomSize(id);
-    return { x: w / 2, y: h + 1.4 + k * 0.75 };
+  const { w, h } = roomSize(id);
+  if (PLOTS[id]?.hostedIn) {
+    // File intérieure (devant le Chaporacle), dans la salle hôte.
+    return { x: 0.8 + (k % 7) * 1.15, y: h - 0.9 - Math.floor(k / 7) * 0.9 };
   }
-  return queueSpot(k);
+  if (PLOTS[id]?.door === 'y') return { x: w / 2, y: h + 1.4 + k * 0.75 };
+  const q = queueSpot(k);
+  return { x: q.x + (w - PLOT.size), y: q.y };
 }

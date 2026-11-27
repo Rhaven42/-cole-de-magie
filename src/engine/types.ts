@@ -147,6 +147,8 @@ export interface GameState {
   cup: HouseCup;
   /** Orientation forcée du Chapeau (niveau 5+). */
   sortingBias: HouseId | null;
+  /** Niveau de chaque professeur·e (salle des profs). Absent = niveau 1. */
+  profLevels?: Partial<Record<CourseId, number>>;
   totals: Totals;
   /** Salles avec un manager (récolte automatique). */
   managers: Record<string, boolean>;

@@ -22,12 +22,14 @@ export function Walker({
   sleeping,
   from,
   back = false,
+  flip = false,
 }: {
   student: Student;
   anchor: Anchor;
   sleeping: boolean;
   from?: Anchor;
   back?: boolean;
+  flip?: boolean;
 }) {
   const [init] = useState<Anchor>(() => from ?? anchor);
   const [start] = useState(() => iso(init.g.x, init.g.y));
@@ -35,7 +37,7 @@ export function Walker({
   /** Cycle de pas : -1 → 0 → 1 (balancement + petit rebond à chaque pas). */
   const [stride] = useState(() => new Animated.Value(0));
   /** Orientation pendant la marche : miroir horizontal et face/dos (sans re-rendu). */
-  const [flip] = useState(() => new Animated.Value(1));
+  const [flipV] = useState(() => new Animated.Value(flip ? -1 : 1));
   const [showBack] = useState(() => new Animated.Value(back ? 1 : 0));
   const last = useRef<Anchor>(init);
   const here = useRef(start);
@@ -43,7 +45,8 @@ export function Walker({
 
   useEffect(() => {
     showBack.setValue(back ? 1 : 0);
-  }, [back, showBack]);
+    flipV.setValue(flip ? -1 : 1);
+  }, [back, flip, showBack, flipV]);
 
   useEffect(() => {
     const target: Anchor = { g: { ...anchor.g }, room: anchor.room };
@@ -66,7 +69,7 @@ export function Walker({
       if (i >= pts.length) {
         step.stop();
         stride.setValue(0);
-        flip.setValue(1);
+        flipV.setValue(flip ? -1 : 1);
         showBack.setValue(back ? 1 : 0);
         return;
       }
@@ -78,7 +81,7 @@ export function Walker({
         // Sprites de face : regardent en bas à gauche ; de dos : en haut à droite.
         const up = dy < 0;
         showBack.setValue(up ? 1 : 0);
-        flip.setValue(up ? (dx < 0 ? -1 : 1) : dx > 0 ? -1 : 1);
+        flipV.setValue(up ? (dx < 0 ? -1 : 1) : dx > 0 ? -1 : 1);
       }
       current = Animated.timing(pos, {
         toValue: p,
@@ -112,7 +115,7 @@ export function Walker({
     >
       <View style={styles.shadow} />
       <Animated.View
-        style={{ transform: [{ translateY: bob }, { rotate: sway }, { scaleX: flip }] }}
+        style={{ transform: [{ translateY: bob }, { rotate: sway }, { scaleX: flipV }] }}
       >
         <Animated.View style={{ opacity: showFront }}>
           <Chibi student={student} size={SIZE} sleeping={sleeping} />

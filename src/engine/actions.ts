@@ -1,3 +1,5 @@
+import { PROF_UPGRADE } from '../data/professors';
+import { profLevel } from './modifiers';
 import { propDef } from '../data/roomProps';
 import { EXAM_PRICE } from '../data/progression';
 import { COURSES, type CourseId } from '../data/courses';
@@ -123,6 +125,21 @@ export function buyProp(state: GameState, stationId: string, propId: string): bo
   const st = state.stations[stationId];
   if (!st || !pay(state, propCost(st, propId))) return false;
   st.props = [...(st.props ?? []), propId];
+  return true;
+}
+
+/** Prix du prochain niveau d'un·e professeur·e (null : salle non construite ou niveau max). */
+export function profUpgradeCost(state: GameState, courseId: CourseId): number | null {
+  if (!state.stations[`course-${courseId}`]) return null;
+  const lvl = profLevel(state, courseId);
+  if (lvl >= PROF_UPGRADE.maxLevel) return null;
+  const base = PROF_UPGRADE.base + COURSES[courseId].price * PROF_UPGRADE.priceShare;
+  return Math.round(base * PROF_UPGRADE.growth ** (lvl - 1));
+}
+
+export function upgradeProf(state: GameState, courseId: CourseId): boolean {
+  if (!pay(state, profUpgradeCost(state, courseId))) return false;
+  state.profLevels = { ...(state.profLevels ?? {}), [courseId]: profLevel(state, courseId) + 1 };
   return true;
 }
 

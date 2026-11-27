@@ -16,7 +16,8 @@ export const ISO = {
 };
 
 /** front : profondeur de la cour d'entrée devant l'école (portail, allée, jardin). */
-export const PLOT = { size: 10, gap: 2, cols: 5, rows: 5, margin: 5, front: 13, top: 18 };
+/** gap : largeur des couloirs (larges, avec tapis). */
+export const PLOT = { size: 10, gap: 4, cols: 5, rows: 5, margin: 5, front: 13, top: 18 };
 
 /** Échelle des aménagements intérieurs (conçus pour une salle de 8 cases). */
 export const ROOM_SCALE = PLOT.size / 8;
@@ -29,8 +30,13 @@ export interface PlotDef {
   /** Décalage (cases) de la salle par rapport à sa parcelle. */
   shiftX?: number;
   shiftY?: number;
-  /** Côté de la porte : 'x' = face avant droite (défaut), 'y' = face avant gauche (entrée). */
-  door?: 'x' | 'y';
+  /**
+   * Côté de la porte : 'x' = face avant droite (défaut), 'y' = face avant gauche (entrée),
+   * 'back' = mur du fond (côté y minimal).
+   */
+  door?: 'x' | 'y' | 'back';
+  /** Lieu situé à l'intérieur d'une autre salle (le Chaporacle dans l'Accueil). */
+  hostedIn?: string;
   /** Terrain en plein air (pas de murs) : le terrain de Balais volants. */
   outdoor?: boolean;
   /** Couleur du sol (tapis / dalles). */
@@ -41,11 +47,22 @@ export interface PlotDef {
 /** Emplacement de chaque lieu (id de Station) ou décor. */
 export const PLOTS: Record<string, PlotDef> = {
   reception: { px: 1, py: 4, spanX: 3, door: 'y', floor: '#C9A27A', floorAlt: '#BD946B' },
-  sorting: { px: 2, py: 3, floor: '#5B4A86', floorAlt: '#52417A' },
-  hall: { px: 4, py: 3, floor: '#A2553C', floorAlt: '#954C35' },
+  // Le Chaporacle trône dans la partie droite du grand Accueil ; sortie par une porte au fond.
+  sorting: {
+    px: 3,
+    py: 4,
+    hostedIn: 'reception',
+    door: 'back',
+    floor: '#5B4A86',
+    floorAlt: '#52417A',
+  },
+  // Cantine : grande salle sur 2 parcelles, juste derrière l'Accueil.
+  hall: { px: 2, py: 3, spanX: 2, floor: '#A2553C', floorAlt: '#954C35' },
+  // Salle des professeurs (amélioration des profs).
+  staff: { px: 2, py: 2, floor: '#6B4E3A', floorAlt: '#5F4433' },
   'course-potions': { px: 1, py: 3, floor: '#4E7F6A', floorAlt: '#46735F' },
   'course-botany': { px: 0, py: 3, floor: '#6E9A4B', floorAlt: '#638C43' },
-  'course-history': { px: 3, py: 3, floor: '#9C6B44', floorAlt: '#8F613D' },
+  'course-history': { px: 4, py: 3, floor: '#9C6B44', floorAlt: '#8F613D' },
   'course-charms': { px: 0, py: 2, floor: '#4D78A8', floorAlt: '#456D99' },
   'course-astronomy': { px: 1, py: 2, floor: '#33406E', floorAlt: '#2C3862' },
   // Balais volants : grand terrain en plein air, au fond de l'école (à droite des Examens).
@@ -73,14 +90,18 @@ export const PLOTS: Record<string, PlotDef> = {
   'dorm-5': { px: 2, py: 0, floor: '#4A5A8C', floorAlt: '#42517F' },
 };
 
+/** Cantine : lignes des 4 tables de Maison (y, en cases), début des tables, table des profs. */
+export const HALL_ROWS = [1.7, 4.0, 6.3, 8.6];
+export const HALL_X0 = 1.2;
+export const HALL_TABLE_SEGMENTS = 5;
+export const HALL_PROF_X = 20.2;
+
 /** Parcelles de jardin (décor). */
 /** Jardins : petits jardins de chaque côté de l'Accueil, grand jardin au fond (2 parcelles). */
 export const GARDENS: { px: number; py: number; spanX?: number }[] = [
   { px: 0, py: 4 },
   { px: 4, py: 4 },
   { px: 0, py: 0, spanX: 2 },
-  // Cour intérieure (ancienne salle de Balais volants, partie dehors).
-  { px: 2, py: 2 },
 ];
 
 /** Décor d'une salle : sprite posé à une position de grille relative à la salle. */
@@ -90,6 +111,11 @@ export interface DecorItem {
   y: number;
   width: number;
   mirror?: boolean;
+}
+
+/** Objet placé en cases réelles (converties dans l'unité des décors, ÷ ROOM_SCALE). */
+function at(sprite: string, x: number, y: number, width: number): DecorItem {
+  return { sprite, x: x / ROOM_SCALE, y: y / ROOM_SCALE, width };
 }
 
 const COURSE_COMMON: DecorItem[] = [
@@ -123,48 +149,65 @@ export const ROOM_DECOR: Record<string, DecorItem[]> = {
     { sprite: 'armchair', x: 4.0, y: 7.6, width: 28 },
     { sprite: 'books', x: 0.7, y: 4.0, width: 22 },
   ],
+  // Positions en cases réelles converties (÷ ROOM_SCALE) : voir `at`.
   hall: [
-    { sprite: 'candelabra', x: 0.7, y: 0.8, width: 22 },
-    { sprite: 'clock', x: 7.4, y: 0.6, width: 22 },
-    { sprite: 'planterTree', x: 0.8, y: 7.4, width: 28 },
-    { sprite: 'barrel', x: 0.7, y: 2.2, width: 20 },
-    { sprite: 'crates', x: 0.7, y: 6.2, width: 26 },
-    { sprite: 'candelabra', x: 7.4, y: 7.5, width: 22 },
+    at('candelabra', 0.5, 0.5, 22),
+    at('fireplace', 18.4, 0.7, 46),
+    at('clock', 23.3, 0.6, 22),
+    at('jarShelf', 21.8, 0.5, 30),
+    at('planterTree', 23.3, 9.2, 28),
+    at('candelabra', 17.8, 9.3, 22),
   ],
+  // Accueil : guichets à gauche, coin d'attente, le Chaporacle à droite (zone violette).
   reception: [
-    { sprite: 'bookshelf', x: 0.6, y: 1.5, width: 30 },
-    { sprite: 'bookshelf', x: 0.6, y: 3.6, width: 30 },
-    { sprite: 'clock', x: 0.6, y: 6.2, width: 22 },
-    { sprite: 'candelabra', x: 1.2, y: 9.0, width: 22 },
-    { sprite: 'noticeBoard', x: 4.0, y: 0.7, width: 30 },
-    { sprite: 'bookshelf', x: 7.5, y: 0.5, width: 30 },
-    { sprite: 'planterTree', x: 10.5, y: 0.8, width: 30 },
-    { sprite: 'statue', x: 17.0, y: 1.0, width: 36 },
-    { sprite: 'planterTree', x: 23.5, y: 0.8, width: 30 },
-    { sprite: 'bookshelf', x: 26.5, y: 0.5, width: 30 },
-    { sprite: 'jarShelf', x: 29.0, y: 0.5, width: 30 },
-    { sprite: 'coatStand', x: 32.8, y: 1.0, width: 24 },
-    { sprite: 'globe', x: 32.8, y: 5.0, width: 26 },
-    { sprite: 'candelabra', x: 32.8, y: 8.8, width: 22 },
-    { sprite: 'armchair', x: 3.0, y: 8.0, width: 32 },
-    { sprite: 'armchair', x: 5.2, y: 8.6, width: 32 },
-    { sprite: 'planterTree', x: 13.8, y: 9.0, width: 30 },
-    { sprite: 'planterTree', x: 20.2, y: 9.0, width: 30 },
-    { sprite: 'parkBench', x: 25.5, y: 8.4, width: 32 },
-    { sprite: 'armchair', x: 29.0, y: 8.2, width: 32 },
-    { sprite: 'books', x: 31.0, y: 8.9, width: 26 },
+    at('bookshelf', 0.8, 0.6, 30),
+    at('jarShelf', 3.2, 0.5, 30),
+    at('bookshelf', 6.0, 0.6, 30),
+    at('clock', 8.6, 0.6, 22),
+    at('noticeBoard', 11.2, 0.6, 30),
+    at('bookshelf', 14.0, 0.6, 30),
+    at('planterTree', 17.0, 0.8, 30),
+    at('coatStand', 20.0, 0.8, 24),
+    at('bookshelf', 23.0, 0.6, 30),
+    at('candelabra', 26.0, 0.7, 22),
+    at('globe', 0.8, 3.0, 26),
+    at('planterTree', 0.8, 9.1, 28),
+    at('armchair', 3.0, 8.6, 32),
+    at('armchair', 5.4, 9.0, 32),
+    at('books', 7.6, 9.2, 24),
+    at('planterTree', 13.0, 9.1, 28),
+    at('planterTree', 25.0, 9.1, 28),
+    at('statue', 37.0, 1.2, 36),
+    at('candelabra', 37.2, 8.9, 22),
+    at('candelabra', 28.6, 8.9, 22),
+  ],
+  // Salle des professeurs : coin cheminée, fauteuils, bibliothèques.
+  staff: [
+    at('fireplace', 1.0, 4.8, 46),
+    at('armchair', 3.2, 3.2, 32),
+    at('armchair', 3.4, 6.4, 32),
+    at('stool', 4.2, 4.9, 18),
+    at('bookshelf', 4.0, 0.6, 30),
+    at('bookshelf', 6.4, 0.6, 30),
+    at('clock', 8.8, 0.6, 22),
+    at('globe', 8.8, 3.2, 26),
+    at('table', 7.0, 6.0, 60),
+    at('candelabra', 9.2, 9.1, 22),
+    at('coatStand', 0.7, 9.0, 24),
+    at('planterTree', 0.7, 0.8, 28),
+    at('books', 6.0, 9.2, 24),
   ],
   exam: [
-    { sprite: 'clock', x: 0.6, y: 1.0, width: 22 },
-    { sprite: 'bookshelf', x: 0.6, y: 8.6, width: 30 },
-    { sprite: 'candelabra', x: 6.0, y: 0.7, width: 22 },
-    { sprite: 'owl', x: 9.0, y: 0.6, width: 20 },
-    { sprite: 'statue', x: 12.0, y: 0.9, width: 34 },
-    { sprite: 'candelabra', x: 16.0, y: 0.7, width: 22 },
-    { sprite: 'noticeBoard', x: 19.0, y: 0.7, width: 30 },
-    { sprite: 'candelabra', x: 21.0, y: 4.5, width: 22 },
-    { sprite: 'books', x: 21.0, y: 9.0, width: 26 },
-    { sprite: 'chest', x: 1.4, y: 9.2, width: 26 },
+    at('clock', 0.7, 1.0, 22),
+    at('bookshelf', 0.7, 8.8, 30),
+    at('candelabra', 6.0, 0.6, 22),
+    at('owl', 9.0, 0.6, 20),
+    at('statue', 12.0, 0.9, 34),
+    at('candelabra', 16.0, 0.6, 22),
+    at('noticeBoard', 19.5, 0.7, 30),
+    at('candelabra', 23.2, 4.5, 22),
+    at('books', 23.0, 9.1, 26),
+    at('chest', 2.0, 9.2, 26),
   ],
   sorting: [
     { sprite: 'candelabra', x: 1.0, y: 1.0, width: 22 },

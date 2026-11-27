@@ -3,7 +3,19 @@ import Svg, { Circle, Ellipse, G, Line, Path, Polygon } from 'react-native-svg';
 import type { SpriteName } from '../assets';
 import { ENVIRONMENTS, type EnvDef } from '../data/environments';
 import { HOUSE_IDS, HOUSES } from '../data/houses';
-import { FLOOR_TEXTURE, GARDENS, ISO, PLOT, PLOTS, ROOM_DECOR, ROOM_SCALE } from '../data/layout';
+import {
+  FLOOR_TEXTURE,
+  GARDENS,
+  HALL_PROF_X,
+  HALL_ROWS,
+  HALL_TABLE_SEGMENTS,
+  HALL_X0,
+  ISO,
+  PLOT,
+  PLOTS,
+  ROOM_DECOR,
+  ROOM_SCALE,
+} from '../data/layout';
 import { COURSE_PROPS } from '../data/roomProps';
 import type { CourseId } from '../data/courses';
 import type { Station } from '../engine';
@@ -11,7 +23,11 @@ import {
   courtyard,
   courtyardLamps,
   backCorridor,
-  sortingPassage,
+  clearH,
+  clearV,
+  CORRIDOR_X,
+  CORRIDOR_Y,
+  doorOf,
   floorPoly,
   fountainPoint,
   GRID_X,
@@ -383,6 +399,49 @@ function Landscape({ env, front }: { env: EnvDef; front: boolean }) {
   );
 }
 
+/** Longs tapis rouges bordés d'or au milieu de chaque couloir (là où il n'y a pas de salle). */
+function CorridorRunners({ x0, y0, x1, y1 }: { x0: number; y0: number; x1: number; y1: number }) {
+  const out: ReactElement[] = [];
+  const W = 1.7;
+  const xs = CORRIDOR_X.filter((x) => x >= x0 - 0.01 && x <= x1 + 0.01);
+  const ys = CORRIDOR_Y.filter((y) => y >= y0 - 0.01 && y <= y1 + 0.01);
+  const runner = (key: string, gx: number, gy: number, w: number, h: number) => {
+    out.push(
+      <G key={key}>
+        <Polygon points={floorPoly(gx, gy, w, h)} fill="#C9A25A" opacity={0.9} />
+        <Polygon
+          points={floorPoly(
+            gx + (w > h ? 0 : 0.18),
+            gy + (w > h ? 0.18 : 0),
+            w > h ? w : w - 0.36,
+            w > h ? h - 0.36 : h,
+          )}
+          fill="#7A2430"
+        />
+        <Polygon
+          points={floorPoly(
+            gx + (w > h ? 0 : w / 2 - 0.05),
+            gy + (w > h ? h / 2 - 0.05 : 0),
+            w > h ? w : 0.1,
+            w > h ? 0.1 : h,
+          )}
+          fill="#C9A25A"
+          opacity={0.5}
+        />
+      </G>,
+    );
+  };
+  for (const x of xs)
+    for (let i = 1; i < ys.length; i++)
+      if (clearV(x, ys[i - 1], ys[i]))
+        runner(`v${x}-${i}`, x - W / 2, ys[i - 1], W, ys[i] - ys[i - 1]);
+  for (const y of ys)
+    for (let i = 1; i < xs.length; i++)
+      if (clearH(y, xs[i - 1], xs[i]))
+        runner(`h${y}-${i}`, xs[i - 1], y - W / 2, xs[i] - xs[i - 1], W);
+  return <G>{out}</G>;
+}
+
 function Ground({ env }: { env: EnvDef }) {
   const school0 = plotOrigin(0, 0);
   const w = PLOT.cols * (S + PLOT.gap) - PLOT.gap;
@@ -457,6 +516,7 @@ function Ground({ env }: { env: EnvDef }) {
         tint={tinted ? env.corridor : '#2B1A0E'}
         tintOpacity={tinted ? 0.45 : 0.18}
       />
+      <CorridorRunners x0={x0} y0={y0} x1={x1} y1={y1} />
       {/* Allée pavée en « L » : du couloir de l'Accueil jusqu'au portail */}
       <TexFloor
         id="pathA"
@@ -824,41 +884,67 @@ function FrontLips({
   );
 }
 
-/** Grande porte voûtée au fond de l'Accueil, vers le Salon des Destinées, et son tapis. */
+/** Porte au fond de l'Accueil, derrière le Chaporacle : sortie vers le couloir de l'école. */
 function BackDoorway({ ox, oy }: { ox: number; oy: number }) {
-  const sp = sortingPassage();
-  if (!sp) return null;
-  const t = sp.x - ox;
+  const d = doorOf('sorting');
+  if (!d || PLOTS.sorting.hostedIn !== 'reception') return null;
+  const t = d.inside.x - ox;
   return (
     <G>
       <WallQuad
         axis="x"
         ox={ox}
         oy={oy}
-        t1={t - 1.5}
-        t2={t + 1.5}
+        t1={t - 1.4}
+        t2={t + 1.4}
         h1={0}
-        h2={H - 6}
+        h2={H - 4}
         fill="#5A3A22"
       />
       <WallQuad
         axis="x"
         ox={ox}
         oy={oy}
-        t1={t - 1.2}
-        t2={t + 1.2}
+        t1={t - 1.1}
+        t2={t + 1.1}
         h1={0}
-        h2={H - 9}
+        h2={H - 7}
         fill="#1C120B"
-      />
-      <Polygon
-        points={floorPoly(sp.x - 0.9, sp.ySort - 1.5, 1.8, sp.yRec - sp.ySort + 4)}
-        fill="#7A2E34"
-        opacity={0.75}
       />
     </G>
   );
 }
+
+/** Tapis aux couleurs des Maisons sous les tables de la cantine. */
+function HallRugs({ ox, oy }: { ox: number; oy: number }) {
+  return (
+    <G>
+      {HALL_ROWS.map((row, i) => (
+        <Polygon
+          key={i}
+          points={floorPoly(ox + HALL_X0, oy + row - 1.0, HALL_TABLE_SEGMENTS * 3, 2.0)}
+          fill={HOUSES[HOUSE_IDS[i]].color}
+          opacity={0.28}
+        />
+      ))}
+      <Polygon
+        points={floorPoly(ox + HALL_PROF_X - 1.2, oy + 1.2, 2.6, 7.8)}
+        fill="#C9A25A"
+        opacity={0.25}
+      />
+    </G>
+  );
+}
+
+/** Salle des professeurs (fixe, toujours présente). */
+const STAFF_ROOM: RoomSnapshot = {
+  id: 'staff',
+  kind: 'staff' as Station['kind'],
+  level: 1,
+  seats: [],
+  seatTiers: [],
+  props: [],
+};
 
 /** Porche d'entrée à colonnes et fronton, sur la face avant gauche (porte « y »). */
 function Porch({ ox, oy, w, h }: { ox: number; oy: number; w: number; h: number }) {
@@ -1030,7 +1116,7 @@ function DimRoom({
   );
 }
 
-function Room({ r, env }: { r: RoomSnapshot; env: EnvDef }) {
+function Room({ r, env, guests = [] }: { r: RoomSnapshot; env: EnvDef; guests?: RoomSnapshot[] }) {
   const def = PLOTS[r.id];
   const o = roomOrigin(def);
   const { w: RW, h: RH } = roomSize(r.id);
@@ -1070,28 +1156,54 @@ function Room({ r, env }: { r: RoomSnapshot; env: EnvDef }) {
     decor('desk', tiered('teacherDeskM' as SpriteName, t), o.x + 1.25 * R, o.y + 4.2 * R, 50);
     decor('shelf', tiered('bookshelf', t), o.x + 0.55 * R, o.y + 1.0 * R, 30);
   } else if (r.kind === 'hall') {
+    // Cantine : une longue table par Maison (en ligne), la table des professeurs au bout.
     tapestries(
       () => 'x',
-      (i) => 0.9 + i * 1.8,
+      (i) => (3 + i * 4) / R,
     );
-    decor('fire', 'fireplace', o.x + 0.6 * R, o.y + 4.3 * R, 46);
-    [0, 1, 2, 3, 4].forEach((row) =>
-      [2.2, 5.7].forEach((gy) =>
-        decor(
-          `t${row}-${gy}`,
-          tiered('table', t),
-          o.x + (1.26 + row * 1.35) * R,
-          o.y + (gy + 1.2) * R,
-          66,
-        ),
+    HALL_ROWS.forEach((row, hi) => {
+      for (let k = 0; k < HALL_TABLE_SEGMENTS; k++) {
+        const gx = o.x + HALL_X0 + 1.5 + k * 3;
+        decor(`bb${hi}-${k}`, 'bench', gx, o.y + row - 0.95, 56);
+        decor(`t${hi}-${k}`, tiered('table', t), gx, o.y + row, 64);
+        decor(`bf${hi}-${k}`, 'bench', gx, o.y + row + 0.95, 56);
+      }
+    });
+    for (let k = 0; k < 3; k++)
+      decor(`prof-${k}`, 'tableM' as SpriteName, o.x + HALL_PROF_X, o.y + 2.4 + k * 2.6, 64);
+  }
+
+  // Lieux situés dans cette salle (le Chaporacle dans l'Accueil) : tentures, places.
+  for (const gst of guests) {
+    const go = roomOrigin(PLOTS[gst.id]);
+    HOUSE_IDS.forEach((h, i) =>
+      wall.push(
+        <WallQuad
+          key={`gt-${h}`}
+          axis="x"
+          ox={o.x}
+          oy={o.y}
+          t1={go.x - o.x + 1.2 + i * 2.2}
+          t2={go.x - o.x + 2.0 + i * 2.2}
+          h1={3}
+          h2={H - 3}
+          fill={HOUSES[h].color}
+          stroke="#3B2414"
+        />,
       ),
     );
-  } else if (r.kind === 'reception') {
-  } else if (r.kind === 'sorting') {
-    tapestries(
-      (i) => (i < 2 ? 'x' : 'y'),
-      (i) => 1.5 + (i % 2) * 3.5,
-    );
+    gst.seats.forEach((sp, i) => {
+      const gx = go.x + sp.x;
+      const gy = go.y + sp.y;
+      add(
+        gx,
+        gy,
+        <G key={`gseat-${gst.id}-${i}`}>
+          <Shadow p={iso(gx, gy)} w={20} />
+          <Furniture kind="sorting" at={iso(gx, gy)} gx={gx} gy={gy} tier={gst.seatTiers[i] ?? 0} />
+        </G>,
+      );
+    });
   }
 
   for (const d of ROOM_DECOR[kind] ?? [])
@@ -1106,21 +1218,21 @@ function Room({ r, env }: { r: RoomSnapshot; env: EnvDef }) {
     for (const p of COURSE_PROPS[r.courseId as CourseId] ?? [])
       if (!p.cost || r.props.includes(p.id))
         decor(`p-${p.id}`, p.sprite as SpriteName, o.x + p.x * R, o.y + p.y * R, p.width);
-  r.seats.forEach((sp, i) => {
-    const gx = o.x + sp.x;
-    const gy = o.y + sp.y;
-    add(
-      gx,
-      gy,
-      <G key={`seat-${i}`}>
-        <Shadow p={iso(gx, gy)} w={26} />
-        <Furniture kind={kind} at={iso(gx, gy)} gx={gx} gy={gy} tier={r.seatTiers[i] ?? 0} />
-      </G>,
-    );
-  });
+  if (r.kind !== 'hall')
+    r.seats.forEach((sp, i) => {
+      const gx = o.x + sp.x;
+      const gy = o.y + sp.y;
+      add(
+        gx,
+        gy,
+        <G key={`seat-${i}`}>
+          <Shadow p={iso(gx, gy)} w={26} />
+          <Furniture kind={kind} at={iso(gx, gy)} gx={gx} gy={gy} tier={r.seatTiers[i] ?? 0} />
+        </G>,
+      );
+    });
   objects.sort((a, b) => a.order - b.order);
 
-  const center = iso(o.x + RW / 2, o.y + RH / 2);
   if (def.outdoor)
     return (
       <G>
@@ -1142,28 +1254,38 @@ function Room({ r, env }: { r: RoomSnapshot; env: EnvDef }) {
         env={env}
       />
       {r.courseId === 'astronomy' ? <StarryFloor ox={o.x} oy={o.y} w={RW} h={RH} /> : null}
-      {r.kind === 'sorting' ? (
-        <G>
-          <Ellipse cx={center.x} cy={center.y} rx={50} ry={25} fill="#4B3B6E" opacity={0.85} />
-          <Ellipse
-            cx={center.x}
-            cy={center.y}
-            rx={46}
-            ry={23}
-            fill="none"
-            stroke="#B89A5A"
-            strokeWidth={1.5}
-          />
-          <Box
-            gx={o.x + S / 2 - 0.4}
-            gy={o.y + S / 2 - 0.4}
-            w={0.8}
-            d={0.8}
-            h={12}
-            color="#6B4A30"
-          />
-        </G>
-      ) : null}
+      {guests.map((gst) => {
+        const go = roomOrigin(PLOTS[gst.id]);
+        const c = iso(go.x + S / 2, go.y + S / 2);
+        return (
+          <G key={`hat-${gst.id}`}>
+            <Polygon
+              points={floorPoly(go.x + 0.3, go.y + 0.3, S - 0.6, S - 0.6)}
+              fill="#3E2F5E"
+              opacity={0.75}
+            />
+            <Ellipse cx={c.x} cy={c.y} rx={58} ry={29} fill="#4B3B6E" opacity={0.9} />
+            <Ellipse
+              cx={c.x}
+              cy={c.y}
+              rx={54}
+              ry={27}
+              fill="none"
+              stroke="#B89A5A"
+              strokeWidth={1.5}
+            />
+            <Box
+              gx={go.x + S / 2 - 0.4}
+              gy={go.y + S / 2 - 0.4}
+              w={0.8}
+              d={0.8}
+              h={12}
+              color="#6B4A30"
+            />
+          </G>
+        );
+      })}
+      {r.kind === 'hall' ? <HallRugs ox={o.x} oy={o.y} /> : null}
       {(isCourse && r.courseId !== 'astronomy') || r.kind === 'exam' ? (
         <G>
           <Polygon
@@ -1184,13 +1306,14 @@ function Room({ r, env }: { r: RoomSnapshot; env: EnvDef }) {
       ) : null}
       {r.kind === 'reception' ? (
         <G>
+          {/* tapis de l'entrée (porte au milieu) vers les guichets à gauche et vers le Chaporacle à droite */}
           <Polygon
-            points={floorPoly(o.x + 5.5, o.y + 3.2, RW - 11, 4.2)}
+            points={floorPoly(o.x + 2.5, o.y + 6.2, RW - 9, 1.8)}
             fill="#7A2E34"
             opacity={0.6}
           />
           <Polygon
-            points={floorPoly(o.x + RW / 2 - 1.2, o.y + 6.5, 2.4, RH - 6.5)}
+            points={floorPoly(o.x + RW / 2 - 1.2, o.y + 6.2, 2.4, RH - 6.2)}
             fill="#7A2E34"
             opacity={0.6}
           />
@@ -1211,8 +1334,8 @@ function Room({ r, env }: { r: RoomSnapshot; env: EnvDef }) {
       {r.courseId === 'potions' ? (
         <DimRoom ox={o.x} oy={o.y} w={RW} h={RH} seats={r.seats} />
       ) : null}
-      <FrontLips ox={o.x} oy={o.y} w={RW} h={RH} door={doorSide} back={r.kind === 'sorting'} />
-      {doorSide === 'y' ? <Porch ox={o.x} oy={o.y} w={RW} h={RH} /> : null}
+      <FrontLips ox={o.x} oy={o.y} w={RW} h={RH} door={doorSide === 'back' ? 'x' : doorSide} />
+      {r.kind === 'reception' ? <Porch ox={o.x} oy={o.y} w={RW} h={RH} /> : null}
     </G>
   );
 }
@@ -1227,9 +1350,12 @@ interface Props {
 function MapArtBase({ rooms, plots, env: envIndex }: Props) {
   const env = ENVIRONMENTS[envIndex] ?? ENVIRONMENTS[0];
   const items: { order: number; el: ReactElement }[] = [];
-  for (const r of rooms) {
+  const all = [...rooms, STAFF_ROOM];
+  for (const r of all) {
     const p = PLOTS[r.id];
-    if (p) items.push({ order: p.px + p.py, el: <Room key={r.id} r={r} env={env} /> });
+    if (!p || p.hostedIn) continue;
+    const guests = all.filter((g) => PLOTS[g.id]?.hostedIn === r.id);
+    items.push({ order: p.px + p.py, el: <Room key={r.id} r={r} env={env} guests={guests} /> });
   }
   for (const pl of plots) {
     const p = PLOTS[pl.id];

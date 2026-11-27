@@ -78,3 +78,66 @@ describe('déplacements par les couloirs', () => {
     expect(pts[pts.length - 1]).toEqual(target);
   });
 });
+
+describe('aucun trajet ne traverse un mur', () => {
+  const { PLOTS } = jest.requireActual('../../data/layout');
+  const { roomSize, queueSpotFor, hostOf } = jest.requireActual('../iso');
+  const ids: string[] = Object.keys(PLOTS).filter((id) => !PLOTS[id].hostedIn);
+  const all: string[] = Object.keys(PLOTS);
+  const rect = (id: string) => {
+    const o = stationOrigin(id)!;
+    const { w, h } = roomSize(id);
+    return { x0: o.x, y0: o.y, x1: o.x + w, y1: o.y + h };
+  };
+  const crossing = (
+    pts: { x: number; y: number }[],
+    start: { x: number; y: number },
+    allowed: string[],
+  ) => {
+    const all = [start, ...pts];
+    for (let i = 1; i < all.length; i++) {
+      const a = all[i - 1];
+      const b = all[i];
+      const n = Math.ceil(Math.hypot(b.x - a.x, b.y - a.y) / 0.2) + 1;
+      for (let k = 0; k <= n; k++) {
+        const p = { x: a.x + ((b.x - a.x) * k) / n, y: a.y + ((b.y - a.y) * k) / n };
+        for (const id of ids) {
+          if (allowed.includes(id)) continue;
+          const r = rect(id);
+          if (p.x > r.x0 + 0.15 && p.x < r.x1 - 0.15 && p.y > r.y0 + 0.15 && p.y < r.y1 - 0.15)
+            return `${id} @ ${p.x.toFixed(1)},${p.y.toFixed(1)}`;
+        }
+      }
+    }
+    return null;
+  };
+  it('entre toutes les salles, et depuis les files d’attente', () => {
+    const errors: string[] = [];
+    for (const a of all)
+      for (const b of all) {
+        if (a === b) continue;
+        const ra = rect(a);
+        const rb = rect(b);
+        const from = { x: (ra.x0 + ra.x1) / 2, y: (ra.y0 + ra.y1) / 2 };
+        const to = { x: (rb.x0 + rb.x1) / 2, y: (rb.y0 + rb.y1) / 2 };
+        const pts = route({ g: from, room: a }, { g: to, room: b });
+        const c = crossing(pts, from, [hostOf(a), hostOf(b)]);
+        if (c) errors.push(`${a} → ${b} : ${c}`);
+        if (b === 'reception') continue; // seuls les nouveaux venus (depuis la grille) y vont
+        // file d'attente de b → entrée dans b
+        const q = queueSpotFor(b, 3);
+        const qg = { x: rb.x0 + q.x, y: rb.y0 + q.y };
+        const qroom = PLOTS[b].hostedIn ? b : null;
+        const c2 = crossing(route({ g: qg, room: qroom }, { g: to, room: b }), qg, [hostOf(b)]);
+        if (c2) errors.push(`file ${b} → ${b} : ${c2}`);
+        // depuis a vers la file de b
+        const c3 = crossing(route({ g: from, room: a }, { g: qg, room: qroom }), from, [
+          hostOf(a),
+          qroom ? hostOf(b) : '',
+        ]);
+        if (c3) errors.push(`${a} → file ${b} : ${c3}`);
+        if (!qroom && crossing([qg], qg, []) !== null) errors.push(`file de ${b} dans une salle`);
+      }
+    expect(errors.slice(0, 15)).toEqual([]);
+  });
+});

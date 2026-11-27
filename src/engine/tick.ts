@@ -7,7 +7,7 @@ import { HAT_LINES_FR } from '../i18n/fr';
 import { EVENT_RULES } from '../data/events';
 import { handleEvents, isClosed, startEvent } from './events';
 import { deposit } from './meta';
-import { COURSE_PATIENCE, ENROLLMENT } from '../data/progression';
+import { COURSE_PATIENCE, ENROLLMENT, isMealBreak } from '../data/progression';
 import { advanceYear, distinctCourses, graduate, handleDonations } from './progression';
 import {
   arrivalInterval,
@@ -124,7 +124,7 @@ function handlePatience(state: GameState, dt: number, events: GameEvent[]): void
 
   // Attente trop longue devant une salle de cours : l'élève quitte l'école.
   for (const st of Object.values(state.stations)) {
-    if (st.kind !== 'course') continue;
+    if (st.kind !== 'course' || isMealBreak(state.time)) continue;
     st.queue = st.queue.filter((id) => {
       const s = state.students[id];
       if (!s || s.activity.mode !== 'queue') return false;
@@ -319,6 +319,8 @@ function complete(
 
 function advanceSeats(state: GameState, st: Station, dt: number, events: GameEvent[]): void {
   if (isClosed(state, st)) return;
+  // Pause repas : les profs sont à la cantine, les cours attendent leur retour.
+  if (st.kind === 'course' && isMealBreak(state.time)) return;
   st.seats.forEach((seat, i) => {
     if (seat.occupant === null) return;
     seat.remaining -= dt;
@@ -332,6 +334,7 @@ function advanceSeats(state: GameState, st: Station, dt: number, events: GameEve
 
 function fillSeats(state: GameState, st: Station): void {
   if (isClosed(state, st)) return;
+  if (st.kind === 'course' && isMealBreak(state.time)) return;
   for (let i = 0; i < st.seats.length && st.queue.length > 0; i++) {
     const seat = st.seats[i];
     if (seat.occupant !== null) continue;

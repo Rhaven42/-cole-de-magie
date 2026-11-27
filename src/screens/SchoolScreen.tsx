@@ -1,3 +1,6 @@
+import { isMealBreak } from '../data/progression';
+import { HALL_ROWS, HALL_X0, PLOT, PLOTS } from '../data/layout';
+import { HOUSE_IDS } from '../data/houses';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SPRITES } from '../assets';
@@ -12,7 +15,6 @@ import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-na
 import { COURSES, type CourseId } from '../data/courses';
 import { ENVIRONMENTS } from '../data/environments';
 import { EVENTS } from '../data/events';
-import { PLOT, PLOTS } from '../data/layout';
 import { DORM_PURCHASE } from '../data/stations';
 import {
   courseCost,
@@ -62,6 +64,8 @@ interface Placed {
   sleeping: boolean;
   /** Vu de dos (élève tourné vers le tableau en classe). */
   back: boolean;
+  /** Miroir horizontal (regarder vers la gauche de l'écran). */
+  flip?: boolean;
   /** Priorité d'affichage (places d'abord, puis tête de file). */
   prio: number;
 }
@@ -73,19 +77,41 @@ function placeStudents(game: GameState): Placed[] {
     const def = PLOTS[st.id];
     if (!def) continue;
     const o = roomOrigin(def);
+    const perHouse: Record<number, number> = {};
     st.seats.forEach((seat, i) => {
       if (seat.occupant === null) return;
+      if (st.kind === 'hall') {
+        // Cantine : chacun à la table de sa Maison, face à la table.
+        const s = game.students[seat.occupant];
+        const hi = Math.max(0, HOUSE_IDS.indexOf(s?.house ?? 'pyrraxe'));
+        const k = (perHouse[hi] = (perHouse[hi] ?? -1) + 1);
+        const side = k % 2 === 0 ? -1 : 1;
+        out.push({
+          id: seat.occupant,
+          anchor: {
+            g: {
+              x: o.x + HALL_X0 + 0.8 + (Math.floor(k / 2) % 10) * 1.45,
+              y: o.y + HALL_ROWS[hi] + side * 0.85,
+            },
+            room: st.id,
+          },
+          sleeping: false,
+          back: side > 0,
+          prio: 0,
+        });
+        return;
+      }
       const sp = seatPos(st.kind, i, seat.pos);
-      // En classe, l'élève se tient derrière son poste, tourné vers le tableau (vu de dos).
-      // En classe et à l'examen, l'élève est tourné vers le professeur (vu de dos).
       const course = st.kind === 'course' || st.kind === 'exam';
-      const dx = st.kind === 'dorm' ? -0.2 : st.kind === 'hall' ? 0 : course ? 0.6 : 0.35;
-      const dy = st.kind === 'hall' ? 0 : course ? 0.15 : 0.1;
+      const dx = st.kind === 'dorm' ? -0.2 : course ? 0.6 : 0.35;
+      const dy = course ? 0.15 : 0.1;
       out.push({
         id: seat.occupant,
         anchor: { g: { x: o.x + sp.x + dx, y: o.y + sp.y + dy }, room: st.id },
         sleeping: st.kind === 'dorm',
+        // Devant son poste, tourné vers lui et vers le professeur (en haut à gauche).
         back: course,
+        flip: course,
         prio: 0,
       });
     });
@@ -93,7 +119,7 @@ function placeStudents(game: GameState): Placed[] {
       const q = queueSpotFor(st.id, k);
       out.push({
         id,
-        anchor: { g: { x: o.x + q.x, y: o.y + q.y }, room: null },
+        anchor: { g: { x: o.x + q.x, y: o.y + q.y }, room: def.hostedIn ? st.id : null },
         sleeping: false,
         back: false,
         prio: 1 + k,
@@ -126,8 +152,10 @@ function snapshot(game: GameState) {
     if (!game.stations[id]) plots.push({ id, available: true });
   }
   if (!game.stations.exam) plots.push({ id: 'exam', available: true });
+  // Tous les dortoirs à venir sont tracés ; seul le prochain est constructible.
   const nextDorm = dormCount(game);
-  if (nextDorm < DORM_PURCHASE.max) plots.push({ id: `dorm-${nextDorm}`, available: true });
+  for (let d = nextDorm; d < DORM_PURCHASE.max; d++)
+    plots.push({ id: `dorm-${d}`, available: d === nextDorm });
   return { rooms, plots, env: game.meta.env };
 }
 
@@ -329,6 +357,7 @@ export function SchoolScreen() {
     if (!id) return;
     if (
       g.stations[id] ||
+      id === 'staff' ||
       id.startsWith('course-') ||
       id === 'exam' ||
       id === `dorm-${dormCount(g)}`
@@ -415,9 +444,11 @@ export function SchoolScreen() {
         <View style={StyleSheet.absoluteFill}>
           <Animated.View style={[styles.map, mapStyle]}>
             <MapArt env={stableSnap.env} rooms={stableSnap.rooms} plots={stableSnap.plots} />
-            {stableSnap.plots.map((p) => (
-              <BuildSign key={p.id} id={p.id} game={game} />
-            ))}
+            {stableSnap.plots
+              .filter((p) => p.available)
+              .map((p) => (
+                <BuildSign key={p.id} id={p.id} game={game} />
+              ))}
             {game.stationOrder.map((id) => {
               const st = game.stations[id];
               if (st.kind !== 'course' || !st.courseId || !PLOTS[id]) return null;
@@ -427,6 +458,7 @@ export function SchoolScreen() {
                   stationId={id}
                   courseId={st.courseId}
                   teaching={st.seats.some((x) => x.occupant !== null)}
+                  eating={isMealBreak(game.time)}
                 />
               );
             })}
@@ -441,6 +473,7 @@ export function SchoolScreen() {
                   anchor={p.anchor}
                   sleeping={p.sleeping}
                   back={p.back}
+                  flip={p.flip}
                   from={fresh ? gate : undefined}
                 />
               );

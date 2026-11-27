@@ -24,6 +24,15 @@ export const GRADES = [
   { min: 9, id: 'grandmaster', label: 'Grand·e Maître', coinMult: 5 },
 ] as const;
 
+/** Pause repas des professeur·es : toutes les 20 min de jeu, les cours s'arrêtent un moment. */
+export const MEAL_BREAK = { every: 20 * 60, duration: 90 };
+
+/** Vrai pendant la pause repas (les profs mangent à la cantine). */
+export function isMealBreak(time: number): boolean {
+  const t = time % MEAL_BREAK.every;
+  return t >= MEAL_BREAK.every - MEAL_BREAK.duration;
+}
+
 /** Prix d'ouverture de la Salle des Examens (la plus chère de l'école). */
 export const EXAM_PRICE = 2_500_000;
 

@@ -1,3 +1,4 @@
+import { StaffSheet } from './StaffSheet';
 import { useState } from 'react';
 import { Image, Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { PORTRAITS } from '../assets/portraits';
@@ -138,6 +139,7 @@ export function RoomSheet() {
   const [rearrange, setRearrange] = useState(false);
   const [bioOpen, setBioOpen] = useState(false);
   const st = id ? game.stations[id] : undefined;
+  if (id === 'staff') return <StaffSheet />;
   if (id && !st) return <BuildSheet id={id} />;
   if (!st) return null;
 

@@ -38,3 +38,43 @@ describe('mobilier spécial des salles', () => {
     }
   });
 });
+
+describe('professeur·es', () => {
+  it('améliorer un prof : plus rapide, plus rentable, coût croissant, niveau max', () => {
+    const { profUpgradeCost, upgradeProf } = jest.requireActual('../actions');
+    const { serviceTime } = jest.requireActual('../modifiers');
+    const g = createGame();
+    const st = g.stations['course-potions'];
+    const who = { house: null, mood: 100 };
+    const t1 = serviceTime(st, 0, undefined, g);
+    const r1 = courseReward(st, who, g);
+    expect(profUpgradeCost(g, 'charms')).toBeNull(); // salle non construite
+    g.coins = 1e12;
+    const c1 = profUpgradeCost(g, 'potions');
+    expect(upgradeProf(g, 'potions')).toBe(true);
+    expect(profUpgradeCost(g, 'potions')).toBeGreaterThan(c1);
+    expect(serviceTime(st, 0, undefined, g)).toBeLessThan(t1);
+    expect(courseReward(st, who, g)).toBeGreaterThanOrEqual(r1);
+    while (upgradeProf(g, 'potions'));
+    expect(g.profLevels?.potions).toBe(10);
+    expect(profUpgradeCost(g, 'potions')).toBeNull();
+  });
+});
+
+describe('pause repas', () => {
+  it('toutes les 20 min, les cours s’arrêtent pendant que les profs mangent', () => {
+    const { isMealBreak, MEAL_BREAK } = jest.requireActual('../../data/progression');
+    expect(isMealBreak(0)).toBe(false);
+    expect(isMealBreak(MEAL_BREAK.every - 10)).toBe(true);
+    expect(isMealBreak(MEAL_BREAK.every + 10)).toBe(false);
+    const { tick } = jest.requireActual('../tick');
+    const g = createGame();
+    g.arrivalTimer = -1e9;
+    const st = g.stations['course-potions'];
+    st.seats[0].occupant = -5;
+    st.seats[0].remaining = 50;
+    g.time = MEAL_BREAK.every - MEAL_BREAK.duration + 1;
+    tick(g, 1);
+    expect(st.seats[0].remaining).toBe(50);
+  });
+});

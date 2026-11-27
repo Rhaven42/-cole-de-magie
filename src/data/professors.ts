@@ -91,6 +91,56 @@ export const NAMED_PROFESSORS: Partial<Record<CourseId, ProfessorName>> = {
   },
 };
 
+/** Petites phrases que les profs lancent à leurs élèves pendant le cours. */
+export const PROF_LINES: Record<CourseId, string[]> = {
+  charms: [
+    'Prends ton temps, je t’écoute.',
+    'Le poignet souple… voilà !',
+    'On réessaie ensemble ?',
+  ],
+  transfiguration: [
+    'Le barème est le même pour tous.',
+    'Ton geste était juste, cette fois.',
+    'Rigueur, pas précipitation.',
+  ],
+  defense: ['Regarde. Comme ça.', 'Ce détail-là. Corrige.', 'Tiens, prends mon outil.'],
+  potions: ['Fascinant… d’incompétence.', 'Encore une explosion et je note.', 'Silence. Remuez.'],
+  botany: [
+    'Ce pot n’est pas étiqueté.',
+    'Nuisible ? Elle est magnifique.',
+    'On ne réussit pas par chance ici.',
+  ],
+  astronomy: [
+    'Tout le monde voit l’étoile ?',
+    'Pas de souci, on recommence.',
+    'Je te parlerai après le cours.',
+  ],
+  flying: ['Encore une fois !', 'Tu inventes, j’adore !', 'Peur ? Parfait, on y va !'],
+  divination: [
+    'Parce que c’est comme ça ? Non.',
+    'Prouve-moi le contraire.',
+    'Intéressant… continue.',
+  ],
+  history: [
+    'Et qui en a profité ?',
+    'Tout le monde n’a pas besoin de tout savoir.',
+    'Bien. Suivant.',
+  ],
+  duel: ['Belle feinte ! Revanche ?', 'Surprends-moi.', 'Sang-froid, d’abord.'],
+};
+
+/** Amélioration des professeur·es (salle des profs). */
+export const PROF_UPGRADE = {
+  maxLevel: 10,
+  /** Coût : (base + part du prix de la salle) × croissance^(niveau-1). */
+  base: 150,
+  priceShare: 0.4,
+  growth: 1.9,
+  /** Par niveau au-delà du premier : cours plus courts et plus rentables. */
+  timePerLevel: 0.04,
+  coinPerLevel: 0.06,
+};
+
 export function professorLabel(p: ProfessorName): string {
   const name = [p.firstName, p.lastName].filter(Boolean).join(' ') || 'Nom à venir';
   return p.title ? `${name}, ${p.title}` : name;
